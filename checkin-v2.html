@@ -10243,12 +10243,24 @@
 
                         this.e_mcr_img = this.e_mcr.querySelector(":scope img");
 
-                        const width = this.msgattr.image_attr.width;
-                        const height = this.msgattr.image_attr.height;
-                        if (width * 0.5 > height) {
-                            this.e_mcr_img.style.width = "140px";
-                            this.e_mcr_img.style.height = "auto";
+                        const maxWidth = 400; // 最大宽度
+                        const maxHeight = 400; // 最大高度
+                        let width = this.msgattr.image_attr.width;
+                        let height = this.msgattr.image_attr.height;
+
+                        // 保持宽高比缩放
+                        if (width > maxWidth) {
+                            height = height * (maxWidth / width);
+                            width = maxWidth;
                         }
+                        if (height > maxHeight) {
+                            width = width * (maxHeight / height);
+                            height = maxHeight;
+                        }
+
+                        this.e_mcr_img.style.width = width + "px";
+                        this.e_mcr_img.style.height = height + "px";
+
                         this.e_mcr_img.addEventListener("click", (event) => {
                             const im = new ImageMark(document.body);
                             im.show();
