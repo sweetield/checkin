@@ -6449,7 +6449,6 @@
 
                 if (ws_send) {
                     body.action = dashboardwrappers.ChatDashboardWrapper.ws_action_type.mark_read;
-                    stopTitleFlash();
                     return ws_send({url, body});
                 }
 
