@@ -9135,8 +9135,10 @@
                     if (i.msgobj.at_attr.is_marking) return false;
                     if (i.msgobj.is_sys_msg()) return false;
                     if (this.is_group()) {
+                        stopTitleFlash();
                         return (i.msgobj.at_attr.at_all && i.sender !== logged_user.uid) || i.msgobj.at_attr.at_users.includes(logged_user.uid);
                     } else {
+                        stopTitleFlash();
                         return i.sender !== logged_user.uid;
                     }
                 });
