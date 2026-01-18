@@ -6443,14 +6443,13 @@
                 };
                 if (contact_type === subviews.Chat.receiver_type.group) {
                     body.gid = xxid;
-                    stopTitleFlash();
                 } else if (contact_type === subviews.Chat.receiver_type.user) {
                     body.uid = xxid;
-                    stopTitleFlash();
                 }
 
                 if (ws_send) {
                     body.action = dashboardwrappers.ChatDashboardWrapper.ws_action_type.mark_read;
+                    stopTitleFlash();
                     return ws_send({url, body});
                 }
 
