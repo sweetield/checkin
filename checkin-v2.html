@@ -8,6 +8,23 @@
 
     <!--主题-->
     <style>
+
+        .chat-session-inputarea-textarea-warp {
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .chat-session-inputarea-textarea {
+            width: 100%;
+            min-height: 100px;       /* 默认高度更高 */
+            max-height: 300px;       /* 最大高度，避免撑破布局 */
+            padding: 8px;
+            font-size: 14px;
+            resize: none;            /* 禁止手动拖动，可用自动增高代替 */
+            box-sizing: border-box;
+            overflow-y: hidden;      /* 隐藏滚动条，自动增高时用 */
+        }
       .chatgpt-float {
             position: fixed;
             right: -70px;          /* 关键：先藏到右边 */
@@ -8214,32 +8231,6 @@
 </div>
 
 </div>
-<style>
-.chat-session-inputarea-textarea-warp {
-    width: 100%;
-    display: flex;
-    flex-direction: column;
-}
-
-.chat-session-inputarea-textarea {
-    width: 100%;
-    min-height: 100px;       /* 默认高度更高 */
-    max-height: 300px;       /* 最大高度，避免撑破布局 */
-    padding: 8px;
-    font-size: 14px;
-    resize: none;            /* 禁止手动拖动，可用自动增高代替 */
-    box-sizing: border-box;
-    overflow-y: hidden;      /* 隐藏滚动条，自动增高时用 */
-}
-</style>
-
-<script>
-const textarea = document.querySelector('.chat-session-inputarea-textarea');
-textarea.addEventListener('input', () => {
-    textarea.style.height = 'auto';                     // 重置高度
-    textarea.style.height = textarea.scrollHeight + 'px'; // 根据内容自适应高度
-});
-</script>
 `;
                 this.container.insertAdjacentHTML("beforeend", html);
                 this.chat_rect = this.container.querySelector(":scope div.chat-rect");
@@ -13966,6 +13957,14 @@ textarea.addEventListener('input', () => {
 
 </script>
 
+
+<script>
+const textarea = document.querySelector('.chat-session-inputarea-textarea');
+textarea.addEventListener('input', () => {
+    textarea.style.height = 'auto';                     // 重置高度
+    textarea.style.height = textarea.scrollHeight + 'px'; // 根据内容自适应高度
+});
+</script>
 <!---->
 <!-- ChatGPT 悬浮按钮 -->
 <a href="https://chat.openai.com/"
