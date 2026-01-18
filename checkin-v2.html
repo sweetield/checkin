@@ -10,25 +10,27 @@
     <style>
       .chatgpt-float {
             position: fixed;
-            right: 20px;
-            bottom: 140px;          /* 避免挡住右下角原有按钮 */
+            right: -70px;          /* 关键：先藏到右边 */
+            bottom: 140px;
             z-index: 9999;
 
             padding: 10px 14px;
-            background: #10a37f;   /* ChatGPT 经典绿 */
+            background: #10a37f;
             color: #fff;
             font-size: 14px;
             border-radius: 999px;
             text-decoration: none;
             box-shadow: 0 4px 12px rgba(0,0,0,.25);
 
-            transition: all .2s ease;
+            transition: right .25s ease, background .2s ease;
         }
 
+        /* 鼠标移到“可感知区域”就出来 */
         .chatgpt-float:hover {
+            right: 20px;
             background: #0e8f6e;
-            transform: translateY(-2px);
         }
+
 
         /* 默认亮 */
         :root {
@@ -13901,4 +13903,3 @@
 
 </body>
 </html>
-
