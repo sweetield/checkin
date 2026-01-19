@@ -10,59 +10,44 @@
     <style>
         #apps-notification {
             color: #1e3557;
-            font-size: 160px;
-            font-weight: 800;
-            line-height: 1.7;
-            letter-spacing: 0.02em;
+            font-size: 160px;            /* 保持原来的大字号 */
+            font-weight: 900;             /* 更粗一点，看起来更大 */
+            line-height: 1.1;             /* 紧凑行高，让文字显得更大 */
+            letter-spacing: 0.04em;       /* 略宽松，增加视觉厚度 */
+            text-align: center;           /* 居中显示 */
 
-            padding: 18px 34px;
+            padding: 20px 40px;           /* 适当加大内边距，让文字有呼吸空间 */
             border-radius: 14px;
 
             /* 关键：真实边框 */
             border: 2px solid #93c5fd;
 
-            /* 承托阴影 */
+            /* 阴影效果 */
             box-shadow:
-                0 6px 16px rgba(59, 130, 246, 0.12),
+                0 8px 20px rgba(59, 130, 246, 0.18),
                 inset 0 1px 0 rgba(255,255,255,0.6);
 
+            display: inline-block;        /* 让元素撑开，不受父元素影响 */
+            
             animation:
                 notify-shadow-breath 5s ease-in-out infinite,
                 notify-text-breath 5s ease-in-out infinite;
         }
 
-
         /* 文字颜色呼吸 */
         @keyframes notify-text-breath {
-            0% {
-                color: #1e3557; /* 稳态蓝灰 */
-            }
-            50% {
-                color: #2563eb; /* 稍亮一点的蓝 */
-            }
-            100% {
-                color: #1e3557;
-            }
+            0%   { color: #1e3557; }
+            50%  { color: #2563eb; }
+            100% { color: #1e3557; }
         }
 
-
+        /* 阴影呼吸 */
         @keyframes notify-shadow-breath {
-            0% {
-                box-shadow:
-                    0 6px 16px rgba(59, 130, 246, 0.12),
-                    inset 0 1px 0 rgba(255,255,255,0.6);
-            }
-            50% {
-                box-shadow:
-                    0 10px 26px rgba(59, 130, 246, 0.22),
-                    inset 0 1px 0 rgba(255,255,255,0.6);
-            }
-            100% {
-                box-shadow:
-                    0 6px 16px rgba(59, 130, 246, 0.12),
-                    inset 0 1px 0 rgba(255,255,255,0.6);
-            }
+            0%   { box-shadow: 0 8px 20px rgba(59,130,246,0.18), inset 0 1px 0 rgba(255,255,255,0.6); }
+            50%  { box-shadow: 0 12px 30px rgba(59,130,246,0.28), inset 0 1px 0 rgba(255,255,255,0.6); }
+            100% { box-shadow: 0 8px 20px rgba(59,130,246,0.18), inset 0 1px 0 rgba(255,255,255,0.6); }
         }
+
 
 
 
