@@ -3066,9 +3066,13 @@
         </div>
     </section>
 
-    <section id="apps-panel" class="">
+    <section id="apps-panel">
         <span id="apps-top-margin"></span>
         <div id="apps-rect">
+            <!-- 添加通知区域 -->
+            <div id="apps-notification" class="apps-item notification">
+                <p class="apps-item-name">全体通知：系统将在今晚10点进行维护，请提前保存您的工作。</p>
+            </div>
             <div class="apps-item" id="apps-item-drive">
                 <p class="apps-item-name">网盘</p>
             </div>
@@ -3080,6 +3084,7 @@
             </div>
         </div>
     </section>
+
 
     <section id="dashboard-mail">
         <div class="aside-left-wrap">
@@ -8277,7 +8282,7 @@
     </div>
 </div>
     <!-- 新增：发送按钮 -->
-    <button class="chat-session-inputarea-sendbtn">>>>点击发送<<<<</button>
+    <button class="chat-session-inputarea-sendbtn">>>>点击发送<<<</button>
 </div>
 `;
                 this.container.insertAdjacentHTML("beforeend", html);
@@ -14076,4 +14081,3 @@ textarea.addEventListener('input', () => {
 
 </body>
 </html>
-
