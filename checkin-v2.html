@@ -12,48 +12,50 @@
         #apps-notification {
             background: linear-gradient(
                 135deg,
-                rgba(240, 246, 255, 0.95),
-                rgba(230, 240, 252, 0.95)
+                rgba(238, 245, 255, 0.96),
+                rgba(226, 238, 252, 0.96)
             );
 
-            color: #1f3556;
+            color: #1e3557;
             font-size: 20px;
             font-weight: 500;
+            line-height: 1.6;
+
             padding: 14px 28px;
             margin-bottom: 18px;
             border-radius: 12px;
             text-align: center;
 
-            /* 不用边框，用“承托阴影” */
+            /* 字体清晰的关键 */
+            transform: none !important;
+            will-change: auto;
+
+            /* 动态只来自阴影 */
             box-shadow:
-                0 6px 18px rgba(30, 64, 175, 0.10),
+                0 6px 16px rgba(59, 130, 246, 0.12),
                 inset 0 1px 0 rgba(255,255,255,0.6);
 
-            backdrop-filter: blur(6px);
-
-            animation: notify-float 2.6s ease-in-out infinite;
+            animation: notify-shadow-breath 2.8s ease-in-out infinite;
         }
 
-        @keyframes notify-float {
+        @keyframes notify-shadow-breath {
             0% {
-                transform: translateY(0);
                 box-shadow:
-                    0 6px 18px rgba(30, 64, 175, 0.10),
+                    0 6px 16px rgba(59, 130, 246, 0.12),
                     inset 0 1px 0 rgba(255,255,255,0.6);
             }
             50% {
-                transform: translateY(-2px);
                 box-shadow:
-                    0 10px 26px rgba(30, 64, 175, 0.18),
+                    0 10px 26px rgba(59, 130, 246, 0.22),
                     inset 0 1px 0 rgba(255,255,255,0.6);
             }
             100% {
-                transform: translateY(0);
                 box-shadow:
-                    0 6px 18px rgba(30, 64, 175, 0.10),
+                    0 6px 16px rgba(59, 130, 246, 0.12),
                     inset 0 1px 0 rgba(255,255,255,0.6);
             }
         }
+
 
 
 
