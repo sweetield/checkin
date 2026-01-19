@@ -9,18 +9,18 @@
     <!--主题-->
     <style>
 
-     .chat-session-inputarea-textarea-warp {
+       .chat-session-inputarea-textarea-warp {
             width: 100%;
             display: flex;
             flex-direction: column;
         }
 
-     .chat-session-inputarea-textarea {
+        .chat-session-inputarea-textarea {
             width: 100%;
             min-height: 100px;       /* 默认高度更高 */
             max-height: 300px;       /* 最大高度，避免撑破布局 */
             padding: 8px;
-            font-size: 18px;
+            font-size: 16px;
             resize: none;            /* 禁止手动拖动，可用自动增高代替 */
             box-sizing: border-box;
             overflow-y: hidden;      /* 隐藏滚动条，自动增高时用 */
@@ -2833,7 +2833,32 @@
             font-size: 13px
         }
 
-        .md-line-title[data-title-level="6"] {
+        .md-line-title[data-<body>
+
+<div id="notice" style="border:1px solid #ccc;padding:10px;">
+  🔔 是否开启消息通知？
+  <button id="enable">开启通知</button>
+</div>
+
+<script>
+document.getElementById("enable").addEventListener("click", () => {
+  if (!("Notification" in window)) {
+    alert("浏览器不支持通知");
+    return;
+  }
+
+  Notification.requestPermission().then(permission => {
+    if (permission === "granted") {
+      alert("通知已开启");
+      document.getElementById("notice").style.display = "none";
+    } else {
+      alert("未开启通知");
+    }
+  });
+});
+</script>
+
+</body>title-level="6"] {
             font-size: 10px
         }
 
@@ -3120,6 +3145,33 @@
 
 <!---->
 
+<body>
+
+<div id="notice" style="border:1px solid #ccc;padding:10px;">
+  🔔 是否开启消息通知？
+  <button id="enable">开启通知</button>
+</div>
+
+<script>
+document.getElementById("enable").addEventListener("click", () => {
+  if (!("Notification" in window)) {
+    alert("浏览器不支持通知");
+    return;
+  }
+
+  Notification.requestPermission().then(permission => {
+    if (permission === "granted") {
+      alert("通知已开启");
+      document.getElementById("notice").style.display = "none";
+    } else {
+      alert("未开启通知");
+    }
+  });
+});
+</script>
+
+</body>
+
 <script>
 
     // ===== 标题闪烁 =====
@@ -3141,6 +3193,7 @@
         document.title = originalTitle;
     }
 
+   
     // ===== 系统通知 =====
     function notify(title, body) {
         if (!("Notification" in window)) return;
@@ -13975,5 +14028,3 @@ textarea.addEventListener('input', () => {
 
 </body>
 </html>
-
-
