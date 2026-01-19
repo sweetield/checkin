@@ -1,5 +1,3 @@
-
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -3147,32 +3145,18 @@ document.getElementById("enable").addEventListener("click", () => {
 
 <!---->
 
-<body>
-
-<div id="notice" style="border:1px solid #ccc;padding:10px;">
-  🔔 是否开启消息通知？
-  <button id="enable">开启通知</button>
+<div id="msg" style="display:none; color:red;">
+  🔔 你有新消息
 </div>
 
 <script>
-document.getElementById("enable").addEventListener("click", () => {
-  if (!("Notification" in window)) {
-    alert("浏览器不支持通知");
-    return;
-  }
-
-  Notification.requestPermission().then(permission => {
-    if (permission === "granted") {
-      alert("通知已开启");
-      document.getElementById("notice").style.display = "none";
-    } else {
-      alert("未开启通知");
-    }
-  });
-});
+function showMsg() {
+  document.getElementById("msg").style.display = "block";
+}
 </script>
 
-</body>
+<button onclick="showMsg()">模拟新消息</button>
+
 
 <script>
 
@@ -13232,6 +13216,7 @@ document.getElementById("enable").addEventListener("click", () => {
 
                 if (_have_new_unread) {
                     playSound();
+                    showMsg();
                     startTitleFlash();
 
                 }
