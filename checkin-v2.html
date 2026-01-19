@@ -9,6 +9,53 @@
     <!--主题-->
     <style>
 
+        .chat-session-inputarea-sendbtn {
+            height: 36px;
+            min-width: 72px;
+            padding: 0 16px;
+
+            background: linear-gradient(135deg, #1677ff, #4096ff);
+            color: #fff;
+
+            border: none;
+            border-radius: 18px;
+
+            font-size: 14px;
+            font-weight: 500;
+            letter-spacing: 1px;
+
+            cursor: pointer;
+            user-select: none;
+
+            display: flex;
+            align-items: center;
+            justify-content: center;
+
+            transition:
+                background 0.2s ease,
+                box-shadow 0.2s ease,
+                transform 0.05s ease;
+        }
+
+        /* 悬浮效果 */
+        .chat-session-inputarea-sendbtn:hover:not(:disabled) {
+            background: linear-gradient(135deg, #0958d9, #1677ff);
+            box-shadow: 0 4px 12px rgba(22, 119, 255, 0.35);
+        }
+
+        /* 点击反馈 */
+        .chat-session-inputarea-sendbtn:active:not(:disabled) {
+            transform: scale(0.96);
+        }
+
+        /* 禁用状态 */
+        .chat-session-inputarea-sendbtn:disabled {
+            background: #d9d9d9;
+            color: #999;
+            cursor: not-allowed;
+            box-shadow: none;
+        }
+
        .chat-session-inputarea-textarea-warp {
             width: 100%;
             display: flex;
@@ -8226,7 +8273,7 @@
     </div>
     <div class="chat-session-inputarea-textarea-warp">
         <div class="chat-session-inputarea-tip-editing hidden"><span>编辑消息：</span><button>取消</button></div>
-        <textarea class="chat-session-inputarea-textarea" placeholder="输入消息..." spellcheck="false"></textarea>
+        <textarea class="chat-session-inputarea-textarea" placeholder="输入消息后,点击发送或回车..." spellcheck="false"></textarea>
     </div>
 </div>
     <!-- 新增：发送按钮 -->
@@ -9103,7 +9150,7 @@
                 this.is_editing_msg = false;
                 this.editing_msg = null;
                 this.e_inputarea_tip_editing.classList.add("hidden");
-                this.e_inputarea_textarea.placeholder = "输入消息...";
+                this.e_inputarea_textarea.placeholder = "输入消息后,点击发送或回车...";
                 this.load_draft_text();
             }
 
