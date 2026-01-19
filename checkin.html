@@ -8,7 +8,52 @@
 
     <!--主题-->
     <style>
+        #apps-notification {
+            color: #1e3557;
+            font-size: 60px;            /* 保持原来的大字号 */
+            font-weight: 900;             /* 更粗一点，看起来更大 */
+            line-height: 1.7;             /* 紧凑行高，让文字显得更大 */
+            letter-spacing: 0.04em;       /* 略宽松，增加视觉厚度 */
+            text-align: center;           /* 居中显示 */
 
+            padding: 20px 40px;           /* 适当加大内边距，让文字有呼吸空间 */
+            border-radius: 14px;
+
+            /* 关键：真实边框 */
+            border: 2px solid #93c5fd;
+
+            /* 阴影效果 */
+            box-shadow:
+                0 8px 20px rgba(59, 130, 246, 0.18),
+                inset 0 1px 0 rgba(255,255,255,0.6);
+
+            display: inline-block;        /* 让元素撑开，不受父元素影响 */
+            
+            animation:
+                notify-shadow-breath 5s ease-in-out infinite,
+                notify-text-breath 5s ease-in-out infinite;
+        }
+
+        /* 文字颜色呼吸 */
+        @keyframes notify-text-breath {
+            0%   { color: #1e3557; }
+            50%  { color: #2563eb; }
+            100% { color: #1e3557; }
+        }
+
+        /* 阴影呼吸 */
+        @keyframes notify-shadow-breath {
+            0%   { box-shadow: 0 8px 20px rgba(59,130,246,0.18), inset 0 1px 0 rgba(255,255,255,0.6); }
+            50%  { box-shadow: 0 12px 30px rgba(59,130,246,0.28), inset 0 1px 0 rgba(255,255,255,0.6); }
+            100% { box-shadow: 0 8px 20px rgba(59,130,246,0.18), inset 0 1px 0 rgba(255,255,255,0.6); }
+        }
+
+
+
+
+
+
+        /* 普通状态 */
         .chat-session-inputarea-sendbtn {
             height: 40px;
             min-width: 72px;
@@ -21,7 +66,7 @@
             border-radius: 18px;
 
             font-size: 16px;
-            font-weight: 600;
+            font-weight: 700;
             letter-spacing: 1px;
 
             cursor: pointer;
@@ -34,7 +79,8 @@
             transition:
                 background 0.2s ease,
                 box-shadow 0.2s ease,
-                transform 0.05s ease;
+                transform 0.05s ease,
+                opacity 0.2s ease;
         }
 
         /* 悬浮效果 */
@@ -48,13 +94,16 @@
             transform: scale(0.96);
         }
 
-        /* 禁用状态 */
+        /* 禁用状态：浅蓝 + 渐变 + 不可点击感 */
         .chat-session-inputarea-sendbtn:disabled {
-            background: #d9d9d9;
-            color: #999;
+            background: linear-gradient(135deg, #a6c8ff, #c2d9ff); /* 浅蓝渐变 */
+            color: #fff;
             cursor: not-allowed;
             box-shadow: none;
+            opacity: 0.6;                /* 视觉上显得不可点击 */
+            filter: grayscale(20%);      /* 可选，增加禁用感 */
         }
+
 
        .chat-session-inputarea-textarea-warp {
             width: 100%;
@@ -396,6 +445,7 @@
             align-self: center;
             font-size: 16px;
             user-select: none;
+            white-space: pre-wrap; /* 保留换行和空格 */
         }
 
     </style>
@@ -3066,9 +3116,14 @@
         </div>
     </section>
 
-    <section id="apps-panel" class="">
+    <section id="apps-panel">
         <span id="apps-top-margin"></span>
         <div id="apps-rect">
+            <!-- 添加通知区域 -->
+            <div id="apps-notification" class="apps-item notification">
+                <p class="apps-item-name">all_people_notice</p>
+            </div>
+            <div style="height: 40px;"></div> <!-- 空白隔离 -->
             <div class="apps-item" id="apps-item-drive">
                 <p class="apps-item-name">网盘</p>
             </div>
@@ -3080,6 +3135,7 @@
             </div>
         </div>
     </section>
+
 
     <section id="dashboard-mail">
         <div class="aside-left-wrap">
@@ -13547,6 +13603,7 @@
                 {text: "储存空间", pagetype: contentpages.backend_panel.disk,},
                 {text: "服务状态", pagetype: contentpages.backend_panel.status,},
                 {text: "备份恢复", pagetype: contentpages.backend_panel.backup,},
+                {text: "通知栏", pagetype: contentpages.backend_panel.backup,},
             ])
 
             this.#bind_mainactions(this.dashboard_chat, 0, [])
@@ -14076,3 +14133,4 @@ textarea.addEventListener('input', () => {
 
 </body>
 </html>
+
