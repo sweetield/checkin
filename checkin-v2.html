@@ -3120,26 +3120,11 @@
 
 <!---->
 
-<div id="msg" style="display:none; color:red;">
-  🔔 你有新消息
-</div>
-
-<script>
-function showMsg() {
-  document.getElementById("msg").style.display = "block";
-}
-</script>
-
-<button onclick="showMsg()">模拟新消息</button>
-
-
-<script>
-
     // ===== 标题闪烁 =====
     let titleTimer = null;
     let originalTitle = document.title;
 
-    function startTitleFlash(text = "【新消息】🚨") {
+    function startTitleFlash(text = "🚨【新消息】") {
         if (titleTimer) return; // 防止重复启动
         titleTimer = setInterval(() => {
             document.title =
