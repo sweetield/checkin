@@ -3126,7 +3126,7 @@
     let titleTimer = null;
     let originalTitle = document.title;
 
-    function startTitleFlash(text = "【新消息】🚨") {
+    function startTitleFlash(text = "🚨【新消息】") {
         if (titleTimer) return; // 防止重复启动
         titleTimer = setInterval(() => {
             document.title =
