@@ -9,6 +9,53 @@
     <!--主题-->
     <style>
 
+        .chat-session-inputarea-sendbtn {
+            height: 40px;
+            min-width: 72px;
+            padding: 0 16px;
+
+            background: linear-gradient(135deg, #1677ff, #4096ff);
+            color: #fff;
+
+            border: none;
+            border-radius: 18px;
+
+            font-size: 16px;
+            font-weight: 600;
+            letter-spacing: 1px;
+
+            cursor: pointer;
+            user-select: none;
+
+            display: flex;
+            align-items: center;
+            justify-content: center;
+
+            transition:
+                background 0.2s ease,
+                box-shadow 0.2s ease,
+                transform 0.05s ease;
+        }
+
+        /* 悬浮效果 */
+        .chat-session-inputarea-sendbtn:hover:not(:disabled) {
+            background: linear-gradient(135deg, #0958d9, #1677ff);
+            box-shadow: 0 4px 12px rgba(22, 119, 255, 0.35);
+        }
+
+        /* 点击反馈 */
+        .chat-session-inputarea-sendbtn:active:not(:disabled) {
+            transform: scale(0.96);
+        }
+
+        /* 禁用状态 */
+        .chat-session-inputarea-sendbtn:disabled {
+            background: #d9d9d9;
+            color: #999;
+            cursor: not-allowed;
+            box-shadow: none;
+        }
+
        .chat-session-inputarea-textarea-warp {
             width: 100%;
             display: flex;
@@ -8226,10 +8273,11 @@
     </div>
     <div class="chat-session-inputarea-textarea-warp">
         <div class="chat-session-inputarea-tip-editing hidden"><span>编辑消息：</span><button>取消</button></div>
-        <textarea class="chat-session-inputarea-textarea" placeholder="输入消息..." spellcheck="false"></textarea>
+        <textarea class="chat-session-inputarea-textarea" placeholder="输入消息后,点击发送或回车..." spellcheck="false"></textarea>
     </div>
 </div>
-
+    <!-- 新增：发送按钮 -->
+    <button class="chat-session-inputarea-sendbtn">>>>点击发送<<<<</button>
 </div>
 `;
                 this.container.insertAdjacentHTML("beforeend", html);
@@ -8407,45 +8455,98 @@
                 });
 
                 // 文本输入
-                this.e_inputarea_textarea = this.container.querySelector(":scope textarea.chat-session-inputarea-textarea");
+                this.e_inputarea_textarea = this.container.querySelector(
+                    ":scope textarea.chat-session-inputarea-textarea"
+                );
+
+                // 自动高度
                 this.e_inputarea_textarea.addEventListener('input', () => {
                     this.e_inputarea_textarea.style.height = 'auto';
-                    this.e_inputarea_textarea.style.height = `${this.e_inputarea_textarea.scrollHeight}px`;
+                    this.e_inputarea_textarea.style.height =
+                        `${this.e_inputarea_textarea.scrollHeight}px`;
                 });
-                this.e_inputarea_textarea.addEventListener('focus', () => {
-                    if (this.client.dashboard_chat.wrapper.is_active()) floatball.setOpacity(0.7);
 
+                // focus / blur
+                this.e_inputarea_textarea.addEventListener('focus', () => {
+                    if (this.client.dashboard_chat.wrapper.is_active()) {
+                        floatball.setOpacity(0.7);
+                    }
                 });
                 this.e_inputarea_textarea.addEventListener('blur', () => {
                     floatball.setOpacity(1);
                 });
+
+                // 🔥 回车发送（原逻辑，保留）
                 this.e_inputarea_textarea.addEventListener('keydown', (e) => {
-                    if (e.key === 'Enter') {
-                        if (e.shiftKey) {
-                        } else {
-                            e.preventDefault();
-                            this.send_msg_text();
-                            this.update_activity(dashboardwrappers.ChatDashboardWrapper.activity_type.none);
-                            this.e_inputarea_textarea.style.height = 'auto';
-                            this.e_inputarea_textarea.style.height = `${this.e_inputarea_textarea.scrollHeight}px`;
-                        }
+                    if (e.key === 'Enter' && !e.shiftKey) {
+                        e.preventDefault();
+                        this.send_msg_text();
+                        this.update_activity(
+                            dashboardwrappers.ChatDashboardWrapper.activity_type.none
+                        );
+                        this.e_inputarea_textarea.style.height = 'auto';
+                        this.e_inputarea_textarea.style.height =
+                            `${this.e_inputarea_textarea.scrollHeight}px`;
                     }
                 });
-                this.e_inputarea_textarea.addEventListener('input', (e) => {
+
+                // 输入状态 + 发送按钮禁用
+                this.e_inputarea_textarea.addEventListener('input', () => {
                     const text = this.e_inputarea_textarea.value;
+
                     if (text.length > 0) {
-                        this.update_activity(dashboardwrappers.ChatDashboardWrapper.activity_type.typing);
+                        this.update_activity(
+                            dashboardwrappers.ChatDashboardWrapper.activity_type.typing
+                        );
                     } else {
-                        this.update_activity(dashboardwrappers.ChatDashboardWrapper.activity_type.none);
+                        this.update_activity(
+                            dashboardwrappers.ChatDashboardWrapper.activity_type.none
+                        );
+                    }
+
+                    // 🔥 同步发送按钮状态
+                    if (this.e_inputarea_sendbtn) {
+                        this.e_inputarea_sendbtn.disabled = text.length === 0;
                     }
                 });
+
+                // 加载草稿
                 this.load_draft_text();
 
-                this.e_inputarea_tip_editing = this.container.querySelector(":scope .chat-session-inputarea-tip-editing");
-                this.e_inputarea_tip_editing__cancel_btn = this.e_inputarea_tip_editing.querySelector(":scope > button");
-                this.e_inputarea_tip_editing__cancel_btn.addEventListener("click", (event) => {
+                // 编辑提示
+                this.e_inputarea_tip_editing = this.container.querySelector(
+                    ":scope .chat-session-inputarea-tip-editing"
+                );
+                this.e_inputarea_tip_editing__cancel_btn =
+                    this.e_inputarea_tip_editing.querySelector(":scope > button");
+
+                this.e_inputarea_tip_editing__cancel_btn.addEventListener("click", () => {
                     this.end_editing_msg();
                 });
+
+                // =============================
+                // 🔥 新增：发送按钮逻辑
+                // =============================
+                this.e_inputarea_sendbtn = this.container.querySelector(
+                    ":scope .chat-session-inputarea-sendbtn"
+                );
+
+                if (this.e_inputarea_sendbtn) {
+                    // 初始禁用
+                    this.e_inputarea_sendbtn.disabled = true;
+
+                    // 点击发送
+                    this.e_inputarea_sendbtn.addEventListener('click', () => {
+                        this.send_msg_text();
+                        this.update_activity(
+                            dashboardwrappers.ChatDashboardWrapper.activity_type.none
+                        );
+                        this.e_inputarea_textarea.style.height = 'auto';
+                        this.e_inputarea_textarea.style.height =
+                            `${this.e_inputarea_textarea.scrollHeight}px`;
+                    });
+                }
+
 
                 // 其他消息类型
                 this.e_othertypes_image = this.container.querySelector(":scope button.chat-session-inputarea-othertypes-image");
@@ -9049,7 +9150,7 @@
                 this.is_editing_msg = false;
                 this.editing_msg = null;
                 this.e_inputarea_tip_editing.classList.add("hidden");
-                this.e_inputarea_textarea.placeholder = "输入消息...";
+                this.e_inputarea_textarea.placeholder = "输入消息后,点击发送或回车...";
                 this.load_draft_text();
             }
 
