@@ -53,6 +53,7 @@
 
 
 
+        /* 普通状态 */
         .chat-session-inputarea-sendbtn {
             height: 40px;
             min-width: 72px;
@@ -78,7 +79,8 @@
             transition:
                 background 0.2s ease,
                 box-shadow 0.2s ease,
-                transform 0.05s ease;
+                transform 0.05s ease,
+                opacity 0.2s ease;
         }
 
         /* 悬浮效果 */
@@ -92,13 +94,16 @@
             transform: scale(0.96);
         }
 
-        /* 禁用状态 */
+        /* 禁用状态：浅蓝 + 渐变 + 不可点击感 */
         .chat-session-inputarea-sendbtn:disabled {
-            background: #d9d9d9;
-            color: #999;
+            background: linear-gradient(135deg, #a6c8ff, #c2d9ff); /* 浅蓝渐变 */
+            color: #fff;
             cursor: not-allowed;
             box-shadow: none;
+            opacity: 0.6;                /* 视觉上显得不可点击 */
+            filter: grayscale(20%);      /* 可选，增加禁用感 */
         }
+
 
        .chat-session-inputarea-textarea-warp {
             width: 100%;
