@@ -10,16 +10,33 @@
     <style>
 
         #apps-notification {
-            background-color: #ffcc00 !important; /* 强烈的黄色背景 */
-            color: #333333 !important; /* 字体颜色 */
-            font-size: 35px !important; /* 字体大小增大 */
-            font-weight: bold !important; /* 加粗字体 */
-            padding: 15px 30px !important; /* 内边距增加可读性 */
-            margin-bottom: 20px !important; /* 下边距增加间距 */
-            border-radius: 8px !important; /* 圆角边框 */
-            text-align: center !important; /* 居中 */
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1) !important; /* 轻微阴影效果 */
+            background: linear-gradient(135deg, #fff4cc, #ffe7a3);
+            color: #5a4300;
+            font-size: 22px;
+            font-weight: 600;
+            padding: 14px 28px;
+            margin-bottom: 18px;
+            border-radius: 10px;
+            text-align: center;
+            box-shadow: 0 6px 14px rgba(0, 0, 0, 0.08);
+            animation: notify-breath 2.5s ease-in-out infinite;
         }
+
+        @keyframes notify-breath {
+            0% {
+                box-shadow: 0 6px 14px rgba(0,0,0,0.08);
+                transform: scale(1);
+            }
+            50% {
+                box-shadow: 0 10px 24px rgba(255, 193, 7, 0.35);
+                transform: scale(1.015);
+            }
+            100% {
+                box-shadow: 0 6px 14px rgba(0,0,0,0.08);
+                transform: scale(1);
+            }
+        }
+
 
 
         .chat-session-inputarea-sendbtn {
