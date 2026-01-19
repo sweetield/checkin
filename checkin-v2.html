@@ -2833,32 +2833,7 @@
             font-size: 13px
         }
 
-        .md-line-title[data-<body>
-
-<div id="notice" style="border:1px solid #ccc;padding:10px;">
-  🔔 是否开启消息通知？
-  <button id="enable">开启通知</button>
-</div>
-
-<script>
-document.getElementById("enable").addEventListener("click", () => {
-  if (!("Notification" in window)) {
-    alert("浏览器不支持通知");
-    return;
-  }
-
-  Notification.requestPermission().then(permission => {
-    if (permission === "granted") {
-      alert("通知已开启");
-      document.getElementById("notice").style.display = "none";
-    } else {
-      alert("未开启通知");
-    }
-  });
-});
-</script>
-
-</body>title-level="6"] {
+        .md-line-title[data-title-level="6"] {
             font-size: 10px
         }
 
