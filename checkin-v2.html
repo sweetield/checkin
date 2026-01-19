@@ -9,18 +9,28 @@
     <!--主题-->
     <style>
         #apps-notification {
-            /* 原有样式保留 */
             color: #1e3557;
             font-size: 35px;
             font-weight: 700;
             line-height: 1.7;
             letter-spacing: 0.02em;
 
+            padding: 18px 34px;
+            border-radius: 14px;
+
+            /* 关键：真实边框 */
+            border: 2px solid #93c5fd;
+
+            /* 承托阴影 */
+            box-shadow:
+                0 6px 16px rgba(59, 130, 246, 0.12),
+                inset 0 1px 0 rgba(255,255,255,0.6);
+
             animation:
                 notify-shadow-breath 5s ease-in-out infinite,
                 notify-text-breath 5s ease-in-out infinite;
-                
         }
+
 
         /* 文字颜色呼吸 */
         @keyframes notify-text-breath {
