@@ -9,47 +9,28 @@
     <!--主题-->
     <style>
         #apps-notification {
-            background: linear-gradient(
-                135deg,
-                rgba(238, 245, 255, 0.96),
-                rgba(226, 238, 252, 0.96)
-            );
-
+            /* 原有样式保留 */
             color: #1e3557;
+            font-size: 24px;
+            font-weight: 600;
+            line-height: 1.7;
+            letter-spacing: 0.02em;
 
-            /* 字体核心调整 */
-            font-size: 40px;        /* 明显，但不夸张 */
-            font-weight: 600;       /* 半粗，最稳 */
-            line-height: 1.7;       /* 防止挤在一起 */
-            letter-spacing: 0.02em;/* 提高清晰度 */
-
-            padding: 18px 34px;
-            margin-bottom: 18px;
-            border-radius: 14px;
-            text-align: center;
-
-            box-shadow:
-                0 6px 16px rgba(59, 130, 246, 0.12),
-                inset 0 1px 0 rgba(255,255,255,0.6);
-
-            animation: notify-shadow-breath 3s ease-in-out infinite;
+            animation:
+                notify-shadow-breath 3s ease-in-out infinite,
+                notify-text-breath 3s ease-in-out infinite;
         }
 
-        @keyframes notify-shadow-breath {
+        /* 文字颜色呼吸 */
+        @keyframes notify-text-breath {
             0% {
-                box-shadow:
-                    0 6px 16px rgba(59, 130, 246, 0.12),
-                    inset 0 1px 0 rgba(255,255,255,0.6);
+                color: #1e3557; /* 稳态蓝灰 */
             }
             50% {
-                box-shadow:
-                    0 10px 26px rgba(59, 130, 246, 0.22),
-                    inset 0 1px 0 rgba(255,255,255,0.6);
+                color: #2563eb; /* 稍亮一点的蓝 */
             }
             100% {
-                box-shadow:
-                    0 6px 16px rgba(59, 130, 246, 0.12),
-                    inset 0 1px 0 rgba(255,255,255,0.6);
+                color: #1e3557;
             }
         }
 
