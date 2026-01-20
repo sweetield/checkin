@@ -98,11 +98,41 @@
         /*让聊天稍微更重要一点*/
         #apps-item-drive {
             flex: 0.9;
+            box-shadow:
+                0 5px 12px rgba(0, 0, 0, 0.35),
+                inset 0 1px 0 rgba(255, 255, 255, 0.04);
         }
 
         #apps-item-chat {
             flex: 1.3;
+            box-shadow:
+                0 10px 22px rgba(0, 0, 0, 0.6),
+                inset 0 1px 0 rgba(255, 255, 255, 0.08);
         }
+
+        #apps-item-chat:hover {
+            transform: translateY(-3px) scale(1.01);
+
+            box-shadow:
+                0 14px 30px rgba(0, 0, 0, 0.7),
+                inset 0 1px 0 rgba(255, 255, 255, 0.12);
+        }
+
+        #apps-item-drive:hover {
+            transform: translateY(-1px);
+        }
+
+        #apps-item-chat .apps-item-name {
+            font-size: 21px;
+            font-weight: 650;
+        }
+
+
+        #apps-item-drive .apps-item-name {
+            font-size: 18px;
+            font-weight: 550;
+        }
+
 
         /* 普通状态 */
         .chat-session-inputarea-sendbtn {
