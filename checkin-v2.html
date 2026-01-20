@@ -206,9 +206,6 @@
             background: linear-gradient(135deg, #1677ff, #4096ff);
             color: #fff;
             cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
         }
 
 
@@ -2346,13 +2343,12 @@
             color: #c70000aa;
         }
 
+        /* 父容器撑满宽度 */
         .chat-session-inputarea {
             display: flex;
             flex-direction: column;
-            padding: 8px;
-            box-sizing: border-box;
             width: 100%;
-            flex-shrink: 0;           /* 不让输入区收缩 */
+            box-sizing: border-box;
         }
 
         .theme-dark .chat-session-inputarea {
