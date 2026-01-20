@@ -48,9 +48,127 @@
             100% { box-shadow: 0 8px 20px rgba(59,130,246,0.18), inset 0 1px 0 rgba(255,255,255,0.6); }
         }
 
+        /* 网盘和聊天主页面布局 左右布局（网盘左，聊天右）*/
+
+        /* =========================
+           左右主入口布局
+        ========================= */
+        .apps-item-row {
+            display: flex;
+            gap: 50px;
+        }
+
+        /* =========================
+           主按钮基础样式
+        ========================= */
+        .main-app {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+
+            border-radius: 22px !important;   /* 圆角 */
+            overflow: hidden;                  /* 必须，防止内阴影/内容挡住圆角 */
+
+            padding: 18px 20px;
+            cursor: pointer;
+
+            background: var(--bg-less);
+            border: 2px solid rgba(147, 197, 253, 0.35);
+
+            /* box-shadow 用于圆角显示 */
+            box-shadow:
+                0 6px 16px rgba(0, 0, 0, 0.18);
+            
+            /* 移除 inset 阴影，否则圆角边缘视觉被压平 */
+            /* inset 0 1px 0 rgba(255,255,255,0.45); */
+        }
 
 
 
+        /* =========================
+           Hover（不位移，只靠质感）
+        ========================= */
+        .main-app:hover {
+            background: rgba(147, 197, 253, 0.12);
+            border-color: rgba(147, 197, 253, 0.55);
+
+            box-shadow:
+                0 8px 20px rgba(59, 130, 246, 0.18),
+                inset 0 1px 0 rgba(255, 255, 255, 0.6);
+        }
+
+
+        /* =========================
+           网盘（次级入口）
+        ========================= */
+        #apps-item-drive {
+            flex: 1;
+        }
+
+
+        #apps-item-drive .apps-item-name {
+            font-size: 20px;
+            font-weight: 700;
+            color: var(--fc-less);
+        }
+
+
+        /* =========================
+           聊天（主入口）
+        ========================= */
+        @keyframes chat-text-breath {
+            0%   { color: var(--c-thick-blue); }
+            50%  { color: #3b82f6; }
+            100% { color: var(--c-thick-blue); }
+        }
+
+        @keyframes chat-border-breath {
+            0% {
+                border-color: rgba(147,197,253,0.35);
+                box-shadow:
+                    0 6px 16px rgba(59,130,246,0.16),
+                    inset 0 1px 0 rgba(255,255,255,0.45);
+            }
+            50% {
+                border-color: rgba(147,197,253,0.6);
+                box-shadow:
+                    0 10px 22px rgba(59,130,246,0.26),
+                    inset 0 1px 0 rgba(255,255,255,0.55);
+            }
+            100% {
+                border-color: rgba(147,197,253,0.35);
+                box-shadow:
+                    0 6px 16px rgba(59,130,246,0.16),
+                    inset 0 1px 0 rgba(255,255,255,0.45);
+            }
+        }
+
+        #apps-item-chat {
+            animation: chat-border-breath 4s ease-in-out infinite;
+        }
+
+        #apps-item-chat .apps-item-name {
+            font-size: 20px;
+            font-weight: 650;
+            animation: chat-text-breath 4s ease-in-out infinite;
+        }
+
+
+        .theme-dark .main-app {
+            background: rgba(255, 255, 255, 0.04);
+            border-color: rgba(86, 172, 255, 0.35);
+
+            box-shadow:
+                0 6px 16px rgba(0, 0, 0, 0.45),
+                inset 0 1px 0 rgba(255, 255, 255, 0.06);
+        }
+
+        .theme-dark .main-app:hover {
+            background: rgba(86, 172, 255, 0.12);
+            border-color: rgba(86, 172, 255, 0.6);
+        }
 
 
         /* 普通状态 */
@@ -121,6 +239,7 @@
             box-sizing: border-box;
             overflow-y: hidden;      /* 隐藏滚动条，自动增高时用 */
         }
+
       .chatgpt-float {
             position: fixed;
             right: -70px;          /* 关键：先藏到右边 */
@@ -1823,7 +1942,7 @@
     <style>
         .float-ball {
             position: fixed;
-            right: 32px;
+            right: -48px; /* 隐藏在屏幕边缘，只露出一部分 */
             bottom: 32px;
             width: 58px;
             height: 58px;
@@ -1852,6 +1971,11 @@
 
         .float-ball.drag-active {
             border: rgba(255, 255, 0, 0.6) 6px solid;
+        }
+
+        /* 鼠标靠近时显示完整悬浮球 */
+        .float-ball.show {
+            right: 32px;
         }
 
     </style>
@@ -3089,13 +3213,13 @@
 <!---->
 
 <header class="">
-    <button id="header-btn-tostartpage" class="initiation_hidden">返回首页</button>
+    <button id="header-btn-tostartpage" class="initiation_hidden">⬅️返回首页</button>
 
-    <button id="header-btn-startpage" class="hidden">首页</button>
+    <button id="header-btn-startpage" class="hidden">🏠首页</button>
 
     <button id="header-btn-mail" class="hidden">收发</button>
-    <button id="header-btn-drive" class="hidden">网盘</button>
-    <button id="header-btn-chat" class="hidden">聊天</button>
+    <button id="header-btn-drive" class="hidden">📁网盘</button>
+    <button id="header-btn-chat" class="hidden">💬聊天</button>
     <button id="header-btn-forum" class="hidden">讨论</button>
 
     <button id="header-btn-more-left" class="menu-btn">&nbsp;</button>
@@ -3118,23 +3242,35 @@
 
     <section id="apps-panel">
         <span id="apps-top-margin"></span>
+
         <div id="apps-rect">
-            <!-- 添加通知区域 -->
+
+            <!-- 通知 -->
             <div id="apps-notification" class="apps-item notification">
                 <p class="apps-item-name">all_people_notice</p>
             </div>
-            <div style="height: 40px;"></div> <!-- 空白隔离 -->
-            <div class="apps-item" id="apps-item-drive">
-                <p class="apps-item-name">网盘</p>
+
+            <div style="height: 50px;"></div>
+
+            <!-- 网盘 + 聊天（左右） -->
+            <div class="apps-item-row">
+                <div class="apps-item main-app" id="apps-item-drive">
+                    <p class="apps-item-name">📁网盘</p>
+                </div>
+
+                <div class="apps-item main-app" id="apps-item-chat">
+                    <p class="apps-item-name">💬聊天</p>
+                </div>
             </div>
-            <div class="apps-item" id="apps-item-chat">
-                <p class="apps-item-name">聊天</p>
-            </div>
+
+            <!-- 其他 -->
             <div class="apps-item hidden" id="apps-item-forum">
                 <p class="apps-item-name">讨论</p>
             </div>
+
         </div>
     </section>
+
 
 
     <section id="dashboard-mail">
@@ -4883,6 +5019,26 @@
             this.ball.addEventListener("click", this.ballClicked.bind(this));
             this.dialog = new FloatBall.FloatBallDialogMark(document.querySelector("body"));
             this.setText();
+
+            // —— 新增靠边隐藏效果（延迟回去） —— //
+            let hideTimeout = null;
+
+            this.ball.addEventListener('mouseenter', () => {
+                // 鼠标靠近，显示悬浮球
+                this.ball.classList.add('show');
+                // 如果之前有延迟隐藏，取消它
+                if (hideTimeout) {
+                    clearTimeout(hideTimeout);
+                    hideTimeout = null;
+                }
+            });
+
+            this.ball.addEventListener('mouseleave', () => {
+                // 鼠标离开后延迟隐藏
+                hideTimeout = setTimeout(() => {
+                    this.ball.classList.remove('show');
+                }, 2000); // 延迟 2 秒，可根据需求调整
+            });
 
             // 拖放
             this.ball.addEventListener('dragenter', (event) => {
