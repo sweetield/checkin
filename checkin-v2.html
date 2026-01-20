@@ -256,21 +256,6 @@
 
 
 
-        /* 点击反馈 */
-        .chat-session-inputarea-sendbtn:active:not(:disabled) {
-            transform: scale(0.96);
-        }
-
-        /* 禁用状态：浅蓝 + 渐变 + 不可点击感 */
-        .chat-session-inputarea-sendbtn:disabled {
-            background: linear-gradient(135deg, #a6c8ff, #c2d9ff); /* 浅蓝渐变 */
-            color: #fff;
-            cursor: not-allowed;
-            box-shadow: none;
-            opacity: 0.6;                /* 视觉上显得不可点击 */
-            filter: grayscale(20%);      /* 可选，增加禁用感 */
-        }
-
       .chatgpt-float {
             position: fixed;
             right: -70px;          /* 关键：先藏到右边 */
@@ -1974,9 +1959,11 @@
         .float-ball {
             position: fixed;
             right: -48px; /* 隐藏在屏幕边缘，只露出一部分 */
+            top: 50%;
+            transform: translateY(-50%); /* 把自身高度偏移一半，实现精确居中 */
             bottom: 32px;
             width: 58px;
-            height: 170px;
+            height: 58px;
             border-radius: 50%;
             background-color: #69b1fa;
             color: white;
