@@ -174,7 +174,7 @@
 
 
         /* 按钮*/
-        .chat-session-inputarea-textarea-warp {
+        .chat-session-inputarea-textarea-row {
             display: flex;
             align-items: stretch; /* 让按钮和输入框高度一致 */
             gap: 6px;
@@ -191,6 +191,7 @@
         }
 
         .chat-session-inputarea-sendbtn {
+            min-width: 72px;
             padding: 0 16px;
             border-radius: 18px;
             border: none;
@@ -2361,7 +2362,7 @@
             padding: 6px;
         }
 
-        .chat-session-inputarea-textarea-warp {
+        .chat-session-inputarea-textarea-row {
             display: flex;
             flex-direction: column;
             flex-grow: 1;
@@ -8466,11 +8467,17 @@
         <button class="chat-session-inputarea-othertypes-image"><input type="file" class="hidden" accept="image/*">图片</button>
         <button class="chat-session-inputarea-othertypes-file"><input type="file" class="hidden">文件</button>
     </div>
-    <div class="chat-session-inputarea-textarea-warp">
-        <div class="chat-session-inputarea-tip-editing hidden"><span>编辑消息：</span><button>取消</button></div>
-        <textarea class="chat-session-inputarea-textarea" placeholder="请在框里输入消息..." spellcheck="false"></textarea>
-        <button class="chat-session-inputarea-sendbtn">>>>点击发送<<<</button>
-    </div>
+    <!-- 编辑消息提示，保留 -->
+<div class="chat-session-inputarea-tip-editing hidden">
+    <span>编辑消息：</span>
+    <button>取消</button>
+</div>
+
+<!-- flex 容器：输入框 + 发送按钮 -->
+<div class="chat-session-inputarea-textarea-row">
+    <textarea class="chat-session-inputarea-textarea" placeholder="请在框里输入消息..." spellcheck="false"></textarea>
+    <button class="chat-session-inputarea-sendbtn">>>>点击发送<<<</button>
+</div>
 
 </div>
 
