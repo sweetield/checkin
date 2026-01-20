@@ -48,10 +48,61 @@
             100% { box-shadow: 0 8px 20px rgba(59,130,246,0.18), inset 0 1px 0 rgba(255,255,255,0.6); }
         }
 
+        /* 网盘和聊天主页面布局 左右布局（网盘左，聊天右）*/
+
+        .apps-item-row {
+            display: flex;
+            gap: 14px;
+        }
+
+        /* 主按钮整体样式（醒目 + 圆角 + 像按钮） */
+        .main-app {
+            flex: 1;
+            position: relative;
+
+            border-radius: 16px;
+            padding: 18px 16px;
+            cursor: pointer;
+
+            background: #1f1f1f;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+
+            box-shadow:
+                0 6px 14px rgba(0, 0, 0, 0.4),
+                inset 0 1px 0 rgba(255, 255, 255, 0.05);
+
+            transition: 
+                transform 0.2s ease,
+                box-shadow 0.2s ease,
+                background 0.2s ease;
+        }
 
 
+        /*Hover 效果（这一步决定“像不像真按钮”）*/
+        .main-app:hover {
+            transform: translateY(-2px);
+            background: #262626;
 
+            box-shadow:
+                0 10px 22px rgba(0, 0, 0, 0.55),
+                inset 0 1px 0 rgba(255, 255, 255, 0.08);
+        }
 
+        /* 字体：加大 + 加粗（但不土） */
+        .main-app .apps-item-name {
+            font-size: 20px;
+            font-weight: 600;
+            letter-spacing: 0.6px;
+        }
+
+        /*让聊天稍微更重要一点*/
+        #apps-item-drive {
+            flex: 0.9;
+        }
+
+        #apps-item-chat {
+            flex: 1.3;
+        }
 
         /* 普通状态 */
         .chat-session-inputarea-sendbtn {
@@ -3118,23 +3169,35 @@
 
     <section id="apps-panel">
         <span id="apps-top-margin"></span>
+
         <div id="apps-rect">
-            <!-- 添加通知区域 -->
+
+            <!-- 通知 -->
             <div id="apps-notification" class="apps-item notification">
                 <p class="apps-item-name">all_people_notice</p>
             </div>
-            <div style="height: 40px;"></div> <!-- 空白隔离 -->
-            <div class="apps-item" id="apps-item-drive">
-                <p class="apps-item-name">网盘</p>
+
+            <div style="height: 40px;"></div>
+
+            <!-- 网盘 + 聊天（左右） -->
+            <div class="apps-item-row">
+                <div class="apps-item main-app" id="apps-item-drive">
+                    <p class="apps-item-name">网盘</p>
+                </div>
+
+                <div class="apps-item main-app" id="apps-item-chat">
+                    <p class="apps-item-name">聊天</p>
+                </div>
             </div>
-            <div class="apps-item" id="apps-item-chat">
-                <p class="apps-item-name">聊天</p>
-            </div>
+
+            <!-- 其他 -->
             <div class="apps-item hidden" id="apps-item-forum">
                 <p class="apps-item-name">讨论</p>
             </div>
+
         </div>
     </section>
+
 
 
     <section id="dashboard-mail">
