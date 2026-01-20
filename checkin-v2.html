@@ -68,7 +68,8 @@
             justify-content: center;
             position: relative;
 
-            border-radius: 22px; /* 圆角关键 */
+            border-radius: 22px !important;  /* 强制圆角生效 */
+            overflow: hidden;                 /* 防止内层阴影/背景挡住圆角 */
             padding: 18px 20px;
             cursor: pointer;
 
