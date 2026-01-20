@@ -174,12 +174,15 @@
 
 
         /* 按钮*/
+        /* flex 行：输入框 + 按钮 */
         .chat-session-inputarea-textarea-row {
-            display: flex;
-            align-items: stretch; /* 让按钮和输入框高度一致 */
+            display: flex;           /* 横向排列 */
+            flex-direction: row;     /* 明确横向 */
+            align-items: stretch;    /* 高度对齐 */
             gap: 6px;
         }
 
+        /* 输入框占满剩余空间 */
         .chat-session-inputarea-textarea {
             flex: 1;
             min-height: 40px;
@@ -188,8 +191,11 @@
             font-size: 16px;
             resize: none;
             box-sizing: border-box;
+            /* 防止 textarea 换行撑高导致按钮跑下方 */
+            overflow: hidden;
         }
 
+        /* 发送按钮 */
         .chat-session-inputarea-sendbtn {
             min-width: 72px;
             padding: 0 16px;
@@ -201,6 +207,7 @@
             display: flex;
             align-items: center;
             justify-content: center;
+            height: 100%;           /* 关键：撑满 flex 行高度 */
         }
 
         /* 悬浮效果 */
