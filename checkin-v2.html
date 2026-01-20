@@ -176,10 +176,10 @@
         /* 按钮*/
         /* flex 行：输入框 + 按钮 */
         .chat-session-inputarea-textarea-row {
-            display: flex;           /* 横向排列 */
-            flex-direction: row;     /* 明确横向 */
-            align-items: stretch;    /* 高度对齐 */
+            display: flex;
+            align-items: center;
             gap: 6px;
+            width: 100%;  /* 确保占满父容器 */
         }
 
         /* 输入框占满剩余空间 */
@@ -197,6 +197,7 @@
 
         /* 发送按钮 */
         .chat-session-inputarea-sendbtn {
+            flex-shrink: 0; /* 不允许缩小 */
             min-width: 72px;
             padding: 0 16px;
             border-radius: 18px;
