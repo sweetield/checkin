@@ -171,24 +171,7 @@
         }
 
 
-        /* 输入框与发送按钮*/
-        .chat-session-inputarea-textarea-row {
-            display: flex;
-            align-items: center; /* 垂直居中 */
-            gap: 6px; /* 输入框和按钮间距 */
-        }
-
-        .chat-session-inputarea-textarea {
-            flex: 1; /* 占满剩余空间 */
-            min-height: 40px;
-            padding: 8px;
-            border-radius: 8px;
-            border: 1px solid #ccc;
-            resize: none;
-        }
-
-
-        /* 发送按钮 */
+        /* 普通状态 */
         .chat-session-inputarea-sendbtn {
             height: 40px;
             min-width: 72px;
@@ -8500,17 +8483,15 @@
         <button class="chat-session-inputarea-othertypes-image"><input type="file" class="hidden" accept="image/*">图片</button>
         <button class="chat-session-inputarea-othertypes-file"><input type="file" class="hidden">文件</button>
     </div>
-
-    <!-- 新增 flex 容器，让输入框和发送按钮在同一行 -->
-    <div class="chat-session-inputarea-textarea-row">
+    <div class="chat-session-inputarea-textarea-warp">
+        <div class="chat-session-inputarea-tip-editing hidden"><span>编辑消息：</span><button>取消</button></div>
         <textarea class="chat-session-inputarea-textarea" placeholder="请在框里输入消息，输入消息后，点击发送或回车。按ctrl+空格键，切换到中文输入法，才能输入中文..." spellcheck="false"></textarea>
-        <button class="chat-session-inputarea-sendbtn">发送</button>
     </div>
 </div>
+    <!-- 新增：发送按钮 -->
+    <button class="chat-session-inputarea-sendbtn">>>>点击发送<<<</button>
 </div>
 `;
-}
-
                 this.container.insertAdjacentHTML("beforeend", html);
                 this.chat_rect = this.container.querySelector(":scope div.chat-rect");
                 this.e_header_info = this.container.querySelector(":scope div.chat-session-header-info");
