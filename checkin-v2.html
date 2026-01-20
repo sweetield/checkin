@@ -5019,12 +5019,24 @@
             this.dialog = new FloatBall.FloatBallDialogMark(document.querySelector("body"));
             this.setText();
 
-            // —— 新增靠边隐藏效果 —— //
+            // —— 新增靠边隐藏效果（延迟回去） —— //
+            let hideTimeout = null;
+
             this.ball.addEventListener('mouseenter', () => {
+                // 鼠标靠近，显示悬浮球
                 this.ball.classList.add('show');
+                // 如果之前有延迟隐藏，取消它
+                if (hideTimeout) {
+                    clearTimeout(hideTimeout);
+                    hideTimeout = null;
+                }
             });
+
             this.ball.addEventListener('mouseleave', () => {
-                this.ball.classList.remove('show');
+                // 鼠标离开后延迟隐藏
+                hideTimeout = setTimeout(() => {
+                    this.ball.classList.remove('show');
+                }, 2000); // 延迟 2 秒，可根据需求调整
             });
 
             // 拖放
