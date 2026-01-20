@@ -177,7 +177,8 @@
         /* flex 行：输入框 + 按钮 */
         .chat-session-inputarea-textarea-row {
             display: flex;           /* 横向排列 */
-            align-items: center;     /* 垂直居中 */
+            flex-direction: row;     /* 明确横向 */
+            align-items: stretch;    /* 高度对齐 */
             gap: 6px;
         }
 
