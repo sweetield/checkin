@@ -171,34 +171,35 @@
         }
 
 
-        /* 普通状态 */
-        .chat-session-inputarea-sendbtn {
-            height: 40px;
-            min-width: 72px;
-            padding: 0 16px;
 
+
+        /* 按钮*/
+        .chat-session-inputarea-textarea-warp {
+            display: flex;
+            align-items: stretch; /* 让按钮和输入框高度一致 */
+            gap: 6px;
+        }
+
+        .chat-session-inputarea-textarea {
+            flex: 1;
+            min-height: 40px;
+            max-height: 200px;
+            padding: 8px;
+            font-size: 16px;
+            resize: none;
+            box-sizing: border-box;
+        }
+
+        .chat-session-inputarea-sendbtn {
+            padding: 0 16px;
+            border-radius: 18px;
+            border: none;
             background: linear-gradient(135deg, #1677ff, #4096ff);
             color: #fff;
-
-            border: none;
-            border-radius: 18px;
-
-            font-size: 16px;
-            font-weight: 700;
-            letter-spacing: 1px;
-
             cursor: pointer;
-            user-select: none;
-
             display: flex;
             align-items: center;
             justify-content: center;
-
-            transition:
-                background 0.2s ease,
-                box-shadow 0.2s ease,
-                transform 0.05s ease,
-                opacity 0.2s ease;
         }
 
         /* 悬浮效果 */
@@ -220,23 +221,6 @@
             box-shadow: none;
             opacity: 0.6;                /* 视觉上显得不可点击 */
             filter: grayscale(20%);      /* 可选，增加禁用感 */
-        }
-
-
-       .chat-session-inputarea-textarea-warp {
-            display: flex;
-            align-items: center; /* 高度对齐 */
-            gap: 6px; /* 输入框和按钮间距 */
-        }
-
-        .chat-session-inputarea-textarea {
-            flex: 1; /* 占满剩余空间 */
-            min-height: 40px;       /* 默认高度更高 */
-            max-height: 200px;       /* 最大高度，避免撑破布局 */
-            padding: 8px;
-            font-size: 16px;
-            resize: none;            /* 禁止手动拖动，可用自动增高代替 */
-            box-sizing: border-box;
         }
 
       .chatgpt-float {
@@ -8484,10 +8468,10 @@
     </div>
     <div class="chat-session-inputarea-textarea-warp">
         <div class="chat-session-inputarea-tip-editing hidden"><span>编辑消息：</span><button>取消</button></div>
-        <textarea class="chat-session-inputarea-textarea" placeholder="请在框里输入消息，输入消息后，点击发送或回车。按ctrl+空格键，切换到中文输入法，才能输入中文..." spellcheck="false"></textarea>
-        <!-- 新增：发送按钮 -->
-        <button class="chat-session-inputarea-sendbtn"发送/button>
+        <textarea class="chat-session-inputarea-textarea" placeholder="请在框里输入消息..." spellcheck="false"></textarea>
+        <button class="chat-session-inputarea-sendbtn">>>>点击发送<<<</button>
     </div>
+
 </div>
 
 </div>
