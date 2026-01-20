@@ -50,83 +50,106 @@
 
         /* 网盘和聊天主页面布局 左右布局（网盘左，聊天右）*/
 
+        /* =========================
+           左右主入口布局
+        ========================= */
         .apps-item-row {
             display: flex;
-            gap: 14px;
+            gap: 28px;
         }
 
-        /* 主按钮整体样式（醒目 + 圆角 + 像按钮） */
+        /* =========================
+           主按钮基础样式
+        ========================= */
         .main-app {
             flex: 1;
             position: relative;
 
-            border-radius: 16px;
-            padding: 18px 16px;
+            border-radius: 22px;
+            padding: 20px 18px;
             cursor: pointer;
 
             background: #1f1f1f;
-            border: 1px solid rgba(255, 255, 255, 0.08);
+
+            /* 清晰但克制的边框 */
+            border: 1px solid rgba(255, 255, 255, 0.12);
 
             box-shadow:
-                0 6px 14px rgba(0, 0, 0, 0.4),
-                inset 0 1px 0 rgba(255, 255, 255, 0.05);
+                0 6px 14px rgba(0, 0, 0, 0.45),
+                inset 0 1px 0 rgba(255, 255, 255, 0.06);
 
-            transition: 
-                transform 0.2s ease,
+            transition:
                 box-shadow 0.2s ease,
-                background 0.2s ease;
+                background 0.2s ease,
+                border-color 0.2s ease;
         }
 
-
-        /*Hover 效果（这一步决定“像不像真按钮”）*/
+        /* =========================
+           Hover（不位移，只靠质感）
+        ========================= */
         .main-app:hover {
-            transform: translateY(-2px);
             background: #262626;
 
+            border-color: rgba(255, 255, 255, 0.22);
+
             box-shadow:
-                0 10px 22px rgba(0, 0, 0, 0.55),
-                inset 0 1px 0 rgba(255, 255, 255, 0.08);
+                0 12px 26px rgba(0, 0, 0, 0.6),
+                inset 0 1px 0 rgba(255, 255, 255, 0.1);
         }
 
-        /* 字体：加大 + 加粗（但不土） */
+        /* =========================
+           字体层级
+        ========================= */
         .main-app .apps-item-name {
             font-size: 20px;
             font-weight: 600;
             letter-spacing: 0.6px;
         }
 
-        /*让聊天稍微更重要一点*/
+        /* =========================
+           网盘（次级入口）
+        ========================= */
         #apps-item-drive {
             flex: 0.9;
+
+            border-color: rgba(255, 255, 255, 0.08);
+
             box-shadow:
                 0 5px 12px rgba(0, 0, 0, 0.35),
                 inset 0 1px 0 rgba(255, 255, 255, 0.04);
         }
 
+        #apps-item-drive .apps-item-name {
+            font-size: 18px;
+            font-weight: 550;
+        }
+
+        /* =========================
+           聊天（主入口）
+        ========================= */
         #apps-item-chat {
             flex: 1.3;
+
+            border-color: rgba(255, 255, 255, 0.18);
+
             box-shadow:
                 0 10px 22px rgba(0, 0, 0, 0.6),
                 inset 0 1px 0 rgba(255, 255, 255, 0.08);
         }
 
         #apps-item-chat:hover {
-            box-shadow:
-                0 14px 30px rgba(0, 0, 0, 0.7),
-                inset 0 1px 0 rgba(255, 255, 255, 0.12);
-        }
+            border-color: rgba(255, 255, 255, 0.3);
 
+            box-shadow:
+                0 16px 34px rgba(0, 0, 0, 0.75),
+                inset 0 1px 0 rgba(255, 255, 255, 0.14);
+        }
 
         #apps-item-chat .apps-item-name {
             font-size: 21px;
             font-weight: 650;
         }
 
-
-        #apps-item-drive .apps-item-name {
-            font-size: 18px;
-            font-weight: 550;
-        }
 
 
         /* 普通状态 */
