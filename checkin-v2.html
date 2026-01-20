@@ -224,13 +224,13 @@
 
 
        .chat-session-inputarea-textarea-warp {
-            width: 100%;
             display: flex;
             flex-direction: column;
+            align-items: center; /* 垂直居中 */
         }
 
         .chat-session-inputarea-textarea {
-            width: 100%;
+            flex: 1; /* 占满剩余空间 */
             min-height: 100px;       /* 默认高度更高 */
             max-height: 300px;       /* 最大高度，避免撑破布局 */
             padding: 8px;
@@ -14289,4 +14289,3 @@ textarea.addEventListener('input', () => {
 
 </body>
 </html>
-
