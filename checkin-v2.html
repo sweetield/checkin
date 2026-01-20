@@ -1941,7 +1941,7 @@
     <style>
         .float-ball {
             position: fixed;
-            right: 32px;
+            right: -48px; /* 隐藏在屏幕边缘，只露出一部分 */
             bottom: 32px;
             width: 58px;
             height: 58px;
@@ -1970,6 +1970,11 @@
 
         .float-ball.drag-active {
             border: rgba(255, 255, 0, 0.6) 6px solid;
+        }
+
+        /* 鼠标靠近时显示完整悬浮球 */
+        .float-ball.show {
+            right: 32px;
         }
 
     </style>
