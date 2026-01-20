@@ -206,38 +206,54 @@
         }
 
         /* 发送按钮 */
+        /* 发送按钮：现代浅蓝/暗黑自适应 */
         .chat-session-inputarea-sendbtn {
             flex-shrink: 0;
-            min-width: 72px;
-            height: 40px;
-            padding: 0 16px;
-            border-radius: 18px;
+            min-width: 80px;
+            height: 44px;
+            padding: 0 20px;
+            border-radius: 20px;
             border: none;
-            background: linear-gradient(135deg, #4a90e2, #82b1ff); /* 渐变蓝 */
+
+            font-size: 16px;
+            font-weight: 600;
             color: #fff;
             cursor: pointer;
             transition: background 0.3s ease, transform 0.2s ease, box-shadow 0.2s ease;
+
+            /* 默认浅色主题渐变 */
+            background: linear-gradient(135deg, #6ca0f7, #a3c2ff);
         }
 
+        /* 浅色主题悬浮效果 */
         .chat-session-inputarea-sendbtn:hover:not(:disabled) {
-            background: linear-gradient(135deg, #5aa0f2, #93c2ff); /* 悬停微亮 */
-            box-shadow: 0 4px 10px rgba(0, 123, 255, 0.25);      /* 阴影更柔和 */
-            transform: translateY(-1px);                          /* 微浮动效果 */
+            background: linear-gradient(135deg, #7ab0ff, #b5d4ff); /* 更亮渐变 */
+            box-shadow: 0 4px 12px rgba(100, 160, 247, 0.35);       /* 柔和阴影 */
+            transform: translateY(-1px);                             /* 微浮动 */
         }
 
+        /* 点击效果 */
         .chat-session-inputarea-sendbtn:active:not(:disabled) {
-            transform: translateY(0);                             /* 点击回弹 */
-            box-shadow: 0 2px 6px rgba(0, 123, 255, 0.2);
+            transform: translateY(0);                               /* 点击回弹 */
+            box-shadow: 0 2px 6px rgba(100, 160, 247, 0.25);
         }
 
-
-
-        /* 悬浮效果 */
-        .chat-session-inputarea-sendbtn:hover:not(:disabled) {
-            background: linear-gradient(135deg, #4a90e2, #82b1ff); /* 和主题协调的渐变 */
-            box-shadow: 0 4px 10px rgba(0, 123, 255, 0.25); /* 柔和的蓝色阴影 */
-            transform: translateY(-1px); /* 悬停微微上浮效果 */
+        /* 暗黑主题自适应 */
+        body.dark-mode .chat-session-inputarea-sendbtn {
+            background: linear-gradient(135deg, #4f7fcf, #7099e0);
         }
+
+        body.dark-mode .chat-session-inputarea-sendbtn:hover:not(:disabled) {
+            background: linear-gradient(135deg, #5a8ee0, #81a7f2);
+            box-shadow: 0 4px 12px rgba(90, 142, 224, 0.35);
+            transform: translateY(-1px);
+        }
+
+        body.dark-mode .chat-session-inputarea-sendbtn:active:not(:disabled) {
+            box-shadow: 0 2px 6px rgba(90, 142, 224, 0.25);
+            transform: translateY(0);
+        }
+
 
 
         /* 点击反馈 */
@@ -1960,7 +1976,7 @@
             right: -48px; /* 隐藏在屏幕边缘，只露出一部分 */
             bottom: 32px;
             width: 58px;
-            height: 70px;
+            height: 170px;
             border-radius: 50%;
             background-color: #69b1fa;
             color: white;
