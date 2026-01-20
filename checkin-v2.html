@@ -177,8 +177,7 @@
         /* flex 行：输入框 + 按钮 */
         .chat-session-inputarea-textarea-row {
             display: flex;           /* 横向排列 */
-            flex-direction: row;     /* 明确横向 */
-            align-items: stretch;    /* 高度对齐 */
+            align-items: center;     /* 垂直居中 */
             gap: 6px;
         }
 
@@ -191,8 +190,8 @@
             font-size: 16px;
             resize: none;
             box-sizing: border-box;
-            /* 防止 textarea 换行撑高导致按钮跑下方 */
-            overflow: hidden;
+
+            display: block;          /* 避免被 flex 弄歪 */
         }
 
         /* 发送按钮 */
@@ -207,7 +206,7 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            height: 100%;           /* 关键：撑满 flex 行高度 */
+            height: 40px;            /* 固定高度，保证和输入框一致 */
         }
 
         /* 悬浮效果 */
@@ -8471,21 +8470,25 @@
 
 <div class="chat-session-inputarea">
     <div class="chat-session-inputarea-othertypes">
-        <button class="chat-session-inputarea-othertypes-image"><input type="file" class="hidden" accept="image/*">图片</button>
-        <button class="chat-session-inputarea-othertypes-file"><input type="file" class="hidden">文件</button>
+        <button class="chat-session-inputarea-othertypes-image">
+            <input type="file" class="hidden" accept="image/*">图片
+        </button>
+        <button class="chat-session-inputarea-othertypes-file">
+            <input type="file" class="hidden">文件
+        </button>
     </div>
-    <!-- 编辑消息提示，保留 -->
-<div class="chat-session-inputarea-tip-editing hidden">
-    <span>编辑消息：</span>
-    <button>取消</button>
-</div>
 
-<!-- flex 容器：输入框 + 发送按钮 -->
-<div class="chat-session-inputarea-textarea-row">
-    <textarea class="chat-session-inputarea-textarea" placeholder="请在框里输入消息..." spellcheck="false"></textarea>
-    <button class="chat-session-inputarea-sendbtn">>>>点击发送<<<</button>
-</div>
+    <!-- 编辑消息提示 -->
+    <div class="chat-session-inputarea-tip-editing hidden">
+        <span>编辑消息：</span>
+        <button>取消</button>
+    </div>
 
+    <!-- flex 容器：输入框 + 发送按钮 -->
+    <div class="chat-session-inputarea-textarea-row">
+        <textarea class="chat-session-inputarea-textarea" placeholder="请在框里输入消息..." spellcheck="false"></textarea>
+        <button class="chat-session-inputarea-sendbtn">>>>点击发送<<<</button>
+    </div>
 </div>
 
 </div>
