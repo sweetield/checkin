@@ -225,19 +225,18 @@
 
        .chat-session-inputarea-textarea-warp {
             display: flex;
-            flex-direction: column;
-            align-items: center; /* 垂直居中 */
+            align-items: center; /* 高度对齐 */
+            gap: 6px; /* 输入框和按钮间距 */
         }
 
         .chat-session-inputarea-textarea {
             flex: 1; /* 占满剩余空间 */
-            min-height: 100px;       /* 默认高度更高 */
-            max-height: 300px;       /* 最大高度，避免撑破布局 */
+            min-height: 40px;       /* 默认高度更高 */
+            max-height: 200px;       /* 最大高度，避免撑破布局 */
             padding: 8px;
             font-size: 16px;
             resize: none;            /* 禁止手动拖动，可用自动增高代替 */
             box-sizing: border-box;
-            overflow-y: hidden;      /* 隐藏滚动条，自动增高时用 */
         }
 
       .chatgpt-float {
@@ -8486,10 +8485,11 @@
     <div class="chat-session-inputarea-textarea-warp">
         <div class="chat-session-inputarea-tip-editing hidden"><span>编辑消息：</span><button>取消</button></div>
         <textarea class="chat-session-inputarea-textarea" placeholder="请在框里输入消息，输入消息后，点击发送或回车。按ctrl+空格键，切换到中文输入法，才能输入中文..." spellcheck="false"></textarea>
+        <!-- 新增：发送按钮 -->
+        <button class="chat-session-inputarea-sendbtn"发送/button>
     </div>
 </div>
-    <!-- 新增：发送按钮 -->
-    <button class="chat-session-inputarea-sendbtn">>>>点击发送<<<</button>
+
 </div>
 `;
                 this.container.insertAdjacentHTML("beforeend", html);
