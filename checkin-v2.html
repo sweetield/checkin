@@ -5019,6 +5019,14 @@
             this.dialog = new FloatBall.FloatBallDialogMark(document.querySelector("body"));
             this.setText();
 
+            // —— 新增靠边隐藏效果 —— //
+            this.ball.addEventListener('mouseenter', () => {
+                this.ball.classList.add('show');
+            });
+            this.ball.addEventListener('mouseleave', () => {
+                this.ball.classList.remove('show');
+            });
+
             // 拖放
             this.ball.addEventListener('dragenter', (event) => {
                 if (!dragging_item) return;
