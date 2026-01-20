@@ -48,50 +48,194 @@
             100% { box-shadow: 0 8px 20px rgba(59,130,246,0.18), inset 0 1px 0 rgba(255,255,255,0.6); }
         }
 
+        /* 网盘和聊天主页面布局 左右布局（网盘左，聊天右）*/
 
+        /* =========================
+           左右主入口布局
+        ========================= */
+        .apps-item-row {
+            display: flex;
+            gap: 50px;
+        }
 
-
-
-
-        /* 普通状态 */
-        .chat-session-inputarea-sendbtn {
-            height: 40px;
-            min-width: 72px;
-            padding: 0 16px;
-
-            background: linear-gradient(135deg, #1677ff, #4096ff);
-            color: #fff;
-
-            border: none;
-            border-radius: 18px;
-
-            font-size: 16px;
-            font-weight: 700;
-            letter-spacing: 1px;
-
-            cursor: pointer;
-            user-select: none;
-
+        /* =========================
+           主按钮基础样式
+        ========================= */
+        .main-app {
+            flex: 1;
             display: flex;
             align-items: center;
             justify-content: center;
+            position: relative;
 
-            transition:
-                background 0.2s ease,
-                box-shadow 0.2s ease,
-                transform 0.05s ease,
-                opacity 0.2s ease;
+            border-radius: 22px !important;   /* 圆角 */
+            overflow: hidden;                  /* 必须，防止内阴影/内容挡住圆角 */
+
+            padding: 18px 20px;
+            cursor: pointer;
+
+            background: var(--bg-less);
+            border: 2px solid rgba(147, 197, 253, 0.35);
+
+            /* box-shadow 用于圆角显示 */
+            box-shadow:
+                0 6px 16px rgba(0, 0, 0, 0.18);
+            
+            /* 移除 inset 阴影，否则圆角边缘视觉被压平 */
+            /* inset 0 1px 0 rgba(255,255,255,0.45); */
         }
 
-        /* 悬浮效果 */
+
+
+        /* =========================
+           Hover（不位移，只靠质感）
+        ========================= */
+        .main-app:hover {
+            background: rgba(147, 197, 253, 0.12);
+            border-color: rgba(147, 197, 253, 0.55);
+
+            box-shadow:
+                0 8px 20px rgba(59, 130, 246, 0.18),
+                inset 0 1px 0 rgba(255, 255, 255, 0.6);
+        }
+
+
+        /* =========================
+           网盘（次级入口）
+        ========================= */
+        #apps-item-drive {
+            flex: 1;
+        }
+
+
+        #apps-item-drive .apps-item-name {
+            font-size: 20px;
+            font-weight: 700;
+            color: var(--fc-less);
+        }
+
+
+        /* =========================
+           聊天（主入口）
+        ========================= */
+        @keyframes chat-text-breath {
+            0%   { color: var(--c-thick-blue); }
+            50%  { color: #3b82f6; }
+            100% { color: var(--c-thick-blue); }
+        }
+
+        @keyframes chat-border-breath {
+            0% {
+                border-color: rgba(147,197,253,0.35);
+                box-shadow:
+                    0 6px 16px rgba(59,130,246,0.16),
+                    inset 0 1px 0 rgba(255,255,255,0.45);
+            }
+            50% {
+                border-color: rgba(147,197,253,0.6);
+                box-shadow:
+                    0 10px 22px rgba(59,130,246,0.26),
+                    inset 0 1px 0 rgba(255,255,255,0.55);
+            }
+            100% {
+                border-color: rgba(147,197,253,0.35);
+                box-shadow:
+                    0 6px 16px rgba(59,130,246,0.16),
+                    inset 0 1px 0 rgba(255,255,255,0.45);
+            }
+        }
+
+        #apps-item-chat {
+            animation: chat-border-breath 4s ease-in-out infinite;
+        }
+
+        #apps-item-chat .apps-item-name {
+            font-size: 20px;
+            font-weight: 650;
+            animation: chat-text-breath 4s ease-in-out infinite;
+        }
+
+
+        .theme-dark .main-app {
+            background: rgba(255, 255, 255, 0.04);
+            border-color: rgba(86, 172, 255, 0.35);
+
+            box-shadow:
+                0 6px 16px rgba(0, 0, 0, 0.45),
+                inset 0 1px 0 rgba(255, 255, 255, 0.06);
+        }
+
+        .theme-dark .main-app:hover {
+            background: rgba(86, 172, 255, 0.12);
+            border-color: rgba(86, 172, 255, 0.6);
+        }
+
+        /* 整体输入行：输入框 + 按钮 */
+        .chat-session-inputarea-textarea-row {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            width: 100%;
+            padding: 8px 12px;              /* 内边距 */
+            background-color: #f0f6ff;      /* 浅蓝背景 */
+            border-radius: 12px;            /* 圆角 */
+            box-shadow: 0 1px 4px rgba(0,0,0,0.08); /* 轻微阴影 */
+        }
+
+        /* 输入框 */
+        .chat-session-inputarea-textarea {
+            flex: 1;
+            min-height: 40px;
+            max-height: 200px;
+            padding: 8px 12px;
+            font-size: 16px;
+            resize: none;
+            box-sizing: border-box;
+
+            border: 1px solid #c0d6f0;     /* 浅蓝边框 */
+            border-radius: 6px;
+            background-color: #ffffff;      /* 白色背景，让输入文字清晰 */
+            color: #1a1a1a;                 /* 文字颜色 */
+            outline: none;                  /* 去掉默认蓝色边框 */
+            transition: border 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .chat-session-inputarea-textarea:focus {
+            border-color: #82b1ff;          /* 聚焦边框蓝色 */
+            box-shadow: 0 0 6px rgba(130,177,255,0.4); /* 聚焦阴影 */
+        }
+
+        /* 发送按钮 */
+        /* 发送按钮：现代浅蓝/暗黑自适应 */
+        .chat-session-inputarea-sendbtn {
+            flex-shrink: 0;
+            min-width: 80px;
+            height: 44px;
+            padding: 0 20px;
+            border-radius: 20px;
+            border: none;
+
+            font-size: 16px;
+            font-weight: 600;
+            color: #fff;
+            cursor: pointer;
+            transition: background 0.3s ease, transform 0.2s ease, box-shadow 0.2s ease;
+
+            /* 默认浅色主题渐变 */
+            background: linear-gradient(135deg, #6ca0f7, #a3c2ff);
+        }
+
+        /* 浅色主题悬浮效果 */
         .chat-session-inputarea-sendbtn:hover:not(:disabled) {
-            background: linear-gradient(135deg, #0958d9, #1677ff);
-            box-shadow: 0 4px 12px rgba(22, 119, 255, 0.35);
+            background: linear-gradient(135deg, #7ab0ff, #b5d4ff); /* 更亮渐变 */
+            box-shadow: 0 4px 12px rgba(100, 160, 247, 0.35);       /* 柔和阴影 */
+            transform: translateY(-1px);                             /* 微浮动 */
         }
 
-        /* 点击反馈 */
+        /* 点击效果 */
         .chat-session-inputarea-sendbtn:active:not(:disabled) {
-            transform: scale(0.96);
+            transform: scale(0.96);                          /* 点击回弹 */
+            box-shadow: 0 2px 6px rgba(100, 160, 247, 0.25);
         }
 
         /* 禁用状态：浅蓝 + 渐变 + 不可点击感 */
@@ -104,23 +248,24 @@
             filter: grayscale(20%);      /* 可选，增加禁用感 */
         }
 
-
-       .chat-session-inputarea-textarea-warp {
-            width: 100%;
-            display: flex;
-            flex-direction: column;
+        /* 暗黑主题自适应 */
+        body.dark-mode .chat-session-inputarea-sendbtn {
+            background: linear-gradient(135deg, #4f7fcf, #7099e0);
         }
 
-        .chat-session-inputarea-textarea {
-            width: 100%;
-            min-height: 100px;       /* 默认高度更高 */
-            max-height: 300px;       /* 最大高度，避免撑破布局 */
-            padding: 8px;
-            font-size: 16px;
-            resize: none;            /* 禁止手动拖动，可用自动增高代替 */
-            box-sizing: border-box;
-            overflow-y: hidden;      /* 隐藏滚动条，自动增高时用 */
+        body.dark-mode .chat-session-inputarea-sendbtn:hover:not(:disabled) {
+            background: linear-gradient(135deg, #5a8ee0, #81a7f2);
+            box-shadow: 0 4px 12px rgba(90, 142, 224, 0.35);
+            transform: translateY(-1px);
         }
+
+        body.dark-mode .chat-session-inputarea-sendbtn:active:not(:disabled) {
+            box-shadow: 0 2px 6px rgba(90, 142, 224, 0.25);
+            transform: translateY(0);
+        }
+
+
+
       .chatgpt-float {
             position: fixed;
             right: -70px;          /* 关键：先藏到右边 */
@@ -1823,7 +1968,9 @@
     <style>
         .float-ball {
             position: fixed;
-            right: 32px;
+            right: -48px; /* 隐藏在屏幕边缘，只露出一部分 */
+            top: 50%;
+            transform: translateY(-50%); /* 把自身高度偏移一半，实现精确居中 */
             bottom: 32px;
             width: 58px;
             height: 58px;
@@ -1852,6 +1999,11 @@
 
         .float-ball.drag-active {
             border: rgba(255, 255, 0, 0.6) 6px solid;
+        }
+
+        /* 鼠标靠近时显示完整悬浮球 */
+        .float-ball.show {
+            right: 32px;
         }
 
     </style>
@@ -2229,14 +2381,12 @@
             color: #c70000aa;
         }
 
+        /* 父容器撑满宽度 */
         .chat-session-inputarea {
             display: flex;
-            flex-direction: row;
-            background: #CCE5FF88;
-            padding: 4px;
-            gap: 4px;
-            border: 0 #3C8FDB88 solid;
-            border-top-width: 1px;
+            flex-direction: column;
+            width: 100%;
+            box-sizing: border-box;
         }
 
         .theme-dark .chat-session-inputarea {
@@ -2254,21 +2404,23 @@
             padding: 6px;
         }
 
-        .chat-session-inputarea-textarea-warp {
+        .chat-session-inputarea-textarea-row {
             display: flex;
-            flex-direction: column;
-            flex-grow: 1;
-            margin-left: 2px;
+            align-items: center;
+            gap: 6px;
+            width: 100%;              /* 横向撑满 */
         }
 
         .chat-session-inputarea-textarea {
-            border: none;
-            flex-grow: 1;
-            resize: vertical;
-            height: 50px;
-            min-height: 50px;
-            min-width: 10px;
+            flex: 1;                  /* 占满剩余空间 */
+            min-height: 40px;
+            max-height: 200px;
+            padding: 8px;
+            font-size: 16px;
+            resize: none;
+            box-sizing: border-box;
         }
+
 
         .chat-session-inputarea-tip-editing {
             display: flex;
@@ -3089,13 +3241,13 @@
 <!---->
 
 <header class="">
-    <button id="header-btn-tostartpage" class="initiation_hidden">返回首页</button>
+    <button id="header-btn-tostartpage" class="initiation_hidden">⬅️返回首页</button>
 
-    <button id="header-btn-startpage" class="hidden">首页</button>
+    <button id="header-btn-startpage" class="hidden">🏠首页</button>
 
     <button id="header-btn-mail" class="hidden">收发</button>
-    <button id="header-btn-drive" class="hidden">网盘</button>
-    <button id="header-btn-chat" class="hidden">聊天</button>
+    <button id="header-btn-drive" class="hidden">📁网盘</button>
+    <button id="header-btn-chat" class="hidden">💬聊天</button>
     <button id="header-btn-forum" class="hidden">讨论</button>
 
     <button id="header-btn-more-left" class="menu-btn">&nbsp;</button>
@@ -3118,23 +3270,35 @@
 
     <section id="apps-panel">
         <span id="apps-top-margin"></span>
+
         <div id="apps-rect">
-            <!-- 添加通知区域 -->
+
+            <!-- 通知 -->
             <div id="apps-notification" class="apps-item notification">
                 <p class="apps-item-name">all_people_notice</p>
             </div>
-            <div style="height: 40px;"></div> <!-- 空白隔离 -->
-            <div class="apps-item" id="apps-item-drive">
-                <p class="apps-item-name">网盘</p>
+
+            <div style="height: 50px;"></div>
+
+            <!-- 网盘 + 聊天（左右） -->
+            <div class="apps-item-row">
+                <div class="apps-item main-app" id="apps-item-drive">
+                    <p class="apps-item-name">📁网盘</p>
+                </div>
+
+                <div class="apps-item main-app" id="apps-item-chat">
+                    <p class="apps-item-name">💬聊天</p>
+                </div>
             </div>
-            <div class="apps-item" id="apps-item-chat">
-                <p class="apps-item-name">聊天</p>
-            </div>
+
+            <!-- 其他 -->
             <div class="apps-item hidden" id="apps-item-forum">
                 <p class="apps-item-name">讨论</p>
             </div>
+
         </div>
     </section>
+
 
 
     <section id="dashboard-mail">
@@ -4883,6 +5047,26 @@
             this.ball.addEventListener("click", this.ballClicked.bind(this));
             this.dialog = new FloatBall.FloatBallDialogMark(document.querySelector("body"));
             this.setText();
+
+            // —— 新增靠边隐藏效果（延迟回去） —— //
+            let hideTimeout = null;
+
+            this.ball.addEventListener('mouseenter', () => {
+                // 鼠标靠近，显示悬浮球
+                this.ball.classList.add('show');
+                // 如果之前有延迟隐藏，取消它
+                if (hideTimeout) {
+                    clearTimeout(hideTimeout);
+                    hideTimeout = null;
+                }
+            });
+
+            this.ball.addEventListener('mouseleave', () => {
+                // 鼠标离开后延迟隐藏
+                hideTimeout = setTimeout(() => {
+                    this.ball.classList.remove('show');
+                }, 2000); // 延迟 2 秒，可根据需求调整
+            });
 
             // 拖放
             this.ball.addEventListener('dragenter', (event) => {
@@ -8324,16 +8508,27 @@
 
 <div class="chat-session-inputarea">
     <div class="chat-session-inputarea-othertypes">
-        <button class="chat-session-inputarea-othertypes-image"><input type="file" class="hidden" accept="image/*">图片</button>
-        <button class="chat-session-inputarea-othertypes-file"><input type="file" class="hidden">文件</button>
+        <button class="chat-session-inputarea-othertypes-image">
+            <input type="file" class="hidden" accept="image/*">图片
+        </button>
+        <button class="chat-session-inputarea-othertypes-file">
+            <input type="file" class="hidden">文件
+        </button>
     </div>
-    <div class="chat-session-inputarea-textarea-warp">
-        <div class="chat-session-inputarea-tip-editing hidden"><span>编辑消息：</span><button>取消</button></div>
-        <textarea class="chat-session-inputarea-textarea" placeholder="请在框里输入消息，输入消息后，点击发送或回车。按ctrl+空格键，切换到中文输入法，才能输入中文..." spellcheck="false"></textarea>
+
+    <!-- 编辑消息提示 -->
+    <div class="chat-session-inputarea-tip-editing hidden">
+        <span>编辑消息：</span>
+        <button>取消</button>
+    </div>
+
+    <!-- flex 容器：输入框 + 发送按钮 -->
+    <div class="chat-session-inputarea-textarea-row">
+        <textarea class="chat-session-inputarea-textarea" placeholder="请在框里输入消息，并按回车或点击发送（按ctrl+空格切换中文输入法，输入中文）..." spellcheck="false"></textarea>
+        <button class="chat-session-inputarea-sendbtn">>>>点击发送<<<</button>
     </div>
 </div>
-    <!-- 新增：发送按钮 -->
-    <button class="chat-session-inputarea-sendbtn">>>>点击发送<<<</button>
+
 </div>
 `;
                 this.container.insertAdjacentHTML("beforeend", html);
@@ -14133,4 +14328,3 @@ textarea.addEventListener('input', () => {
 
 </body>
 </html>
-
