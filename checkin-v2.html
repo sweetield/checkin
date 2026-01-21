@@ -8845,9 +8845,12 @@
                 this.e_inputarea_candidates.addEventListener("click", e => {
                     const item = e.target.closest(".chat-session-inputarea-candidate-item");
                     if (!item) return;
-                    this.e_inputarea_textarea.value = item.textContent;
-                    this.e_inputarea_textarea.focus();
-                    this.e_inputarea_candidates.classList.add("hidden");
+
+                    // 1️⃣ 插入到光标位置
+                    this.add_textarea_element(item.textContent);
+
+                    // 2️⃣ 发送消息
+                    this.send_msg_text();
                 });
 
                 // 失焦隐藏
