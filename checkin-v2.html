@@ -8574,26 +8574,22 @@
 </div>
 `;
 
-                // 获取输入框 & 候选词容器（注意作用域）
-                const textarea = this.panel.querySelector(
-                    ".chat-session-inputarea-textarea"
-                );
+                this.container.insertAdjacentHTML("beforeend", html);
 
-                const candidatesBox = this.panel.querySelector(
-                    ".chat-session-inputarea-candidates"
-                );
+                const root = this.container;
+
+                // 2️⃣ 再获取
+                const textarea = root.querySelector(".chat-session-inputarea-textarea");
+                const candidatesBox = root.querySelector(".chat-session-inputarea-candidates");
+
+                if (!textarea || !candidatesBox) {
+                    console.error("输入框或候选词容器未找到");
+                    return;
+                }
 
                 const commonPhrases = [
-                    "好的",
-                    "在吗",
-                    "我在",
-                    "有事吗",
-                    "我下线了",
-                    "稍等一下",
-                    "马上回来",
-                    "可以的",
-                    "不太方便",
-                    "明天再说"
+                    "好的","在吗","我在","有事吗","我下线了",
+                    "稍等一下","马上回来","可以的","不太方便","明天再说"
                 ];
 
                 function renderCandidates(list) {
@@ -8601,47 +8597,27 @@
                         candidatesBox.classList.add("hidden");
                         return;
                     }
-
-                    candidatesBox.innerHTML = list.map(text =>
-                        `<div class="chat-session-inputarea-candidate-item">${text}</div>`
+                    candidatesBox.innerHTML = list.map(t =>
+                        `<div class="chat-session-inputarea-candidate-item">${t}</div>`
                     ).join("");
-
                     candidatesBox.classList.remove("hidden");
                 }
 
-                // 输入监听
                 textarea.addEventListener("input", () => {
-                    const value = textarea.value.trim();
-
-                    if (value === "") {
-                        renderCandidates(commonPhrases);
-                    } else {
-                        renderCandidates(
-                            commonPhrases.filter(p => p.includes(value))
-                        );
-                    }
+                    const v = textarea.value.trim();
+                    renderCandidates(
+                        v === "" ? commonPhrases : commonPhrases.filter(p => p.includes(v))
+                    );
                 });
 
-                // 点击候选词
                 candidatesBox.addEventListener("click", e => {
-                    const item = e.target.closest(
-                        ".chat-session-inputarea-candidate-item"
-                    );
+                    const item = e.target.closest(".chat-session-inputarea-candidate-item");
                     if (!item) return;
-
                     textarea.value = item.textContent;
                     textarea.focus();
                     candidatesBox.classList.add("hidden");
                 });
-
-                // 失焦隐藏
-                textarea.addEventListener("blur", () => {
-                    setTimeout(() => {
-                        candidatesBox.classList.add("hidden");
-                    }, 150);
-                });
-
-                this.container.insertAdjacentHTML("beforeend", html);
+            }
                 this.chat_rect = this.container.querySelector(":scope div.chat-rect");
                 this.e_header_info = this.container.querySelector(":scope div.chat-session-header-info");
                 this.e_header_info_clickmark = this.container.querySelector(":scope div.chat-session-header-info-clickmark");
