@@ -50,15 +50,25 @@
 
         /*候选词 */
         .chat-session-inputarea-candidates {
-            max-height: 160px;
-            overflow-y: auto;
+            position: absolute;
+
+            /* 关键：往上浮 */
+            bottom: calc(100% + 8px);
+
+            left: 12px;
+            right: 12px;
+
             background: #fff;
             border: 1px solid #ddd;
             border-radius: 8px;
-            padding: 6px;
-            margin-bottom: 6px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+            box-shadow: 0 8px 24px rgba(0,0,0,.15);
+
+            max-height: 180px;
+            overflow-y: auto;
+
+            z-index: 9999;
         }
+
 
         .chat-session-inputarea-candidates.hidden {
             display: none;
@@ -2242,6 +2252,7 @@
             flex-direction: column;
             /*flex-grow: 1;*/
             height: 100%;
+            overflow: visible;
         }
 
         .chat-session-header {
@@ -2414,6 +2425,8 @@
             flex-direction: column;
             width: 100%;
             box-sizing: border-box;
+            position: relative; /* 定位基准，必须有 */
+            overflow: visible;
         }
 
         .theme-dark .chat-session-inputarea {
@@ -8549,14 +8562,13 @@
         <button>取消</button>
     </div>
 
-    <!-- 候选词面板 -->
-    <div class="chat-session-inputarea-candidates hidden"></div>
-
     <!-- flex 容器：输入框 + 发送按钮 -->
     <div class="chat-session-inputarea-textarea-row">
         <textarea class="chat-session-inputarea-textarea" placeholder="请在框里输入消息，并按回车或点击发送（按ctrl+空格切换中文输入法，输入中文）..." spellcheck="false"></textarea>
         <button class="chat-session-inputarea-sendbtn">>>>点击发送<<<</button>
     </div>
+    <!-- 候选词容器（关键） -->
+    <div class="chat-session-inputarea-candidates hidden"></div>
 </div>
 
 </div>
