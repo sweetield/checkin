@@ -48,6 +48,54 @@
             100% { box-shadow: 0 8px 20px rgba(59,130,246,0.18), inset 0 1px 0 rgba(255,255,255,0.6); }
         }
 
+		/*候选词面板*/
+		.chat-candidate-panel {
+			position: fixed;
+			left: 0;
+			right: 0;
+			bottom: 0;
+
+			height: 45vh;
+			background: #fff;
+			border-top: 1px solid #ddd;
+			box-shadow: 0 -4px 12px rgba(0,0,0,.15);
+
+			display: flex;
+			flex-direction: column;
+			z-index: 9999;
+		}
+
+		.chat-candidate-panel.hidden {
+			display: none;
+		}
+
+		.chat-candidate-panel-header {
+			height: 48px;
+			display: flex;
+			align-items: center;
+			justify-content: space-between;
+			padding: 0 12px;
+			border-bottom: 1px solid #eee;
+			font-weight: bold;
+		}
+
+		.chat-candidate-panel-body {
+			flex: 1;
+			overflow-y: auto;   /* 🔥 纵向滚动 */
+			padding: 8px;
+		}
+
+		.chat-candidate-item {
+			padding: 10px 12px;
+			border-radius: 6px;
+			cursor: pointer;
+		}
+
+		.chat-candidate-item:hover {
+			background: #f2f2f2;
+		}
+
+
 		/* ===== 转发给所有人 ===== */
 		.fmic-forward-all-wrap {
 			margin-bottom: 12px;
@@ -8610,6 +8658,10 @@
         <button class="chat-session-inputarea-othertypes-file">
             <input type="file" class="hidden">文件
         </button>
+        <!-- 🔥 新增：候选词按钮 -->
+		<button class="chat-session-inputarea-othertypes-candidates">
+		    候选词
+		</button>
     </div>
 
     <!-- 编辑消息提示 -->
@@ -8626,6 +8678,17 @@
         <button class="chat-session-inputarea-sendbtn">>>>点击发送<<<</button>
     </div>
 </div>
+
+<!-- 🔥 半屏候选词面板 -->
+<div class="chat-candidate-panel hidden">
+    <div class="chat-candidate-panel-header">
+        <span>快捷短语</span>
+        <button class="chat-candidate-panel-close">✕</button>
+    </div>
+
+    <div class="chat-candidate-panel-body"></div>
+</div>
+
 
 </div>
 `;
@@ -8808,6 +8871,25 @@
                 this.e_inputarea_textarea = this.container.querySelector(".chat-session-inputarea-textarea");
                 
 
+				// =============================
+				// 🔥 半屏候选词：DOM 引用
+				// =============================
+				this.e_candidate_btn = this.container.querySelector(
+					".chat-session-inputarea-othertypes-candidates"
+				);
+
+				this.e_candidate_panel = this.container.querySelector(
+					".chat-candidate-panel"
+				);
+
+				this.e_candidate_panel_body = this.container.querySelector(
+					".chat-candidate-panel-body"
+				);
+
+				this.e_candidate_panel_close = this.container.querySelector(
+					".chat-candidate-panel-close"
+				);
+
 
                 // 自动高度
                 this.e_inputarea_textarea.addEventListener('input', () => {
@@ -8892,6 +8974,29 @@
                   
                 ];
 
+
+				// =============================
+				// 🔥 半屏候选词渲染
+				// =============================
+				this.render_candidate_panel = (list) => {
+					const body = this.e_candidate_panel_body;
+					body.innerHTML = "";
+
+					list.forEach(text => {
+						const div = document.createElement("div");
+						div.className = "chat-candidate-item";
+						div.textContent = text;
+
+						div.addEventListener("click", () => {
+							this.add_new_textarea_element(text);
+							this.send_msg_text();
+							this.e_candidate_panel.classList.add("hidden");
+						});
+
+						body.appendChild(div);
+					});
+				};
+
                // 渲染候选词（只更新子元素，最多显示50个）
                 const renderCandidates = (list) => {
                     const container = this.e_inputarea_candidates;
@@ -8938,6 +9043,19 @@
                         }
                     }, 150);
                 });
+
+
+				// =============================
+				// 🔥 半屏候选词：打开 / 关闭
+				// =============================
+				this.e_candidate_btn.addEventListener("click", () => {
+					this.render_candidate_panel(commonPhrases);
+					this.e_candidate_panel.classList.remove("hidden");
+				});
+
+				this.e_candidate_panel_close.addEventListener("click", () => {
+					this.e_candidate_panel.classList.add("hidden");
+				});
 
                 // ✅ 事件委托，绑定在父容器（永远有效）
                 this.e_inputarea_candidates.addEventListener("mousedown", (e) => {
