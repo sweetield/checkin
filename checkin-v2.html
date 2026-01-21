@@ -8803,55 +8803,7 @@
                     floatball.setOpacity(1);
                 });
 
-                // 🔥 回车发送（原逻辑，保留）
-                this.e_inputarea_textarea.addEventListener('keydown', (e) => {
-                    if (e.key === 'Enter' && !e.shiftKey) {
-                        e.preventDefault();
-                        this.send_msg_text();
-                        this.update_activity(
-                            dashboardwrappers.ChatDashboardWrapper.activity_type.none
-                        );
-                        this.e_inputarea_textarea.style.height = 'auto';
-                        this.e_inputarea_textarea.style.height =
-                            `${this.e_inputarea_textarea.scrollHeight}px`;
-                    }
-                });
 
-                // 输入状态 + 发送按钮禁用
-                this.e_inputarea_textarea.addEventListener('input', () => {
-                    const text = this.e_inputarea_textarea.value;
-
-                    if (text.length > 0) {
-                        this.update_activity(
-                            dashboardwrappers.ChatDashboardWrapper.activity_type.typing
-                        );
-                    } else {
-                        this.update_activity(
-                            dashboardwrappers.ChatDashboardWrapper.activity_type.none
-                        );
-                    }
-
-                    // 🔥 同步发送按钮状态
-                    if (this.e_inputarea_sendbtn) {
-                        this.e_inputarea_sendbtn.disabled = text.length === 0;
-                    }
-                });
-
-
-
-                // 加载草稿
-                this.load_draft_text();
-
-                // 编辑提示
-                this.e_inputarea_tip_editing = this.container.querySelector(
-                    ":scope .chat-session-inputarea-tip-editing"
-                );
-                this.e_inputarea_tip_editing__cancel_btn =
-                    this.e_inputarea_tip_editing.querySelector(":scope > button");
-
-                this.e_inputarea_tip_editing__cancel_btn.addEventListener("click", () => {
-                    this.end_editing_msg();
-                });
 
                  // =============================
                 // 🔥 新增：候选词逻辑
@@ -8904,6 +8856,57 @@
                         this.e_inputarea_candidates.classList.add("hidden");
                     }, 150);
                 });
+
+                // 🔥 回车发送（原逻辑，保留）
+                this.e_inputarea_textarea.addEventListener('keydown', (e) => {
+                    if (e.key === 'Enter' && !e.shiftKey) {
+                        e.preventDefault();
+                        this.send_msg_text();
+                        this.update_activity(
+                            dashboardwrappers.ChatDashboardWrapper.activity_type.none
+                        );
+                        this.e_inputarea_textarea.style.height = 'auto';
+                        this.e_inputarea_textarea.style.height =
+                            `${this.e_inputarea_textarea.scrollHeight}px`;
+                    }
+                });
+
+                // 输入状态 + 发送按钮禁用
+                this.e_inputarea_textarea.addEventListener('input', () => {
+                    const text = this.e_inputarea_textarea.value;
+
+                    if (text.length > 0) {
+                        this.update_activity(
+                            dashboardwrappers.ChatDashboardWrapper.activity_type.typing
+                        );
+                    } else {
+                        this.update_activity(
+                            dashboardwrappers.ChatDashboardWrapper.activity_type.none
+                        );
+                    }
+
+                    // 🔥 同步发送按钮状态
+                    if (this.e_inputarea_sendbtn) {
+                        this.e_inputarea_sendbtn.disabled = text.length === 0;
+                    }
+                });
+
+
+
+                // 加载草稿
+                this.load_draft_text();
+
+                // 编辑提示
+                this.e_inputarea_tip_editing = this.container.querySelector(
+                    ":scope .chat-session-inputarea-tip-editing"
+                );
+                this.e_inputarea_tip_editing__cancel_btn =
+                    this.e_inputarea_tip_editing.querySelector(":scope > button");
+
+                this.e_inputarea_tip_editing__cancel_btn.addEventListener("click", () => {
+                    this.end_editing_msg();
+                });
+
                 // =============================
                 // 🔥 新增：发送按钮逻辑
                 // =============================
