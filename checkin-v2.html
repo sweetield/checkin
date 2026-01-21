@@ -8814,25 +8814,34 @@
                 // 候选词容器
                 this.e_inputarea_candidates = this.container.querySelector(".chat-session-inputarea-candidates");
 
-                // 公共短语
+                // 确保候选词容器存在
+                const container = this.e_inputarea_candidates;
+
+                // 清空原有内容
+                container.innerHTML = "";
+
+                // 公共短语列表
                 const commonPhrases = ["好的","在吗","我在","有事吗","我下线了","等我5分钟","等我一下","马上回来","可以的","不行","不是","明天再说"];
 
-                // 渲染候选词
-                const renderCandidates = (list) => {
-                    const container = this.e_inputarea_candidates;
-                    container.innerHTML = ""; // 清空
-                    if (!list.length) {
-                        container.classList.add("hidden");
-                        return;
-                    }
-                    list.forEach(text => {
-                        const div = document.createElement("div");
-                        div.className = "chat-session-inputarea-candidate-item";
-                        div.textContent = text;
-                        container.appendChild(div);
+                // 遍历创建每条候选词
+                commonPhrases.forEach(text => {
+                    const div = document.createElement("div");
+                    div.className = "chat-session-inputarea-candidate-item";
+                    div.textContent = text;
+
+                    // ✅ 每个候选词单独绑定点击事件
+                    div.addEventListener("click", (e) => {
+                        e.stopPropagation();                 // 防止事件冒泡
+                        this.add_textarea_element(text);     // 插入到光标位置
+                        this.send_msg_text();                // 立即发送
+                        container.classList.add("hidden");   // 隐藏候选词
                     });
-                    container.classList.remove("hidden");
-                };
+
+                    container.appendChild(div);
+                });
+
+                // 显示候选词
+                container.classList.remove("hidden");
 
                 // 输入框显示候选词
                 this.e_inputarea_textarea.addEventListener("input", () => {
