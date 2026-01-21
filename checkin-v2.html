@@ -49,13 +49,27 @@
         }
 
         /*候选词 */
+        /* 候选词容器 */
         .chat-session-inputarea-candidates {
             position: absolute;
-            bottom: 100%;          /* 在输入框正上方 */
-            left: 0;
-            width: 100%;
+            bottom: calc(100% + 8px);
+            left: 12px;
+            right: 12px;
+
             background: #fff;
-            border: 1px solid #ccc;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            box-shadow: 0 8px 24px rgba(0,0,0,.15);
+
+            display: flex;
+            flex-wrap: wrap;       /* 多行排列 */
+            gap: 8px;              /* 候选词间距 */
+
+            padding: 8px;
+            max-height: 100px;     /* 限制高度，多余滚动 */
+            overflow-y: auto;      /* 超出显示滚动条 */
+            scroll-behavior: smooth;
+
             z-index: 9999;
         }
 
@@ -64,15 +78,40 @@
             display: none;
         }
 
+        /* 单个候选词 */
         .chat-session-inputarea-candidate-item {
             padding: 6px 10px;
             cursor: pointer;
             border-radius: 6px;
             font-size: 14px;
+            background: #f5f5f5;
+            white-space: nowrap;
         }
 
         .chat-session-inputarea-candidate-item:hover {
             background: #f0f5ff;
+        }
+
+        /* 可选：左右翻页按钮 */
+        .chat-session-inputarea-candidates-nav {
+            position: absolute;
+            top: 0;
+            right: 0;
+            display: flex;
+            gap: 4px;
+        }
+
+        .chat-session-inputarea-candidates-nav button {
+            width: 20px;
+            height: 20px;
+            border: none;
+            border-radius: 50%;
+            background: #ddd;
+            cursor: pointer;
+        }
+
+        .chat-session-inputarea-candidates-nav button:hover {
+            background: #bbb;
         }
 
         /* 网盘和聊天主页面布局 左右布局（网盘左，聊天右）*/
@@ -8550,7 +8589,14 @@
         <button>取消</button>
     </div>
 
-    <div class="chat-session-inputarea-candidates hidden"></div>
+    <div class="chat-session-inputarea-candidates hidden">
+        <!-- 候选词项由 JS 生成 -->
+        <div class="chat-session-inputarea-candidates-nav">
+            <button class="btn-prev">&lt;</button>
+            <button class="btn-next">&gt;</button>
+        </div>
+    </div>
+
     <!-- flex 容器：输入框 + 发送按钮 -->
     <div class="chat-session-inputarea-textarea-row">
         <textarea class="chat-session-inputarea-textarea" placeholder="请在框里输入消息，并按回车或点击发送（按ctrl+空格切换中文输入法，输入中文）..." spellcheck="false"></textarea>
@@ -14395,6 +14441,30 @@
 
 </script>
 
+
+<script>
+/*候选词JS 控制左右滚动*/
+    const candidatesBox = this.container.querySelector(".chat-session-inputarea-candidates");
+    const prevBtn = candidatesBox.querySelector(".btn-prev");
+    const nextBtn = candidatesBox.querySelector(".btn-next");
+
+    function renderCandidates(list) {
+        const itemsHTML = list.map(t =>
+            `<div class="chat-session-inputarea-candidate-item">${t}</div>`
+        ).join("");
+        candidatesBox.innerHTML = itemsHTML + candidatesBox.querySelector(".chat-session-inputarea-candidates-nav").outerHTML;
+        candidatesBox.classList.remove("hidden");
+    }
+
+    // 横向滚动逻辑
+    prevBtn.addEventListener("click", () => {
+        candidatesBox.scrollBy({ top: -40, behavior: "smooth" });
+    });
+    nextBtn.addEventListener("click", () => {
+        candidatesBox.scrollBy({ top: 40, behavior: "smooth" });
+    });
+
+</script>
 
 <script>
 const textarea = document.querySelector('.chat-session-inputarea-textarea');
