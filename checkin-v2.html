@@ -81,19 +81,28 @@
 
 		.chat-candidate-panel-body {
 			flex: 1;
-			overflow-y: auto;   /* 🔥 纵向滚动 */
+			overflow-y: auto;
 			padding: 8px;
+
+			display: grid;                             /* 🔥 关键 */
+			grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+			gap: 8px;
 		}
 
+
 		.chat-candidate-item {
-			padding: 10px 12px;
+			padding: 10px 6px;
+			text-align: center;
 			border-radius: 6px;
 			cursor: pointer;
+			background: #f7f7f7;
+			user-select: none;
 		}
 
 		.chat-candidate-item:hover {
-			background: #f2f2f2;
+			background: #eaeaea;
 		}
+
 
 
 		/* ===== 转发给所有人 ===== */
