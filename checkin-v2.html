@@ -8945,15 +8945,31 @@
 					".chat-candidate-panel-close"
 				);
 
-				// 🔹 翻页按钮 DOM
+
+				// 🔹 半屏候选词 DOM
+				this.e_candidate_panel_body = this.container.querySelector(".chat-candidate-panel-body");
 				this.e_candidate_prev = this.container.querySelector(".chat-candidate-panel-prev");
 				this.e_candidate_next = this.container.querySelector(".chat-candidate-panel-next");
-				this.e_candidate_filter = this.container.querySelector(".chat-candidate-panel-filter"); // ✅ 新增
-				
-				// 🔹 滚动步长
-				const scrollStep = 150;
+				this.e_candidate_filter = this.container.querySelector(".chat-candidate-panel-filter");
 
-				// 🔹 翻页事件
+				// 🔹 更新按钮状态函数
+				const updateCandidateButtons = () => {
+					const body = this.e_candidate_panel_body;
+					this.e_candidate_prev.disabled = body.scrollTop <= 0;
+					this.e_candidate_next.disabled = body.scrollTop + body.clientHeight >= body.scrollHeight;
+				};
+
+				// 🔹 输入筛选事件
+				this.e_candidate_filter.addEventListener("input", () => {
+					const v = this.e_candidate_filter.value.trim();
+					const filtered = v === "" ? this.commonPhrases : this.commonPhrases.filter(p => p.includes(v));
+					this.render_candidate_panel(filtered); // ✅ 使用半屏渲染函数
+					this.e_candidate_panel_body.scrollTop = 0;
+					updateCandidateButtons();
+				});
+
+				// 🔹 翻页按钮
+				const scrollStep = 150;
 				this.e_candidate_prev.addEventListener("click", () => {
 					this.e_candidate_panel_body.scrollBy({ top: -scrollStep, behavior: 'smooth' });
 				});
@@ -8961,39 +8977,12 @@
 					this.e_candidate_panel_body.scrollBy({ top: scrollStep, behavior: 'smooth' });
 				});
 
-
-				// 🔹 绑定输入框事件：输入即筛选
-				this.e_candidate_filter.addEventListener("input", () => {
-					const v = this.e_candidate_filter.value.trim();
-
-					// 🔹 根据输入筛选候选词
-					const filtered = v === "" 
-						? commonPhrases 
-						: commonPhrases.filter(p => p.includes(v));
-
-					// 🔹 调用你已有的渲染函数（renderCandidates 或 render_candidate_panel）
-					renderCandidates(filtered);
-
-					// 🔹 滚动到顶部，保证用户看到第一页候选词
-					this.e_candidate_panel_body.scrollTop = 0;
-
-					// 🔹 更新上一页/下一页按钮状态
-					updateCandidateButtons();
-				});
-				
-				// 🔹 自动禁用上一页/下一页按钮
-				const updateCandidateButtons = () => {
-					const body = this.e_candidate_panel_body;
-					this.e_candidate_prev.disabled = body.scrollTop <= 0;
-					this.e_candidate_next.disabled = body.scrollTop + body.clientHeight >= body.scrollHeight;
-				};
-
-				// 🔹 绑定滚动事件
+				// 🔹 滚动事件
 				this.e_candidate_panel_body.addEventListener("scroll", updateCandidateButtons);
 
-				// 🔹 打开面板时刷新按钮状态
+				// 🔹 打开面板按钮
 				this.e_candidate_btn.addEventListener("click", () => {
-					this.render_candidate_panel(commonPhrases);
+					this.render_candidate_panel(this.commonPhrases);
 					this.e_candidate_panel.classList.remove("hidden");
 					updateCandidateButtons();
 				});
