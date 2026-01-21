@@ -79,22 +79,22 @@
 			gap: 6px;
 		}
 
+		/* 翻页按钮 */
 		.chat-candidate-panel-prev,
 		.chat-candidate-panel-next {
-			width: 70px;               /* 按钮宽度固定 */
-			height: 30px;              /* 按钮高度固定 */
-			font-size: 15px;           /* 字体稍大，看得清楚 */
-			font-weight: bold;         /* 加粗文字 */
-			background-color: #3399ff; /* 浅蓝背景 */
-			color: #fff;               /* 白色文字 */
+			flex: 0 0 70px;         /* 固定宽度 70px，不被压扁 */
+			height: 36px;
+			font-size: 16px;
+			font-weight: bold;
+			line-height: 36px;      /* 文字垂直居中 */
+			text-align: center;
+			background-color: #3399ff;
+			color: #fff;
 			border: none;
 			border-radius: 6px;
 			cursor: pointer;
-			line-height: 36px;         /* 文字垂直居中 */
-			text-align: center;        /* 文字水平居中 */
-			margin: 0 5px;             /* 左右间距 */
-			transition: background-color 0.2s;
 		}
+
 
 		.chat-candidate-panel-prev:hover,
 		.chat-candidate-panel-next:hover {
@@ -108,17 +108,23 @@
 			cursor: not-allowed;
 		}
 
+		.chat-candidate-panel-top {
+			display: flex;
+			align-items: center;
+			gap: 5px; /* 按钮与输入框间距 */
+			padding: 5px;
+		}
 		/* 🔥 筛选输入框样式 */
 		.chat-candidate-panel-filter {
-			width: calc(100% - 140px);   /* 留出左右按钮空间，如果按钮各70px */
+			flex: 1;                /* 占剩余空间，自适应 */
 			padding: 6px 10px;
 			font-size: 16px;
-			background-color: #e6f2ff;   /* 亮蓝色背景，更清晰 */
-			border: 2px solid #3399ff;   /* 蓝色边框 */
+			background-color: #e6f2ff;
+			border: 2px solid #3399ff;
 			border-radius: 6px;
 			outline: none;
+			color: #000;
 			box-sizing: border-box;
-			color: #000;                 /* 文本颜色清晰 */
 		}
 
 		.chat-candidate-panel-filter:focus {
