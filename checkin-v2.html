@@ -77,7 +77,25 @@
 			padding: 0 12px;
 			border-bottom: 1px solid #eee;
 			font-weight: bold;
+			gap: 8px; /* 按钮间距 */
 		}
+
+		.chat-candidate-panel-prev,
+		.chat-candidate-panel-next,
+		.chat-candidate-panel-close {
+			background: #f2f2f2;
+			border: none;
+			padding: 4px 8px;
+			border-radius: 4px;
+			cursor: pointer;
+		}
+
+		.chat-candidate-panel-prev:hover,
+		.chat-candidate-panel-next:hover,
+		.chat-candidate-panel-close:hover {
+			background: #e0e0e0;
+		}
+
 
 		.chat-candidate-panel-body {
 			flex: 1;
@@ -8691,9 +8709,12 @@
 <!-- 🔥 半屏候选词面板 -->
 <div class="chat-candidate-panel hidden">
     <div class="chat-candidate-panel-header">
-        <span>快捷短语</span>
-        <button class="chat-candidate-panel-close">✕</button>
-    </div>
+		<button class="chat-candidate-panel-prev">← 上一页</button>
+		<button class="chat-candidate-panel-next">下一页 →</button>
+		<span>快捷短语</span>
+		<button class="chat-candidate-panel-close">✕</button>
+	</div>
+
 
     <div class="chat-candidate-panel-body"></div>
 </div>
@@ -8898,6 +8919,19 @@
 				this.e_candidate_panel_close = this.container.querySelector(
 					".chat-candidate-panel-close"
 				);
+
+				// 翻页按钮 DOM
+				this.e_candidate_prev = this.container.querySelector(".chat-candidate-panel-prev");
+				this.e_candidate_next = this.container.querySelector(".chat-candidate-panel-next");
+
+				// 翻页事件绑定
+				const scrollStep = 150; // 每页滚动高度（px，可调）
+				this.e_candidate_prev.addEventListener("click", () => {
+					this.e_candidate_panel_body.scrollBy({ top: -scrollStep, behavior: 'smooth' });
+				});
+				this.e_candidate_next.addEventListener("click", () => {
+					this.e_candidate_panel_body.scrollBy({ top: scrollStep, behavior: 'smooth' });
+				});
 
 
                 // 自动高度
