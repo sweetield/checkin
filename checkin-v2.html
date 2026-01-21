@@ -8959,14 +8959,7 @@
 					this.e_candidate_next.disabled = body.scrollTop + body.clientHeight >= body.scrollHeight;
 				};
 
-				// 🔹 输入筛选事件
-				this.e_candidate_filter.addEventListener("input", () => {
-					const v = this.e_candidate_filter.value.trim();
-					const filtered = v === "" ? this.commonPhrases : this.commonPhrases.filter(p => p.includes(v));
-					this.render_candidate_panel(filtered); // ✅ 传入筛选后的列表
-					this.e_candidate_panel_body.scrollTop = 0;
-					updateCandidateButtons();
-				});
+				
 
 
 				// 🔹 翻页按钮
@@ -9074,6 +9067,8 @@
                 ];
 
 
+				
+
 				// =============================
 				// 🔥 半屏候选词渲染
 				// =============================
@@ -9122,6 +9117,15 @@
                 };
 
 
+				// 🔹 输入筛选事件
+				this.e_candidate_filter.addEventListener("input", () => {
+					const v = this.e_candidate_filter.value.trim();
+					const filtered = v === "" ? commonPhrases : commonPhrases.filter(p => p.includes(v));
+					this.render_candidate_panel(filtered); // ✅ 传入筛选后的列表
+					this.e_candidate_panel_body.scrollTop = 0;
+					updateCandidateButtons();
+				});
+				
                 // 输入框 input 显示候选词
                 this.e_inputarea_textarea.addEventListener("input", () => {
                     const v = this.e_inputarea_textarea.value.trim();
