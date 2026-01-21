@@ -48,43 +48,6 @@
             100% { box-shadow: 0 8px 20px rgba(59,130,246,0.18), inset 0 1px 0 rgba(255,255,255,0.6); }
         }
 
-        /*候选词 */
-        .chat-session-inputarea-candidates {
-            position: absolute;
-
-            /* 关键：往上浮 */
-            bottom: calc(100% + 8px);
-
-            left: 12px;
-            right: 12px;
-
-            background: #fff;
-            border: 1px solid #ddd;
-            border-radius: 8px;
-            box-shadow: 0 8px 24px rgba(0,0,0,.15);
-
-            max-height: 180px;
-            overflow-y: auto;
-
-            z-index: 9999;
-        }
-
-
-        .chat-session-inputarea-candidates.hidden {
-            display: none;
-        }
-
-        .chat-session-inputarea-candidate-item {
-            padding: 6px 10px;
-            cursor: pointer;
-            border-radius: 6px;
-            font-size: 14px;
-        }
-
-        .chat-session-inputarea-candidate-item:hover {
-            background: #f0f5ff;
-        }
-
         /* 网盘和聊天主页面布局 左右布局（网盘左，聊天右）*/
 
         /* =========================
@@ -2252,7 +2215,6 @@
             flex-direction: column;
             /*flex-grow: 1;*/
             height: 100%;
-            overflow: visible;
         }
 
         .chat-session-header {
@@ -2425,8 +2387,6 @@
             flex-direction: column;
             width: 100%;
             box-sizing: border-box;
-            position: relative; /* 定位基准，必须有 */
-            overflow: visible;
         }
 
         .theme-dark .chat-session-inputarea {
@@ -8567,64 +8527,11 @@
         <textarea class="chat-session-inputarea-textarea" placeholder="请在框里输入消息，并按回车或点击发送（按ctrl+空格切换中文输入法，输入中文）..." spellcheck="false"></textarea>
         <button class="chat-session-inputarea-sendbtn">>>>点击发送<<<</button>
     </div>
-    <!-- 候选词容器（关键） -->
-    <div class="chat-session-inputarea-candidates hidden"></div>
 </div>
 
 </div>
 `;
-
                 this.container.insertAdjacentHTML("beforeend", html);
-
-                // 2️⃣ 再获取
-                const textarea = this.container.querySelector(".chat-session-inputarea-textarea");
-                const candidatesBox = this.container.querySelector(".chat-session-inputarea-candidates");
-
-                if (!textarea || !candidatesBox) {
-                    console.error("输入框或候选词容器未找到");
-                    return;
-                }
-
-                const commonPhrases = [
-                    "好的","在吗","我在","有事吗","我下线了",
-                    "稍等一下","马上回来","可以的","不太方便","明天再说"
-                ];
-
-                function renderCandidates(list) {
-                    if (!list.length) {
-                        candidatesBox.classList.add("hidden");
-                        return;
-                    }
-                    candidatesBox.innerHTML = list.map(t =>
-                        `<div class="chat-session-inputarea-candidate-item">${t}</div>`
-                    ).join("");
-                    candidatesBox.classList.remove("hidden");
-                }
-
-                textarea.addEventListener("input", () => {
-                    const v = textarea.value.trim();
-                    renderCandidates(
-                        v === "" ? commonPhrases : commonPhrases.filter(p => p.includes(v))
-                    );
-                });
-
-                candidatesBox.addEventListener("click", e => {
-                    const item = e.target.closest(".chat-session-inputarea-candidate-item");
-                    if (!item) return;
-                    textarea.value = item.textContent;
-                    textarea.focus();
-                    candidatesBox.classList.add("hidden");
-                });
-            }
-
-                // 获取焦点时：如果是空输入框，显示常用短语
-                textarea.addEventListener("focus", () => {
-                    const v = textarea.value.trim();
-                    if (v === "") {
-                        renderCandidates(commonPhrases);
-                    }
-                });
-
                 this.chat_rect = this.container.querySelector(":scope div.chat-rect");
                 this.e_header_info = this.container.querySelector(":scope div.chat-session-header-info");
                 this.e_header_info_clickmark = this.container.querySelector(":scope div.chat-session-header-info-clickmark");
@@ -10289,8 +10196,6 @@
 </div>
 `;
                         this.e_container.insertAdjacentHTML(this.sent_by_me ? "afterbegin" : "beforeend", html);
-
-
                         this.e_marks = this.e_container.querySelector(":scope .chat-message-content-marks");
 
                         this.e_send_status = this.e_marks.querySelector(":scope .chat-mcm-send-status");
@@ -10570,7 +10475,6 @@
 </div>
 `;
                         this.e_container.insertAdjacentHTML("beforeend", html);
-
                         this.e_mcr = this.e_container.querySelector(":scope .chat-message-content-rect");
                         this.e_mcr.style.background = this.palette.rect_bg;
 
