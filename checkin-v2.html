@@ -8963,10 +8963,11 @@
 				this.e_candidate_filter.addEventListener("input", () => {
 					const v = this.e_candidate_filter.value.trim();
 					const filtered = v === "" ? this.commonPhrases : this.commonPhrases.filter(p => p.includes(v));
-					this.render_candidate_panel(filtered); // ✅ 使用半屏渲染函数
+					this.render_candidate_panel(filtered); // ✅ 传入筛选后的列表
 					this.e_candidate_panel_body.scrollTop = 0;
 					updateCandidateButtons();
 				});
+
 
 				// 🔹 翻页按钮
 				const scrollStep = 150;
