@@ -48,6 +48,158 @@
             100% { box-shadow: 0 8px 20px rgba(59,130,246,0.18), inset 0 1px 0 rgba(255,255,255,0.6); }
         }
 
+		/*候选词面板*/
+		.chat-candidate-panel {
+			position: fixed;
+			left: 0;
+			right: 0;
+			bottom: 0;
+
+			height: 45vh;
+			background: #fff;
+			border-top: 1px solid #ddd;
+			box-shadow: 0 -4px 12px rgba(0,0,0,.15);
+
+			display: flex;
+			flex-direction: column;
+			z-index: 9999;
+		}
+
+		.chat-candidate-panel.hidden {
+			display: none;
+		}
+
+		
+		.chat-candidate-panel-header {
+			height: 48px;
+			display: flex;
+			align-items: center;
+			padding: 0 6px;
+			border-bottom: 1px solid #eee;
+			gap: 8px;
+		}
+
+		/* 翻页按钮 */
+		.chat-candidate-panel-prev,
+		.chat-candidate-panel-next {
+			flex: 0 0 80px;         /* 固定宽度 70px，不被压扁 */
+			height: 36px;
+			font-size: 15px;
+			font-weight: bold;
+			line-height: 36px;      /* 文字垂直居中 */
+			text-align: center;
+			background-color: #3399ff;
+			color: #fff;
+			border: none;
+			border-radius: 6px;
+			cursor: pointer;
+		}
+
+
+		.chat-candidate-panel-prev:hover,
+		.chat-candidate-panel-next:hover {
+			background-color: #1a75ff; /* 悬停加深 */
+		}
+
+
+		.chat-candidate-panel-prev:disabled,
+		.chat-candidate-panel-next:disabled {
+			background: #ddd;
+			cursor: not-allowed;
+		}
+
+		
+		/* 🔥 筛选输入框样式 */
+		.chat-candidate-panel-filter {
+			flex: 1;                /* 占剩余空间，自适应 */
+			padding: 6px 10px;
+			font-size: 16px;
+			background-color: #e6f2ff;
+			border: 2px solid #3399ff;
+			border-radius: 6px;
+			outline: none;
+			color: #000;
+			box-sizing: border-box;
+		}
+
+		.chat-candidate-panel-filter:focus {
+			border-color: #0066cc;       /* 聚焦时深蓝色 */
+			background-color: #cce6ff;   /* 聚焦背景加深 */
+		}
+
+
+
+		.chat-candidate-panel-filter::placeholder {
+			color: rgba(0,0,0,0.4);
+		}
+
+
+		.chat-candidate-panel-prev:hover,
+		.chat-candidate-panel-next:hover,
+		.chat-candidate-panel-close:hover {
+			background: #e0e0e0;
+		}
+
+
+		.chat-candidate-panel-body {
+			flex: 1;
+			overflow-y: auto;
+			padding: 8px;
+
+			display: grid;                             /* 🔥 关键 */
+			grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+			gap: 8px;
+		}
+
+
+		.chat-candidate-item {
+			padding: 10px 6px;
+			text-align: center;
+			border-radius: 6px;
+			cursor: pointer;
+			background: #f7f7f7;
+			user-select: none;
+		}
+
+		.chat-candidate-item:hover {
+			background: #eaeaea;
+		}
+
+
+
+		/* ===== 转发给所有人 ===== */
+		.fmic-forward-all-wrap {
+			margin-bottom: 12px;
+			padding: 10px 12px;
+			border-radius: 8px;
+			background: linear-gradient(135deg, #f0f6ff, #e6f0ff);
+			border: 1px solid #c9ddff;
+		}
+
+		.fmic-forward-all {
+			display: flex;
+			align-items: center;
+			gap: 8px;
+			font-weight: 600;
+			font-size: 14px;
+			cursor: pointer;
+		}
+
+		.fmic-forward-all input {
+			transform: scale(1.15);
+		}
+
+		.fmic-forward-all-text {
+			color: #2b6de5;
+		}
+
+		.fmic-forward-all-desc {
+			margin-left: 22px;
+			margin-top: 4px;
+			font-size: 12px;
+			color: #6b7a99;
+		}
+
         /* 候选词容器 */
         .chat-session-inputarea-candidates {
             position: absolute;
@@ -8577,6 +8729,10 @@
         <button class="chat-session-inputarea-othertypes-file">
             <input type="file" class="hidden">文件
         </button>
+        <!-- 🔥 新增：候选词按钮 -->
+		<button class="chat-session-inputarea-othertypes-candidates">
+		    候选词
+		</button>
     </div>
 
     <!-- 编辑消息提示 -->
@@ -8593,6 +8749,21 @@
         <button class="chat-session-inputarea-sendbtn">>>>点击发送<<<</button>
     </div>
 </div>
+
+<!-- 🔥 半屏候选词面板 -->
+<div class="chat-candidate-panel hidden">
+    <div class="chat-candidate-panel-header">
+		<button class="chat-candidate-panel-prev">← 上一页</button>
+		<!-- 🔥 中间添加筛选输入框 -->
+    	<input type="text" class="chat-candidate-panel-filter" placeholder="筛选候选词…">
+		<button class="chat-candidate-panel-next">下一页 →</button>
+		<button class="chat-candidate-panel-close">✕</button>
+	</div>
+
+
+    <div class="chat-candidate-panel-body"></div>
+</div>
+
 
 </div>
 `;
@@ -8775,6 +8946,62 @@
                 this.e_inputarea_textarea = this.container.querySelector(".chat-session-inputarea-textarea");
                 
 
+				// =============================
+				// 🔥 半屏候选词：DOM 引用
+				// =============================
+				this.e_candidate_btn = this.container.querySelector(
+					".chat-session-inputarea-othertypes-candidates"
+				);
+
+				this.e_candidate_panel = this.container.querySelector(
+					".chat-candidate-panel"
+				);
+
+				this.e_candidate_panel_body = this.container.querySelector(
+					".chat-candidate-panel-body"
+				);
+
+				this.e_candidate_panel_close = this.container.querySelector(
+					".chat-candidate-panel-close"
+				);
+
+
+				// 🔹 半屏候选词 DOM
+				this.e_candidate_panel_body = this.container.querySelector(".chat-candidate-panel-body");
+				this.e_candidate_prev = this.container.querySelector(".chat-candidate-panel-prev");
+				this.e_candidate_next = this.container.querySelector(".chat-candidate-panel-next");
+				this.e_candidate_filter = this.container.querySelector(".chat-candidate-panel-filter");
+
+				// 🔹 更新按钮状态函数
+				const updateCandidateButtons = () => {
+					const body = this.e_candidate_panel_body;
+					this.e_candidate_prev.disabled = body.scrollTop <= 0;
+					this.e_candidate_next.disabled = body.scrollTop + body.clientHeight >= body.scrollHeight;
+				};
+
+				
+
+
+				// 🔹 翻页按钮
+				const scrollStep = 150;
+				this.e_candidate_prev.addEventListener("click", () => {
+					this.e_candidate_panel_body.scrollBy({ top: -scrollStep, behavior: 'smooth' });
+				});
+				this.e_candidate_next.addEventListener("click", () => {
+					this.e_candidate_panel_body.scrollBy({ top: scrollStep, behavior: 'smooth' });
+				});
+
+				// 🔹 滚动事件
+				this.e_candidate_panel_body.addEventListener("scroll", updateCandidateButtons);
+
+				// 🔹 打开面板按钮
+				this.e_candidate_btn.addEventListener("click", () => {
+					this.render_candidate_panel(this.commonPhrases);
+					this.e_candidate_panel.classList.remove("hidden");
+					updateCandidateButtons();
+				});
+
+
 
                 // 自动高度
                 this.e_inputarea_textarea.addEventListener('input', () => {
@@ -8806,10 +9033,10 @@
                 // 公共短语
                 const commonPhrases = [
                   // 日常聊天（前 200 条）
-                  "好的","在吗","我在","有事吗？","有事找你","是的","不是","拜拜","我下线了","🔥特急！","有时间吗？", "没时间","你好","有急事找你", "有事请留言", "会","不会","听懂了","等我5分钟", "可以","收到了","明天按时去","等我一下","马上回来","可以的","不行","我还不没掌握", "收到信了吗","有人被抓了", "这边出环境了","😄","😂","😅","😭","😡",
-                  "不是","明天再说","辛苦了","谢谢","没事","等一下","吃了吗","忙吗","我懂了","哈哈","在家吗","忙吗","有空吗","你好吗？","30分钟后再见","小心摄像头", "doo来这了", "DOO来这了", "我被跟踪了","不要在摄像头底下见面","有摄像头吗？","注意安全",
-                  "你什么时候有空？","明天有空吗？", "我们几点见？",
-                  "今天下午可以吗？", "可以约个时间吗？", "周末有空吗？", "明晚方便吗？", "你什么时候方便？", 
+                  "好的","在吗","在","不在","有事吗？","有事找你","是的","不是","拜拜","我下线了","🔥特急！","有时间吗？", "没时间","你好","有急事找你", "有事请留言", "会","不会","听懂了","等我5分钟", "可以","收到了","明天按时去","等我一下","马上回来","可以的","不行","我还不没掌握", "收到信了吗","这边出事了","😄","😂","😅","😭","😡",
+                  "不是","明天再说","辛苦了","谢谢","没事","等一下","吃了吗","忙吗","我懂了","哈哈","在家吗","忙吗","有空吗","你好吗？","30分钟后再见","注意安全",
+                  "你什么时候有空？","明天有空吗？", "我们几点见？","安装","抓","被","了","上门","摄像头","跟踪","我", "你", "有人","不知道",
+                  "今天下午可以吗？", "可以约个时间吗？", "周末有空吗？", "警察","明晚方便吗？", "你什么时候方便？", "能去吗？", 
                   "我们几点碰面？", "什么时候开会？", "明天上午可以吗？", "后天有空吗？", "我们定个时间吧。", 
                   "今天什么时候方便？", "下午几点合适？", "你有空吗？", "下周可以安排吗？", "什么时候方便聊天？", "明天几点见？", 
                   "今天晚上方便吗？", "我们周几见面？", "你下午有空吗？", "明天早上可以吗？", "我们约个时间吧。", 
@@ -8850,14 +9077,60 @@
                   "听懂了吗","理解了吗","掌握了吗","有没有问题",
                   "购物了吗","下单了吗","收到了吗","快递到了吗","取快递了吗",
                    "收快递了吗","寄快递了吗","做作业了吗","完成作业了吗",
+                   // 时间方面
+                   "现在", "刚刚", "马上", "刚才", "刚", "刚好", "马上就", "马上来", "立刻", 
+                   "马上到", "今天", "昨天", "明天", "今晚", "早上", "上午", "中午", "下午", 
+                   "晚上", "每周", "每天", "每月", "每年", "经常", "有时", "偶尔", "一直", "刚开始", 
+                   "刚结束", "刚发", "刚收", "马上完成", "马上处理", "随时", "马上回复", "马上到达", 
+                   "马上开会", "最近", "之前", "之后", "之前完成", "之后再", "临时", "长期", "定期", 
+                   "周期", "频繁", "时常", "当时", "立刻处理", 
                    
                   
                   // 工作交流（接下来的 300 条）
                   "收到","已处理","正在处理","请确认","确认完成","需要补充资料","已转发","请查看",
                   "请回复","紧急","尽快处理","稍后回复","更新完成","请跟进","会议开始了","会议结束了","明天开会","稍等",
-                  "请安排","已安排","请检查","系统异常","测试通过","上线完成","记得交回报"
+                  "请安排","已安排","请检查","系统异常","测试通过","上线完成","记得交回报",
+                  // 常用汉字单字
+                  "的","一","是","了","我","不","人","在","他","有",
+				  "这","个","上","们","来","到","时","大","地","为",
+				  "子","中","你","说","生","国","年","着","就","那",
+				  "和","要","她","出","也","得","里","后","自","以",
+				  "会","家","可","下","而","过","天","去","能","对",
+				  "小","多","然","于","心","学","么","之","都","好",
+				  "看","起","发","成","法","当","只","如","想","作",
+				  "日","用","然","于","事","成","都","动","面","与",
+				  "后","无","里","起","所","情","些","两","长","意",
+				  "样","现","本","次","新","两","于","或","然","己",
+				  "知","重","定","进","其","先","所","向","用","所",
+				  "名","问","法","间","从","现","意","利","各","因",
+				  "点","问","等","开","主","题","看","公","理","各"
                   
                 ];
+
+
+				
+
+				// =============================
+				// 🔥 半屏候选词渲染
+				// =============================
+				this.render_candidate_panel = (list) => {
+					const body = this.e_candidate_panel_body;
+					body.innerHTML = "";
+
+					list.forEach(text => {
+						const div = document.createElement("div");
+						div.className = "chat-candidate-item";
+						div.textContent = text;
+
+						div.addEventListener("click", () => {
+							this.add_new_textarea_element(text);
+							this.send_msg_text();
+							this.e_candidate_panel.classList.add("hidden");
+						});
+
+						body.appendChild(div);
+					});
+				};
 
                // 渲染候选词（只更新子元素，最多显示50个）
                 const renderCandidates = (list) => {
@@ -8885,6 +9158,15 @@
                 };
 
 
+				// 🔹 输入筛选事件
+				this.e_candidate_filter.addEventListener("input", () => {
+					const v = this.e_candidate_filter.value.trim();
+					const filtered = v === "" ? commonPhrases : commonPhrases.filter(p => p.includes(v));
+					this.render_candidate_panel(filtered); // ✅ 传入筛选后的列表
+					this.e_candidate_panel_body.scrollTop = 0;
+					updateCandidateButtons();
+				});
+				
                 // 输入框 input 显示候选词
                 this.e_inputarea_textarea.addEventListener("input", () => {
                     const v = this.e_inputarea_textarea.value.trim();
@@ -8905,6 +9187,19 @@
                         }
                     }, 150);
                 });
+
+
+				// =============================
+				// 🔥 半屏候选词：打开 / 关闭
+				// =============================
+				this.e_candidate_btn.addEventListener("click", () => {
+					this.render_candidate_panel(commonPhrases);
+					this.e_candidate_panel.classList.remove("hidden");
+				});
+
+				this.e_candidate_panel_close.addEventListener("click", () => {
+					this.e_candidate_panel.classList.add("hidden");
+				});
 
                 // ✅ 事件委托，绑定在父容器（永远有效）
                 this.e_inputarea_candidates.addEventListener("mousedown", (e) => {
@@ -9796,106 +10091,162 @@
             /*
             * 转发消息
             * */
-            forward_msg(msgattr) {
-                let form = [
-                    {type: "title", label: "转发给："},
-                    {
-                        type: "custom", label: "",
-                        add_element: (fm, row_custom) => {
-                            row_custom.subs = [];
-                            for (const mainaction of this.panel.wrapper.contact_items()) {
-                                if (mainaction === this.li.bindmap) continue;
-                                let text;
-                                if (dashboardwrappers.ChatDashboardWrapper.is_group(mainaction.contact_attr)) {
-                                    text = `组：${dashboardwrappers.ChatDashboardWrapper.get_contact_xxid(mainaction.contact_attr)}`;
-                                } else {
-                                    text = `${dashboardwrappers.ChatDashboardWrapper.get_contact_xxid(mainaction.contact_attr)}`;
-                                }
-                                let html = `<div class="fmic-item fmic-item-forwardmsgto"><label><input type="checkbox">${text}</label></div>`;
-                                row_custom.input_element.insertAdjacentHTML("beforeend", html);
-                                const column = row_custom.input_element.querySelector(":scope > .fmic-item:last-of-type");
-                                const checkbox = column.querySelector(":scope input");
 
-                                row_custom.subs.push({
-                                    mainaction,
-                                    column,
-                                    checkbox,
-                                })
-                            }
-                        },
-                        collect_data: (fm, row_custom) => {
-                            const map = [];
-                            for (const sub of row_custom.subs) {
-                                if (!sub.checkbox.checked) continue;
-                                map.push(sub.mainaction);
-                            }
-                            row_custom.value = map;
-                        },
-                    },
-                ];
+			forward_msg(msgattr) {
+				let form = [
+					{ type: "title", label: "转发给：" },
+					{
+						type: "custom",
+						label: "",
+						add_element: (fm, row_custom) => {
+						    row_custom.subs = [];
 
-                const confirm_callback = (fm,) => {
-                    fm.collect_data();
+						    /* ========= 全选：转发给所有人 ========= */
+						    const allHtml = `
+								<div class="fmic-forward-all-wrap">
+									<label class="fmic-forward-all">
+										<input type="checkbox" class="forward-select-all">
+										<span class="fmic-forward-all-text">
+											🚀 转发给所有人
+										</span>
+									</label>
+									<div class="fmic-forward-all-desc">
+										将消息发送给当前可选的全部联系人
+									</div>
+								</div>
+							`;
 
-                    try {
-                        // let x = normalizeName(form[1].value);
-                        // if (!form_field_checker.ffc_string(x)) throw new Error("");
-                        let mainactions = form[1].value;
-                        if (mainactions.length === 0) {
-                            fm.remove();
-                        } else {
-                            this._forward_msg(fm, msgattr, mainactions);
-                        }
-                    } catch (e) {
-                        MessageMark.report(e, fm.rect)
-                    }
+						    row_custom.input_element.insertAdjacentHTML("beforeend", allHtml);
 
-                }
-                FormMark.get_global_input(form, confirm_callback)
-            }
+						    const selectAllCheckbox =
+						        row_custom.input_element.querySelector(".forward-select-all");
 
-            _forward_msg(fm, msgattr, mainactions) {
-                const {xxid, contact_type, ceid} = this.current_contact_xxid();
+						    /* ========= 普通联系人 ========= */
+						    for (const mainaction of this.panel.wrapper.contact_items()) {
+						        if (mainaction === this.li.bindmap) continue;
 
-                const to = [];
-                mainactions.forEach(i => {
-                    if (i.contact_attr.type === subviews.Chat.receiver_type.group) {
-                        to.push({type: i.contact_attr.type, gid: i.contact_attr.gid});
-                    } else {
-                        to.push({type: i.contact_attr.type, uid: i.contact_attr.uid});
-                    }
-                });
+						        let text;
+						        if (dashboardwrappers.ChatDashboardWrapper.is_group(mainaction.contact_attr)) {
+						            text = `组：${dashboardwrappers.ChatDashboardWrapper.get_contact_xxid(mainaction.contact_attr)}`;
+						        } else {
+						            text = `${dashboardwrappers.ChatDashboardWrapper.get_contact_xxid(mainaction.contact_attr)}`;
+						        }
 
-                fm.loading_mark = new LoadingMark(fm.rect);
-                fm.loading_mark.show();
+						        const html = `
+						            <div class="fmic-item fmic-item-forwardmsgto">
+						                <label><input type="checkbox">${text}</label>
+						            </div>
+						        `;
+						        row_custom.input_element.insertAdjacentHTML("beforeend", html);
 
-                const onfetchload = (result) => {
-                    this.client.dashboard_chat.wrapper.update_contact_item_status(result.sync);
+						        const column =
+						            row_custom.input_element.querySelector(":scope > .fmic-item:last-of-type");
+						        const checkbox = column.querySelector("input");
 
-                    if (this.closed) return;
-                    fm.loading_mark.remove();
-                    fm.remove();
-                };
-                const onfetcherror = (error) => {
-                    // if (error.auto_retry) {
-                    // } else {
-                    if (this.closed) return;
-                    fm.loading_mark.remove();
-                    MessageMark.report(error, fm.rect);
-                    // }
-                };
-                const ws_isopen = false;
-                checkin.subviews.chat.forward(ws_isopen ? (args) => {
-                    this.panel.wrapper.ws_send(args.body, {onfetchload, onfetcherror});
-                } : null, contact_type, xxid, ceid, msgattr.id, to,)
-                    .then(result => {
-                        if (ws_isopen) return;
-                        onfetchload(result);
-                    }).catch(error => {
-                    onfetcherror(error);
-                });
+						        row_custom.subs.push({
+						            mainaction,
+						            column,
+						            checkbox,
+						        });
+						    }
 
-            }
+						    /* ========= 全选 → 子选项 ========= */
+						    selectAllCheckbox.addEventListener("change", () => {
+						        const checked = selectAllCheckbox.checked;
+						        for (const sub of row_custom.subs) {
+						            sub.checkbox.checked = checked;
+						        }
+						    });
+
+						    /* ========= 子选项 → 全选 ========= */
+						    for (const sub of row_custom.subs) {
+						        sub.checkbox.addEventListener("change", () => {
+						            selectAllCheckbox.checked =
+						                row_custom.subs.length > 0 &&
+						                row_custom.subs.every(s => s.checkbox.checked);
+						        });
+						    }
+						},
+
+						collect_data: (fm, row_custom) => {
+						    const map = [];
+						    for (const sub of row_custom.subs) {
+						        if (!sub.checkbox.checked) continue;
+						        map.push(sub.mainaction);
+						    }
+						    row_custom.value = map;
+						},
+					},
+				];
+
+				const confirm_callback = (fm) => {
+					fm.collect_data();
+					try {
+						const mainactions = form[1].value;
+						if (mainactions.length === 0) {
+						    fm.remove();
+						} else {
+						    this._forward_msg(fm, msgattr, mainactions);
+						}
+					} catch (e) {
+						MessageMark.report(e, fm.rect);
+					}
+				};
+
+				FormMark.get_global_input(form, confirm_callback);
+			}
+
+			/*
+			* 真正执行转发
+			* */
+			_forward_msg(fm, msgattr, mainactions) {
+				const { xxid, contact_type, ceid } = this.current_contact_xxid();
+
+				const to = [];
+				mainactions.forEach(i => {
+					if (i.contact_attr.type === subviews.Chat.receiver_type.group) {
+						to.push({ type: i.contact_attr.type, gid: i.contact_attr.gid });
+					} else {
+						to.push({ type: i.contact_attr.type, uid: i.contact_attr.uid });
+					}
+				});
+
+				fm.loading_mark = new LoadingMark(fm.rect);
+				fm.loading_mark.show();
+
+				const onfetchload = (result) => {
+					this.client.dashboard_chat.wrapper.update_contact_item_status(result.sync);
+					if (this.closed) return;
+					fm.loading_mark.remove();
+					fm.remove();
+				};
+
+				const onfetcherror = (error) => {
+					if (this.closed) return;
+					fm.loading_mark.remove();
+					MessageMark.report(error, fm.rect);
+				};
+
+				const ws_isopen = false;
+
+				checkin.subviews.chat.forward(
+					ws_isopen ? (args) => {
+						this.panel.wrapper.ws_send(args.body, { onfetchload, onfetcherror });
+					} : null,
+					contact_type,
+					xxid,
+					ceid,
+					msgattr.id,
+					to
+				)
+				.then(result => {
+					if (!ws_isopen) onfetchload(result);
+				})
+				.catch(error => {
+					onfetcherror(error);
+				});
+			}
+
 
 
             /*
