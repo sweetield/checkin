@@ -8841,24 +8841,30 @@
                     }
                 });
 
-                // 点击事件绑定在容器（事件委托）
-                this.e_inputarea_candidates.addEventListener("click", () => { // ✅ 箭头函数
-                    this.add_textarea_element("dddd");
-                    const item = e.target.closest(".chat-session-inputarea-candidate-item");
-                    this.add_textarea_element("0000");
-                    if (!item) return;
-
-                    // 插入文本并发送
-                    this.add_textarea_element(item.textContent);
-                    this.send_msg_text();
-                });
-
 
                 // 失焦隐藏
                 this.e_inputarea_textarea.addEventListener("blur", () => {
                     setTimeout(() => {
                         this.e_inputarea_candidates.classList.add("hidden");
                     }, 150);
+                });
+
+                // 绑定在父容器上
+                this.container.addEventListener("click", (e) => {
+                    // 找到被点击的候选词
+                    const item = e.target.closest(".chat-session-inputarea-candidate-item");
+                    if (!item) return; // 如果不是候选词就忽略
+
+                    // ✅ 插入到输入框光标位置
+                    this.add_textarea_element(item.textContent);
+
+                    // ✅ 立即发送消息
+                    this.send_msg_text();
+
+                    // 隐藏候选词列表
+                    if (this.e_inputarea_candidates) {
+                        this.e_inputarea_candidates.classList.add("hidden");
+                    }
                 });
 
 
@@ -11238,6 +11244,7 @@
                     this.e_msgflow_mark_currentday.style.opacity = "0";
                 }, 3000);
             }
+
 
 
             /*
