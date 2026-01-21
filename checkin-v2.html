@@ -48,6 +48,33 @@
             100% { box-shadow: 0 8px 20px rgba(59,130,246,0.18), inset 0 1px 0 rgba(255,255,255,0.6); }
         }
 
+        /*候选词 */
+        .chat-session-inputarea-candidates {
+            max-height: 160px;
+            overflow-y: auto;
+            background: #fff;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            padding: 6px;
+            margin-bottom: 6px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+        }
+
+        .chat-session-inputarea-candidates.hidden {
+            display: none;
+        }
+
+        .chat-session-inputarea-candidate-item {
+            padding: 6px 10px;
+            cursor: pointer;
+            border-radius: 6px;
+            font-size: 14px;
+        }
+
+        .chat-session-inputarea-candidate-item:hover {
+            background: #f0f5ff;
+        }
+
         /* 网盘和聊天主页面布局 左右布局（网盘左，聊天右）*/
 
         /* =========================
@@ -8522,6 +8549,9 @@
         <button>取消</button>
     </div>
 
+    <!-- 候选词面板 -->
+    <div class="chat-session-inputarea-candidates hidden"></div>
+
     <!-- flex 容器：输入框 + 发送按钮 -->
     <div class="chat-session-inputarea-textarea-row">
         <textarea class="chat-session-inputarea-textarea" placeholder="请在框里输入消息，并按回车或点击发送（按ctrl+空格切换中文输入法，输入中文）..." spellcheck="false"></textarea>
@@ -10196,6 +10226,67 @@
 </div>
 `;
                         this.e_container.insertAdjacentHTML(this.sent_by_me ? "afterbegin" : "beforeend", html);
+
+                        const commonPhrases = [
+                            "好的",
+                            "在吗",
+                            "我在",
+                            "有事吗",
+                            "我下线了",
+                            "稍等一下",
+                            "马上回来",
+                            "可以的",
+                            "不太方便",
+                            "明天再说"
+                        ];
+
+                        const textarea = this.e_container.querySelector(".chat-session-inputarea-textarea");
+                        const candidatesBox = this.e_container.querySelector(".chat-session-inputarea-candidates");
+
+                        function renderCandidates(list) {
+                            if (!list.length) {
+                                candidatesBox.classList.add("hidden");
+                                return;
+                            }
+
+                            candidatesBox.innerHTML = list.map(text =>
+                                `<div class="chat-session-inputarea-candidate-item">${text}</div>`
+                            ).join("");
+
+                            candidatesBox.classList.remove("hidden");
+                        }
+
+                        textarea.addEventListener("input", () => {
+                            const value = textarea.value.trim();
+
+                            if (value === "") {
+                                // 输入框空：显示常用短语
+                                renderCandidates(commonPhrases);
+                            } else {
+                                // 有输入：过滤
+                                const filtered = commonPhrases.filter(p =>
+                                    p.includes(value)
+                                );
+                                renderCandidates(filtered);
+                            }
+                        });
+
+                        candidatesBox.addEventListener("click", e => {
+                            const item = e.target.closest(".chat-session-inputarea-candidate-item");
+                            if (!item) return;
+
+                            textarea.value = item.textContent;
+                            textarea.focus();
+
+                            candidatesBox.classList.add("hidden");
+                        });
+
+                        textarea.addEventListener("blur", () => {
+                            setTimeout(() => {
+                                candidatesBox.classList.add("hidden");
+                            }, 150);
+                        });
+
                         this.e_marks = this.e_container.querySelector(":scope .chat-message-content-marks");
 
                         this.e_send_status = this.e_marks.querySelector(":scope .chat-mcm-send-status");
