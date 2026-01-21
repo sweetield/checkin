@@ -14454,18 +14454,18 @@
     const nextBtn = candidatesBox.querySelector(".btn-next");
 
     // 渲染候选词，只更新子元素
-    function renderCandidates(list) {
+    const renderCandidates = (list) => {
         if (!list.length) {
             this.e_inputarea_candidates.classList.add("hidden");
-            this.e_inputarea_candidates.innerHTML = ""; // 清空子元素
+            this.e_inputarea_candidates.innerHTML = "";
             return;
         }
-
         this.e_inputarea_candidates.innerHTML = list.map(t =>
             `<div class="chat-session-inputarea-candidate-item">${t}</div>`
         ).join("");
         this.e_inputarea_candidates.classList.remove("hidden");
-    }
+    };
+
 
 
     // 横向滚动逻辑
