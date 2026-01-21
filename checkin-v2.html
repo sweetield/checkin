@@ -62,7 +62,7 @@
             box-shadow: 0 8px 24px rgba(0,0,0,.15);
 
             display: flex;
-            flex-wrap: wrap;       /* 多行排列 */
+            flex-wrap: nowrap; /* 横向一行排列 */
             gap: 8px;              /* 候选词间距 */
 
             padding: 8px;
@@ -80,6 +80,7 @@
 
         /* 单个候选词 */
         .chat-session-inputarea-candidate-item {
+            flex: 0 0 auto;    /* 防止换行 */
             padding: 6px 10px;
             cursor: pointer;
             border-radius: 6px;
@@ -8808,12 +8809,16 @@
                  // =============================
                 // 🔥 新增：候选词逻辑
                 // =============================
-                // 类初始化时
+                // =============================
+
                 this.e_inputarea_candidates = this.container.querySelector(".chat-session-inputarea-candidates");
 
-                const commonPhrases = ["好的","在吗","我在","有事吗","我下线了","等我5分钟","等我一下","马上回来","可以的","不行","不是","明天再说"];
+                const commonPhrases = [
+                    "好的","在吗","我在","有事吗","我下线了","等我5分钟",
+                    "等我一下","马上回来","可以的","不行","不是","明天再说"
+                ];
 
-                // 渲染候选词
+                // 渲染候选词（只定义一次）
                 const renderCandidates = (list) => {
                     if (!list.length) {
                         this.e_inputarea_candidates.classList.add("hidden");
@@ -8826,20 +8831,20 @@
                     this.e_inputarea_candidates.classList.remove("hidden");
                 };
 
-                // 输入时显示候选词
+                // 输入框 input 时显示 / 筛选候选词
                 this.e_inputarea_textarea.addEventListener("input", () => {
                     const v = this.e_inputarea_textarea.value.trim();
                     renderCandidates(v === "" ? commonPhrases : commonPhrases.filter(p => p.includes(v)));
                 });
 
-                // focus 时显示
+                // 输入框 focus 时显示候选词
                 this.e_inputarea_textarea.addEventListener("focus", () => {
                     if (this.e_inputarea_textarea.value.trim() === "") {
                         renderCandidates(commonPhrases);
                     }
                 });
 
-                // 点击事件绑定在容器（事件委托）
+                // 点击候选词填充输入框（事件委托）
                 this.e_inputarea_candidates.addEventListener("click", e => {
                     const item = e.target.closest(".chat-session-inputarea-candidate-item");
                     if (!item) return;
@@ -8848,12 +8853,29 @@
                     this.e_inputarea_candidates.classList.add("hidden");
                 });
 
-                // 失焦隐藏
+                // 输入框失焦隐藏候选词
                 this.e_inputarea_textarea.addEventListener("blur", () => {
                     setTimeout(() => {
                         this.e_inputarea_candidates.classList.add("hidden");
                     }, 150);
                 });
+
+                // =============================
+                // 🔥 横向滚动按钮
+                // =============================
+                const prevBtn = this.e_inputarea_candidates.querySelector(".btn-prev");
+                const nextBtn = this.e_inputarea_candidates.querySelector(".btn-next");
+
+                if (prevBtn) {
+                    prevBtn.addEventListener("click", () => {
+                        this.e_inputarea_candidates.scrollBy({ left: -100, behavior: "smooth" });
+                    });
+                }
+                if (nextBtn) {
+                    nextBtn.addEventListener("click", () => {
+                        this.e_inputarea_candidates.scrollBy({ left: 100, behavior: "smooth" });
+                    });
+                }
 
 
                 // 🔥 回车发送（原逻辑，保留）
@@ -14444,38 +14466,6 @@
 
 </script>
 
-
-<script>
-/*候选词JS 控制左右滚动*/
-    const candidatesBox = this.container.querySelector(".chat-session-inputarea-candidates");
-    const prevBtn = candidatesBox.querySelector(".btn-prev");
-    const nextBtn = candidatesBox.querySelector(".btn-next");
-
-    // 渲染候选词，只更新子元素
-    const renderCandidates = (list) => {
-        if (!list.length) {
-            this.e_inputarea_candidates.classList.add("hidden");
-            this.e_inputarea_candidates.innerHTML = "";
-            return;
-        }
-
-        this.e_inputarea_candidates.innerHTML = list.map(t =>
-            `<div class="chat-session-inputarea-candidate-item">${t}</div>`
-        ).join("");
-        this.e_inputarea_candidates.classList.remove("hidden");
-    };
-
-
-
-    // 横向滚动逻辑
-    prevBtn.addEventListener("click", () => {
-        candidatesBox.scrollBy({ top: -40, behavior: "smooth" });
-    });
-    nextBtn.addEventListener("click", () => {
-        candidatesBox.scrollBy({ top: 40, behavior: "smooth" });
-    });
-
-</script>
 
 <script>
 const textarea = document.querySelector('.chat-session-inputarea-textarea');
