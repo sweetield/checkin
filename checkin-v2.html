@@ -8817,16 +8817,35 @@
 
                 // 渲染候选词
                 const renderCandidates = (list) => {
+                    // 先清空已有子节点
+                    while (this.e_inputarea_candidates.firstChild) {
+                        this.e_inputarea_candidates.removeChild(this.e_inputarea_candidates.firstChild);
+                    }
+
                     if (!list.length) {
                         this.e_inputarea_candidates.classList.add("hidden");
-                        this.e_inputarea_candidates.innerHTML = "";
                         return;
                     }
-                    this.e_inputarea_candidates.innerHTML = list.map(t =>
-                        `<div class="chat-session-inputarea-candidate-item">${t}</div>`
-                    ).join("");
+
+                    // 逐个创建候选词节点
+                    list.forEach(text => {
+                        const div = document.createElement("div");
+                        div.className = "chat-session-inputarea-candidate-item";
+                        div.textContent = text;
+
+                        // 点击事件直接绑定在节点上
+                        div.addEventListener("click", () => {
+                            this.add_textarea_element(text); // 插入到光标位置
+                            this.send_msg_text();            // 立即发送
+                            this.e_inputarea_candidates.classList.add("hidden");
+                        });
+
+                        this.e_inputarea_candidates.appendChild(div);
+                    });
+
                     this.e_inputarea_candidates.classList.remove("hidden");
                 };
+
 
                 // 输入时显示候选词
                 this.e_inputarea_textarea.addEventListener("input", () => {
