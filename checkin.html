@@ -48,6 +48,56 @@
             100% { box-shadow: 0 8px 20px rgba(59,130,246,0.18), inset 0 1px 0 rgba(255,255,255,0.6); }
         }
 
+        /* 候选词容器 */
+        .chat-session-inputarea-candidates {
+            position: absolute;
+            bottom: calc(100% + 12px);  /* 离输入框稍远一点 */
+            left: 12px;
+            right: 12px;
+
+            background: #ffffff;
+            border: 1px solid #ccc;        /* 较明显边框 */
+            border-radius: 10px;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2); /* 更清晰阴影 */
+
+            display: flex;
+            flex-wrap: nowrap;
+            gap: 12px;              /* 候选词间距更大 */
+            
+            padding: 10px;          /* 内边距增加，滚动条不遮挡 */
+            max-height: 120px;      /* 增高一些，更舒服 */
+            overflow-y: auto;
+            scroll-behavior: smooth;
+
+            z-index: 9999;
+        }
+
+        /* 隐藏状态 */
+        .chat-session-inputarea-candidates.hidden {
+            display: none;
+        }
+
+        /* 单个候选词 */
+        .chat-session-inputarea-candidate-item {
+            flex: 0 0 auto;
+            padding: 8px 14px;         /* 内边距增加，更容易点击 */
+            cursor: pointer;
+            border-radius: 8px;
+            font-size: 16px;            /* 字体加大 */
+            font-weight: 600;           /* 稍微加粗 */
+            color: #333;                /* 字体颜色更清晰 */
+            background: #f0f0f0;        /* 背景色稍深，增强对比 */
+            white-space: nowrap;
+            transition: all 0.2s ease;
+        }
+
+        /* 悬停效果 */
+        .chat-session-inputarea-candidate-item:hover {
+            background: #cce0ff;        /* 蓝色高亮，更明显 */
+            color: #000;
+        }
+
+
         /* 网盘和聊天主页面布局 左右布局（网盘左，聊天右）*/
 
         /* =========================
@@ -1338,7 +1388,6 @@
             position: relative; /* 关键：让 子div 以它为定位基准 */
             /*overflow: hidden; !* 防止 子div 溢出 *!*/
 
-            overflow: visible;
         }
 
         div.blank-mark {
@@ -2215,6 +2264,7 @@
             flex-direction: column;
             /*flex-grow: 1;*/
             height: 100%;
+            overflow: visible;
         }
 
         .chat-session-header {
@@ -2387,6 +2437,7 @@
             flex-direction: column;
             width: 100%;
             box-sizing: border-box;
+            position: relative; /* 定位基准，必须有 */
         }
 
         .theme-dark .chat-session-inputarea {
@@ -3262,11 +3313,23 @@
         <div id="login-rect">
             <span id="login-tip-user" class="hidden"></span>
             <span id="login-tip-admin" class="hidden">服务管理员</span>
-            <label id="login-input-account-label">账号：<input type="text" id="login-input-account"></label>
-            <label>密码：<input type="text" id="login-input-password"></label>
+
+            <label id="login-input-account-label">
+                账号：
+                <input type="text" id="login-input-account">
+            </label>
+
+            <label>
+                密码：
+                <input type="text" id="login-input-password">
+                <button type="button" class="clear-input-btn" data-target="login-input-password">清空</button>
+            </label>
+
             <button id="login-btn">登录</button>
         </div>
     </section>
+
+
 
     <section id="apps-panel">
         <span id="apps-top-margin"></span>
@@ -8522,6 +8585,8 @@
         <button>取消</button>
     </div>
 
+    <div class="chat-session-inputarea-candidates hidden"></div>
+
     <!-- flex 容器：输入框 + 发送按钮 -->
     <div class="chat-session-inputarea-textarea-row">
         <textarea class="chat-session-inputarea-textarea" placeholder="请在框里输入消息，并按回车或点击发送（按ctrl+空格切换中文输入法，输入中文）..." spellcheck="false"></textarea>
@@ -8531,6 +8596,7 @@
 
 </div>
 `;
+
                 this.container.insertAdjacentHTML("beforeend", html);
                 this.chat_rect = this.container.querySelector(":scope div.chat-rect");
                 this.e_header_info = this.container.querySelector(":scope div.chat-session-header-info");
@@ -8706,9 +8772,9 @@
                 });
 
                 // 文本输入
-                this.e_inputarea_textarea = this.container.querySelector(
-                    ":scope textarea.chat-session-inputarea-textarea"
-                );
+                this.e_inputarea_textarea = this.container.querySelector(".chat-session-inputarea-textarea");
+                
+
 
                 // 自动高度
                 this.e_inputarea_textarea.addEventListener('input', () => {
@@ -8726,6 +8792,166 @@
                 this.e_inputarea_textarea.addEventListener('blur', () => {
                     floatball.setOpacity(1);
                 });
+
+
+
+                 // =============================
+                // 🔥 新增：候选词逻辑
+                // =============================
+                // =============================
+                // 类初始化时
+                // 候选词容器
+                this.e_inputarea_candidates = this.container.querySelector(".chat-session-inputarea-candidates");
+
+                // 公共短语
+                const commonPhrases = [
+                  // 日常聊天（前 200 条）
+                  "好的","在吗","我在","有事吗？","我下线了","等我5分钟","有事找你", "有事请留言", "听懂了","🔥特急！", "明天按时去","等我一下","马上回来","可以的","不行","我还不没掌握",  
+                  "不是","明天再说","辛苦了","谢谢","没事","等一下","吃了吗","忙吗","我懂了","哈哈","在家吗","忙吗","有空吗",
+                  "😄","😂","😅","😭","😡","晚安","早上好","中午好","下午好","晚上好", "好吧！","没时间",
+                  "路上小心","加油","拜拜","再见","小心点","没关系","放心吧","我试试","好的好的","嗯嗯",
+                  "太棒了","厉害","明白","懂了","知道了","好的，谢谢","抱歉","没问题","加油呀","辛苦啦",
+                  "开心","生气了","累了","饿了","困了","想睡觉","吃饱了吗","出去吗","回来了吗",
+                  "等你","等我","快点","慢点","不要急","放松点","小心","别忘了","记得","快来了",
+                  "恭喜","干得漂亮","加把劲","继续努力","保持联系","注意安全","早点休息","晚安了","早点睡","明天见",
+                  "别着急","慢慢来","小心驾驶","照顾好自己","保重","理解","同意","支持","赞同","放心",
+                  "加油哦","期待","等一下哦","等等我","等我一下","我来了","我走了","在路上","马上到","准备好了",
+                  "收到","确认","了解","明白了","知道了","行","好","嗯","嗯嗯","哦",
+                  "哈哈哈","嘻嘻","呵呵","哎呀","哇","哎哟","哼","嗯哼","唉","哎",
+                  "打电话吗","聊会儿吗","见面吗","出来吗",
+                  "可以吗","行吗","怎么了","什么事","有问题吗","没事吧","还好吗？","你好吗","我很好","你呢","最近怎么样",
+                  "开心吗","累吗","饿吗","你是谁？", "我是", "那里能住吗？",
+                  "你什么时候有空？","明天有空吗？", "我们几点见？",
+                  "今天下午可以吗？", "可以约个时间吗？", "周末有空吗？", "明晚方便吗？", "你什么时候方便？", 
+                  "我们几点碰面？", "什么时候开会？", "明天上午可以吗？", "后天有空吗？", "我们定个时间吧。", 
+                  "今天什么时候方便？", "下午几点合适？", "你有空吗？", "下周可以安排吗？", "什么时候方便聊天？", "明天几点见？", 
+                  "今天晚上方便吗？", "我们周几见面？", "你下午有空吗？", "明天早上可以吗？", "我们约个时间吧。", 
+                  "什么时候开视频？", "下次见面定在什么时候？", "明天见可以吗？", "你什么时候下班？", "今天几点开会？", 
+                  "约个时间聊一下吧。", "后天见可以吗？", "你周末有空吗？", "今天方便吗？", "我们几点通话？", "下周几合适？", 
+                  "明天中午可以吗？", "我们安排一下时间。", "今天上午你有空吗？", "你什么时候方便见面？", "我们约个时间讨论一下。", 
+                  "什么时候吃饭？", "下周见可以吗？", "明天什么时候方便？", "今天晚上几点？", "我们什么时候开会？", "周末几点见？", 
+                  "我们明天约吗？", "什么时候方便打电话？", "今天下午几点？", "我们什么时候碰头？", "能约个时间吗？", 
+                  "明天见面合适吗？", "你几点下班？", "今天中午方便吗？", "下午你有空吗？", "什么时候开个会？", "我们定个时间讨论吧。", 
+                  "明晚几点？", "周末安排一下吧。", "你明天有空吗？", "今天能见面吗？", "什么时候方便开会？", "我们约一下时间吧。", "你下午什么时候方便？", "下周什么时候合适？", "今天几点见？", "明天晚上方便吗？", "我们什么时候聊？", "可以约个时间吃饭吗？", "明天上午几点？", "我们约个时间通话吧。", 
+                   "什么时候可以视频？", "下次开会什么时候？", "你什么时候空闲？", "今天安排一下时间吧。", "我们周末见面可以吗？", "明天下午几点？", "你什么时候方便打电话？", "今天中午几点？", "我们什么时候碰面？", "下午见面可以吗？", "明天中午方便吗？", "什么时候约个时间？", 
+                    "我们明天几点见？", "你周五有空吗？", "今天晚上能聊吗？", "明天早上几点？", "我们什么时候吃饭？", "你什么时候方便开会？", "今天下午几点合适？", "周末什么时候见？", "我们什么时候视频？", "明天晚上几点见？", "你明天中午方便吗？", "今天什么时候可以聊？", "我们约个时间吃午饭吧。", "你什么时候方便面谈？", "明天几点开会？", "我们什么时候电话沟通？", "今天下午方便开会吗？", "你什么时候可以碰面？", "明天上午方便吗？", "我们约个时间讨论工作吧。", "今天晚上几点见？", "你什么时候方便视频？",
+                  "他家能去吗？","那里安全吗？", "困吗","想吃什么","想喝什么","想去哪","想做什么","打算干什么","计划好了","安排好了","准备好了",
+                  "加油加油","稳住","别慌","没关系的","一切顺利","不用担心","放心吧","慢慢来","一步一步","做好了",
+                  "小伙伴们","大家好","各位好","同事们好","朋友们好","兄弟们好","姐妹们好","亲爱的们好","早安","午安",
+                  "晚安","夜安","祝大家好","祝大家愉快","祝大家健康","祝大家开心","祝大家顺利","祝大家平安","祝大家幸福","祝大家成功",
+                  "天气不错","下雨了吗","今天热吗","今天冷吗","吃饭了吗","要不要一起吃","去哪儿玩","看电影吗","看电视剧吗","听音乐吗",
+                  "运动了吗","跑步了吗","健身了吗","休息了吗","睡得好吗","早起了吗","晚睡了吗","今天心情怎么样","开心吗","难过吗",
+                  "想聊吗","聊会儿天吧","聊聊天吧","买东西了吗","购物了吗","下单了吗","收到了吗","快递到了吗","取快递了吗",
+                   "收快递了吗","寄快递了吗","做作业了吗","完成作业了吗",
+                  "上课了吗","下课了吗","上班了吗","下班了吗","休息了吗","加班了吗","忙吗","有空吗","在家吗","在公司吗",
+                  "去哪儿了","回来了吗","出去了吗","到家了吗","吃了吗","喝了吗","睡了吗","醒了吗","准备了吗","出门了吗",
+                  "小心摄像头", "小心被跟踪", "doo来这了", "DOO来这了", "有人被抓了", "不要在摄像头地下见面",
+                  "想吃吗","想喝吗","想玩吗","想去吗","想看吗","想买吗","想学吗","想问吗","想说吗","想聊吗","这个星期放假吗？",
+                  "今天怎么样","今天忙吗","昨天怎么样","昨天忙吗","明天怎么样","明天忙吗","周末打算","周末安排","假期安排","假期计划",
+                  "节日安排","旅行安排","旅行计划","工作顺利吗","学习顺利吗","身体好吗","心情好吗","开心吗","累吗","困吗",
+                  "饿吗","渴吗","疼吗","舒服吗","生气了吗","开心吗","惊讶吗","难过吗","兴奋吗","期待吗",
+                  "听懂了吗","理解了吗","掌握了吗","学习效率高吗","学习状态怎么样","有没有问题",
+                   
+                  
+                  // 工作交流（接下来的 300 条）
+                  "收到","已处理","正在处理","请确认","确认完成","请审批","已审批","需要补充资料","已转发","请查看",
+                  "请回复","紧急","尽快处理","稍后回复","更新完成","请跟进","会议开始了","会议结束了","明天开会","稍等",
+                  "请安排","已安排","任务完成","请检查","系统异常","测试通过","代码提交","代码review","上线完成","记得交回报"
+                  
+                ];
+
+               // 渲染候选词（只更新子元素，最多显示50个）
+                const renderCandidates = (list) => {
+                    const container = this.e_inputarea_candidates;
+
+                    // 清空子元素
+                    container.querySelectorAll(".chat-session-inputarea-candidate-item").forEach(el => el.remove());
+
+                    if (!list.length) {
+                        container.classList.add("hidden");
+                        return;
+                    }
+
+                    // 只取前50个
+                    const limitedList = list.slice(0, 1000);
+
+                    limitedList.forEach(text => {
+                        const div = document.createElement("div");
+                        div.className = "chat-session-inputarea-candidate-item";
+                        div.textContent = text;
+                        container.appendChild(div);
+                    });
+
+                    container.classList.remove("hidden");
+                };
+
+
+                // 输入框 input 显示候选词
+                this.e_inputarea_textarea.addEventListener("input", () => {
+                    const v = this.e_inputarea_textarea.value.trim();
+                    renderCandidates(v === "" ? commonPhrases : commonPhrases.filter(p => p.includes(v)));
+                });
+
+                // focus 显示候选词
+                this.e_inputarea_textarea.addEventListener("focus", () => {
+                    renderCandidates(commonPhrases);
+                });
+
+                // blur 隐藏候选词，但判断如果正在点击候选词就不隐藏
+                this.e_inputarea_textarea.addEventListener("blur", (e) => {
+                    setTimeout(() => {
+                        const active = document.activeElement;
+                        if (!active.classList.contains("chat-session-inputarea-candidate-item")) {
+                            this.e_inputarea_candidates.classList.add("hidden");
+                        }
+                    }, 150);
+                });
+
+                // ✅ 事件委托，绑定在父容器（永远有效）
+                this.e_inputarea_candidates.addEventListener("mousedown", (e) => {
+                    // 用 mousedown 而不是 click，避免 blur 先触发隐藏
+                    const item = e.target.closest(".chat-session-inputarea-candidate-item");
+                    if (!item) return;
+
+                    // 插入光标位置
+                    this.add_new_textarea_element(item.textContent);
+
+                    this.send_msg_text();
+
+                    // 隐藏候选词
+                    this.e_inputarea_candidates.classList.add("hidden");
+                });
+
+
+                // 绑定在父容器上
+                this.container.addEventListener("click", (e) => {
+                    const item = e.target.closest(".chat-session-inputarea-candidate-item");
+                    if (!item) return; // 不是候选词就忽略
+
+                    // 插入文本并发送
+                    this.add_new_textarea_element(item.textContent);
+                    this.send_msg_text();
+
+                    // 隐藏候选词
+                    this.e_inputarea_candidates.classList.add("hidden");
+                });
+
+
+
+                // =============================
+                // 🔥 横向滚动按钮
+                // =============================
+                const prevBtn = this.container.querySelector(".chat-session-inputarea-candidates .btn-prev");
+                const nextBtn = this.container.querySelector(".chat-session-inputarea-candidates .btn-next");
+
+                if (prevBtn) prevBtn.addEventListener("click", () => {
+                    this.e_inputarea_candidates.scrollBy({ left: -100, behavior: "smooth" });
+                });
+                if (nextBtn) nextBtn.addEventListener("click", () => {
+                    this.e_inputarea_candidates.scrollBy({ left: 100, behavior: "smooth" });
+                });
+
+
 
                 // 🔥 回车发送（原逻辑，保留）
                 this.e_inputarea_textarea.addEventListener('keydown', (e) => {
@@ -8760,6 +8986,8 @@
                         this.e_inputarea_sendbtn.disabled = text.length === 0;
                     }
                 });
+
+
 
                 // 加载草稿
                 this.load_draft_text();
@@ -10196,6 +10424,8 @@
 </div>
 `;
                         this.e_container.insertAdjacentHTML(this.sent_by_me ? "afterbegin" : "beforeend", html);
+
+
                         this.e_marks = this.e_container.querySelector(":scope .chat-message-content-marks");
 
                         this.e_send_status = this.e_marks.querySelector(":scope .chat-mcm-send-status");
@@ -10475,6 +10705,7 @@
 </div>
 `;
                         this.e_container.insertAdjacentHTML("beforeend", html);
+
                         this.e_mcr = this.e_container.querySelector(":scope .chat-message-content-rect");
                         this.e_mcr.style.background = this.palette.rect_bg;
 
@@ -11085,6 +11316,7 @@
             }
 
 
+
             /*
             * 文本输入框
             * */
@@ -11117,6 +11349,24 @@
                 textarea.focus();
             }
 
+            add_new_textarea_element(textToInsert) {
+                const textarea = this.e_inputarea_textarea;
+
+                // 获取光标位置
+                const startPos = textarea.selectionStart;
+                const endPos = textarea.selectionEnd;
+                // textarea 原来的内容
+                const originalValue = "";
+                // 在光标位置插入文本
+                textarea.value =
+                    originalValue.substring(0, startPos) +
+                    textToInsert +
+                    originalValue.substring(endPos);
+                // 更新光标位置到插入文本后
+                textarea.selectionStart = textarea.selectionEnd = startPos + textToInsert.length;
+                // 保持 textarea 焦点
+                textarea.focus();
+            }
             update_activity(type) {
                 // if (this.previous_activity_attr.is_sending) return;
                 const current_time = Date.now();
@@ -13758,6 +14008,14 @@
             this.login_input_account = document.getElementById("login-input-account");
             this.login_input_account_label = document.getElementById("login-input-account-label");
             this.login_input_password = document.getElementById("login-input-password");
+            /*清理密码*/
+            document.querySelectorAll('.clear-input-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const targetId = this.getAttribute('data-target');
+                    document.getElementById(targetId).value = '';
+                });
+            });
+
             this.login_btn = document.getElementById("login-btn");
             this.login_btn.addEventListener("click", (event) => {
                 this.login(event)
