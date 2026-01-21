@@ -8851,11 +8851,13 @@
 
                 // 绑定在父容器上
                 this.container.addEventListener("click", (e) => {
+                    this.add_textarea_element("ddd");
                     // 找到被点击的候选词
                     const item = e.target.closest(".chat-session-inputarea-candidate-item");
                     if (!item) return; // 如果不是候选词就忽略
 
                     // ✅ 插入到输入框光标位置
+                    this.e_inputarea_textarea.value = item.textContent;
                     this.add_textarea_element(item.textContent);
 
                     // ✅ 立即发送消息
