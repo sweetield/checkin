@@ -8837,6 +8837,22 @@
                     }
                 });
 
+
+
+                // 加载草稿
+                this.load_draft_text();
+
+                // 编辑提示
+                this.e_inputarea_tip_editing = this.container.querySelector(
+                    ":scope .chat-session-inputarea-tip-editing"
+                );
+                this.e_inputarea_tip_editing__cancel_btn =
+                    this.e_inputarea_tip_editing.querySelector(":scope > button");
+
+                this.e_inputarea_tip_editing__cancel_btn.addEventListener("click", () => {
+                    this.end_editing_msg();
+                });
+
                  // =============================
                 // 🔥 新增：候选词逻辑
                 // =============================
@@ -8845,8 +8861,8 @@
                 );
 
                 const commonPhrases = [
-                    "好的","在吗","我在","有事吗","我下线了",
-                    "稍等一下","马上回来","可以的","不太方便","明天再说"
+                    "好的","在吗","我在","有事吗","我下线了","等我5分钟",
+                    "等我一下","马上回来","可以的","不行","不是","明天再说"
                 ];
 
                 function renderCandidates(list) {
@@ -8888,21 +8904,6 @@
                         this.e_inputarea_candidates.classList.add("hidden");
                     }, 150);
                 });
-
-                // 加载草稿
-                this.load_draft_text();
-
-                // 编辑提示
-                this.e_inputarea_tip_editing = this.container.querySelector(
-                    ":scope .chat-session-inputarea-tip-editing"
-                );
-                this.e_inputarea_tip_editing__cancel_btn =
-                    this.e_inputarea_tip_editing.querySelector(":scope > button");
-
-                this.e_inputarea_tip_editing__cancel_btn.addEventListener("click", () => {
-                    this.end_editing_msg();
-                });
-
                 // =============================
                 // 🔥 新增：发送按钮逻辑
                 // =============================
