@@ -8618,6 +8618,15 @@
                     candidatesBox.classList.add("hidden");
                 });
             }
+
+                // 获取焦点时：如果是空输入框，显示常用短语
+                textarea.addEventListener("focus", () => {
+                    const v = textarea.value.trim();
+                    if (v === "") {
+                        renderCandidates(commonPhrases);
+                    }
+                });
+
                 this.chat_rect = this.container.querySelector(":scope div.chat-rect");
                 this.e_header_info = this.container.querySelector(":scope div.chat-session-header-info");
                 this.e_header_info_clickmark = this.container.querySelector(":scope div.chat-session-header-info-clickmark");
