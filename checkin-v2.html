@@ -8576,11 +8576,9 @@
 
                 this.container.insertAdjacentHTML("beforeend", html);
 
-                const root = this.container;
-
                 // 2️⃣ 再获取
-                const textarea = root.querySelector(".chat-session-inputarea-textarea");
-                const candidatesBox = root.querySelector(".chat-session-inputarea-candidates");
+                const textarea = this.container.querySelector(".chat-session-inputarea-textarea");
+                const candidatesBox = this.container.querySelector(".chat-session-inputarea-candidates");
 
                 if (!textarea || !candidatesBox) {
                     console.error("输入框或候选词容器未找到");
