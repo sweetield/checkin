@@ -8867,7 +8867,13 @@
                     if (!item) return;
 
                     // 插入光标位置
-                    this.add_textarea_element(item.textContent);
+                    this.add_new_textarea_element(item.textContent);
+
+                    // 发送消息
+                    this.send_msg_text();
+
+                    // 隐藏候选词
+                    this.e_inputarea_candidates.classList.add("hidden");
                 });
 
 
@@ -11282,6 +11288,24 @@
                 textarea.focus();
             }
 
+            add_new_textarea_element(textToInsert) {
+                const textarea = this.e_inputarea_textarea;
+
+                // 获取光标位置
+                const startPos = textarea.selectionStart;
+                const endPos = textarea.selectionEnd;
+                // textarea 原来的内容
+                const originalValue = "";
+                // 在光标位置插入文本
+                textarea.value =
+                    originalValue.substring(0, startPos) +
+                    textToInsert +
+                    originalValue.substring(endPos);
+                // 更新光标位置到插入文本后
+                textarea.selectionStart = textarea.selectionEnd = startPos + textToInsert.length;
+                // 保持 textarea 焦点
+                textarea.focus();
+            }
             update_activity(type) {
                 // if (this.previous_activity_attr.is_sending) return;
                 const current_time = Date.now();
