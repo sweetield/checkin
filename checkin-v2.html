@@ -8868,6 +8868,11 @@
 
                     // 插入光标位置
                     this.add_new_textarea_element(item.textContent);
+
+                    this.send_msg_text();
+
+                    // 隐藏候选词
+                    this.e_inputarea_candidates.classList.add("hidden");
                 });
 
 
