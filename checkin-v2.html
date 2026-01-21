@@ -8814,34 +8814,28 @@
                 // 候选词容器
                 this.e_inputarea_candidates = this.container.querySelector(".chat-session-inputarea-candidates");
 
-                // 确保候选词容器存在
-                const container = this.e_inputarea_candidates;
-
-                // 清空原有内容
-                container.innerHTML = "";
-
-                // 公共短语列表
+                // 公共短语
                 const commonPhrases = ["好的","在吗","我在","有事吗","我下线了","等我5分钟","等我一下","马上回来","可以的","不行","不是","明天再说"];
 
-                // 遍历创建每条候选词
-                commonPhrases.forEach(text => {
-                    const div = document.createElement("div");
-                    div.className = "chat-session-inputarea-candidate-item";
-                    div.textContent = text;
+                // 渲染候选词
+                const renderCandidates = (list) => {
+                    const container = this.e_inputarea_candidates;
+                    container.innerHTML = ""; // 清空
 
-                    // ✅ 每个候选词单独绑定点击事件
-                    div.addEventListener("click", (e) => {
-                        e.stopPropagation();                 // 防止事件冒泡
-                        this.add_textarea_element(text);     // 插入到光标位置
-                        this.send_msg_text();                // 立即发送
-                        container.classList.add("hidden");   // 隐藏候选词
+                    if (!list.length) {
+                        container.classList.add("hidden");
+                        return;
+                    }
+
+                    list.forEach(text => {
+                        const div = document.createElement("div");
+                        div.className = "chat-session-inputarea-candidate-item";
+                        div.textContent = text;
+                        container.appendChild(div);
                     });
 
-                    container.appendChild(div);
-                });
-
-                // 显示候选词
-                container.classList.remove("hidden");
+                    container.classList.remove("hidden");
+                };
 
                 // 输入框显示候选词
                 this.e_inputarea_textarea.addEventListener("input", () => {
@@ -8851,19 +8845,17 @@
 
                 // focus 时显示候选词
                 this.e_inputarea_textarea.addEventListener("focus", () => {
-                    if (this.e_inputarea_textarea.value.trim() === "") {
-                        renderCandidates(commonPhrases);
-                    }
+                    renderCandidates(commonPhrases);
                 });
 
-                // 失焦隐藏
+                // 失焦隐藏候选词（延迟隐藏，防止点击候选词时被隐藏）
                 this.e_inputarea_textarea.addEventListener("blur", () => {
                     setTimeout(() => {
                         this.e_inputarea_candidates.classList.add("hidden");
-                    }, 150);
+                    }, 200);
                 });
 
-                // ✅ 核心：事件委托绑定在容器，保证点击动态生成的候选词也能触发
+                // ✅ 核心：事件委托绑定在容器，保证动态生成的候选词都能触发
                 this.e_inputarea_candidates.addEventListener("click", (e) => {
                     const item = e.target.closest(".chat-session-inputarea-candidate-item");
                     if (!item) return;
@@ -8877,6 +8869,7 @@
                     // 隐藏候选词
                     this.e_inputarea_candidates.classList.add("hidden");
                 });
+
 
 
 
