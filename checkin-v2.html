@@ -73,32 +73,46 @@
 			height: 48px;
 			display: flex;
 			align-items: center;
-			justify-content: space-between;
+			justify-content: flex-start; /* 按钮和输入框靠左排列 */
 			padding: 0 12px;
 			border-bottom: 1px solid #eee;
-			font-weight: bold;
-			gap: 8px; /* 按钮间距 */
+			gap: 6px;
 		}
 
-
 		.chat-candidate-panel-prev,
-		.chat-candidate-panel-next,
-		.chat-candidate-panel-close {
+		.chat-candidate-panel-next {
 			background: #f2f2f2;
 			border: none;
 			padding: 6px 12px;
 			border-radius: 4px;
 			cursor: pointer;
-			font-size: 16px;       /* 🔥字体加大 */
-			font-weight: bold;     /* 🔥凸显 */
+			font-size: 16px;
+			font-weight: bold;
 		}
 
 		.chat-candidate-panel-prev:disabled,
 		.chat-candidate-panel-next:disabled {
-			background: #ddd;      /* 灰掉 */
+			background: #ddd;
 			cursor: not-allowed;
 		}
-		
+
+		/* 🔥 筛选输入框样式 */
+		.chat-candidate-panel-filter {
+			flex: 1;                   /* 占据两按钮中间剩余空间 */
+			padding: 4px 8px;
+			border: none;
+			border-radius: 6px;
+			background: rgba(255,255,255,0.2); /* 半透明背景 */
+			color: #333;
+			font-size: 14px;
+			outline: none;
+		}
+
+		.chat-candidate-panel-filter::placeholder {
+			color: rgba(0,0,0,0.4);
+		}
+
+
 		.chat-candidate-panel-prev:hover,
 		.chat-candidate-panel-next:hover,
 		.chat-candidate-panel-close:hover {
@@ -8720,6 +8734,8 @@
     <div class="chat-candidate-panel-header">
     	<span>快捷短语</span>
 		<button class="chat-candidate-panel-prev">← 上一页</button>
+		<!-- 🔥 中间添加筛选输入框 -->
+    	<input type="text" class="chat-candidate-panel-filter" placeholder="筛选候选词…">
 		<button class="chat-candidate-panel-next">下一页 →</button>
 		<button class="chat-candidate-panel-close">✕</button>
 	</div>
@@ -8932,7 +8948,8 @@
 				// 🔹 翻页按钮 DOM
 				this.e_candidate_prev = this.container.querySelector(".chat-candidate-panel-prev");
 				this.e_candidate_next = this.container.querySelector(".chat-candidate-panel-next");
-
+				this.e_candidate_filter = this.container.querySelector(".chat-candidate-panel-filter"); // ✅ 新增
+				
 				// 🔹 滚动步长
 				const scrollStep = 150;
 
@@ -8944,6 +8961,26 @@
 					this.e_candidate_panel_body.scrollBy({ top: scrollStep, behavior: 'smooth' });
 				});
 
+
+				// 🔹 绑定输入框事件：输入即筛选
+				this.e_candidate_filter.addEventListener("input", () => {
+					const v = this.e_candidate_filter.value.trim();
+
+					// 🔹 根据输入筛选候选词
+					const filtered = v === "" 
+						? commonPhrases 
+						: commonPhrases.filter(p => p.includes(v));
+
+					// 🔹 调用你已有的渲染函数（renderCandidates 或 render_candidate_panel）
+					renderCandidates(filtered);
+
+					// 🔹 滚动到顶部，保证用户看到第一页候选词
+					this.e_candidate_panel_body.scrollTop = 0;
+
+					// 🔹 更新上一页/下一页按钮状态
+					updateCandidateButtons();
+				});
+				
 				// 🔹 自动禁用上一页/下一页按钮
 				const updateCandidateButtons = () => {
 					const body = this.e_candidate_panel_body;
