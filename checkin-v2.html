@@ -48,21 +48,6 @@
             100% { box-shadow: 0 8px 20px rgba(59,130,246,0.18), inset 0 1px 0 rgba(255,255,255,0.6); }
         }
 
-		/*全部转发按钮*/
-		.forward-all-btn {
-			margin-top: 10px;
-			padding: 5px 10px;
-			background-color: #007bff;
-			color: white;
-			border: none;
-			border-radius: 5px;
-			cursor: pointer;
-		}
-
-		.forward-all-btn:hover {
-			background-color: #0056b3;
-		}
-
         /* 候选词容器 */
         .chat-session-inputarea-candidates {
             position: absolute;
@@ -9811,65 +9796,43 @@
             /*
             * 转发消息
             * */
-			forward_msg(msgattr) {
-				let form = [
-					{
-						type: "title",
-						label: "转发给："
-					},
-					{
-						type: "custom",
-						label: "",
-						add_element: (fm, row_custom) => {
-						    row_custom.subs = [];
+            forward_msg(msgattr) {
+                let form = [
+                    {type: "title", label: "转发给："},
+                    {
+                        type: "custom", label: "",
+                        add_element: (fm, row_custom) => {
+                            row_custom.subs = [];
+                            for (const mainaction of this.panel.wrapper.contact_items()) {
+                                if (mainaction === this.li.bindmap) continue;
+                                let text;
+                                if (dashboardwrappers.ChatDashboardWrapper.is_group(mainaction.contact_attr)) {
+                                    text = `组：${dashboardwrappers.ChatDashboardWrapper.get_contact_xxid(mainaction.contact_attr)}`;
+                                } else {
+                                    text = `${dashboardwrappers.ChatDashboardWrapper.get_contact_xxid(mainaction.contact_attr)}`;
+                                }
+                                let html = `<div class="fmic-item fmic-item-forwardmsgto"><label><input type="checkbox">${text}</label></div>`;
+                                row_custom.input_element.insertAdjacentHTML("beforeend", html);
+                                const column = row_custom.input_element.querySelector(":scope > .fmic-item:last-of-type");
+                                const checkbox = column.querySelector(":scope input");
 
-						    // 添加“全部转发”按钮
-						    let allForwardButton = document.createElement('button');
-						    allForwardButton.textContent = "全部转发";
-						    allForwardButton.classList.add('forward-all-btn');
-						    allForwardButton.addEventListener('click', () => {
-						        // 点击时选择所有复选框
-						        row_custom.subs.forEach(sub => {
-						            sub.checkbox.checked = true;
-						        });
-						    });
-						    row_custom.input_element.appendChild(allForwardButton);
-
-						    // 遍历每个联系人并生成复选框
-						    for (const mainaction of this.panel.wrapper.contact_items()) {
-						        if (mainaction === this.li.bindmap) continue;
-						        let text;
-						        if (dashboardwrappers.ChatDashboardWrapper.is_group(mainaction.contact_attr)) {
-						            text = `组：${dashboardwrappers.ChatDashboardWrapper.get_contact_xxid(mainaction.contact_attr)}`;
-						        } else {
-						            text = `${dashboardwrappers.ChatDashboardWrapper.get_contact_xxid(mainaction.contact_attr)}`;
-						        }
-
-						        let html = `<div class="fmic-item fmic-item-forwardmsgto"><label><input type="checkbox">${text}</label></div>`;
-						        row_custom.input_element.insertAdjacentHTML("beforeend", html);
-
-						        const column = row_custom.input_element.querySelector(":scope > .fmic-item:last-of-type");
-						        const checkbox = column.querySelector(":scope input");
-
-						        row_custom.subs.push({
-						            mainaction,
-						            column,
-						            checkbox,
-						        });
-						    }
-						},
-						collect_data: (fm, row_custom) => {
-						    const map = [];
-						    for (const sub of row_custom.subs) {
-						        if (!sub.checkbox.checked) continue;
-						        map.push(sub.mainaction);
-						    }
-						    row_custom.value = map;
-						},
-					},
-				];
-			}
-            
+                                row_custom.subs.push({
+                                    mainaction,
+                                    column,
+                                    checkbox,
+                                })
+                            }
+                        },
+                        collect_data: (fm, row_custom) => {
+                            const map = [];
+                            for (const sub of row_custom.subs) {
+                                if (!sub.checkbox.checked) continue;
+                                map.push(sub.mainaction);
+                            }
+                            row_custom.value = map;
+                        },
+                    },
+                ];
 
                 const confirm_callback = (fm,) => {
                     fm.collect_data();
