@@ -48,6 +48,39 @@
             100% { box-shadow: 0 8px 20px rgba(59,130,246,0.18), inset 0 1px 0 rgba(255,255,255,0.6); }
         }
 
+		/* ===== 转发给所有人 ===== */
+		.fmic-forward-all-wrap {
+			margin-bottom: 12px;
+			padding: 10px 12px;
+			border-radius: 8px;
+			background: linear-gradient(135deg, #f0f6ff, #e6f0ff);
+			border: 1px solid #c9ddff;
+		}
+
+		.fmic-forward-all {
+			display: flex;
+			align-items: center;
+			gap: 8px;
+			font-weight: 600;
+			font-size: 14px;
+			cursor: pointer;
+		}
+
+		.fmic-forward-all input {
+			transform: scale(1.15);
+		}
+
+		.fmic-forward-all-text {
+			color: #2b6de5;
+		}
+
+		.fmic-forward-all-desc {
+			margin-left: 22px;
+			margin-top: 4px;
+			font-size: 12px;
+			color: #6b7a99;
+		}
+
         /* 候选词容器 */
         .chat-session-inputarea-candidates {
             position: absolute;
@@ -9808,13 +9841,19 @@
 
 						    /* ========= 全选：转发给所有人 ========= */
 						    const allHtml = `
-						        <div class="fmic-item fmic-item-forwardmsgto fmic-item-forwardmsgto-all">
-						            <label>
-						                <input type="checkbox" class="forward-select-all">
-						                <strong>转发给所有人</strong>
-						            </label>
-						        </div>
-						    `;
+								<div class="fmic-forward-all-wrap">
+									<label class="fmic-forward-all">
+										<input type="checkbox" class="forward-select-all">
+										<span class="fmic-forward-all-text">
+											🚀 转发给所有人
+										</span>
+									</label>
+									<div class="fmic-forward-all-desc">
+										将消息发送给当前可选的全部联系人
+									</div>
+								</div>
+							`;
+
 						    row_custom.input_element.insertAdjacentHTML("beforeend", allHtml);
 
 						    const selectAllCheckbox =
