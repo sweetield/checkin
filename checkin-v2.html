@@ -3313,15 +3313,24 @@
         <div id="login-rect">
             <span id="login-tip-user" class="hidden"></span>
             <span id="login-tip-admin" class="hidden">服务管理员</span>
-            <label id="login-input-account-label">账号：<input type="text" id="login-input-account"></label>
+
+            <label id="login-input-account-label">
+                账号：
+                <input type="text" id="login-input-account">
+                <button type="button" class="clear-input-btn" data-target="login-input-account">清空</button>
+            </label>
+
             <label>
                 密码：
                 <input type="text" id="login-input-password">
-                <button type="button" id="clear-password-btn">清空</button>
+                <button type="button" class="clear-input-btn" data-target="login-input-password">清空</button>
             </label>
+
             <button id="login-btn">登录</button>
         </div>
     </section>
+
+
 
     <section id="apps-panel">
         <span id="apps-top-margin"></span>
@@ -8798,7 +8807,7 @@
                 // 公共短语
                 const commonPhrases = [
                   // 日常聊天（前 200 条）
-                  "好的","在吗","我在","有事吗？","我下线了","等我5分钟","有事找你", "有事请留言", "🔥特急！", "明天按时去","等我一下","马上回来","可以的","不行","我还不没掌握",  
+                  "好的","在吗","我在","有事吗？","我下线了","等我5分钟","有事找你", "有事请留言", "听懂了","🔥特急！", "明天按时去","等我一下","马上回来","可以的","不行","我还不没掌握",  
                   "不是","明天再说","辛苦了","谢谢","没事","等一下","吃了吗","忙吗","我懂了","哈哈","在家吗","忙吗","有空吗",
                   "😄","😂","😅","😭","😡","晚安","早上好","中午好","下午好","晚上好", "好吧！","没时间",
                   "路上小心","加油","拜拜","再见","小心点","没关系","放心吧","我试试","好的好的","嗯嗯",
@@ -14001,9 +14010,13 @@
             this.login_input_account_label = document.getElementById("login-input-account-label");
             this.login_input_password = document.getElementById("login-input-password");
             /*清理密码*/
-            document.getElementById('clear-password-btn').addEventListener('click', function() {
-                document.getElementById('login-input-password').value = '';
+            document.querySelectorAll('.clear-input-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const targetId = this.getAttribute('data-target');
+                    document.getElementById(targetId).value = '';
+                });
             });
+
             this.login_btn = document.getElementById("login-btn");
             this.login_btn.addEventListener("click", (event) => {
                 this.login(event)
