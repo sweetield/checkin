@@ -8845,13 +8845,17 @@
                 });
 
                 // 点击候选词填充输入框（事件委托）
-                this.e_inputarea_candidates.addEventListener("click", e => {
+                // 委托给父容器（确保存在）
+                this.container.addEventListener("click", e => {
                     const item = e.target.closest(".chat-session-inputarea-candidate-item");
-                    if (!item) return;
-                    this.e_inputarea_textarea.value = item.textContent;
-                    this.e_inputarea_textarea.focus();
-                    this.e_inputarea_candidates.classList.add("hidden");
+                    if (item) {
+                        this.e_inputarea_textarea.value = item.textContent;
+                        this.e_inputarea_textarea.focus();
+                        if (this.e_inputarea_candidates)
+                            this.e_inputarea_candidates.classList.add("hidden");
+                    }
                 });
+
 
                 // 输入框失焦隐藏候选词
                 this.e_inputarea_textarea.addEventListener("blur", () => {
@@ -8863,19 +8867,16 @@
                 // =============================
                 // 🔥 横向滚动按钮
                 // =============================
-                const prevBtn = this.e_inputarea_candidates.querySelector(".btn-prev");
-                const nextBtn = this.e_inputarea_candidates.querySelector(".btn-next");
+                const prevBtn = this.container.querySelector(".chat-session-inputarea-candidates .btn-prev");
+                const nextBtn = this.container.querySelector(".chat-session-inputarea-candidates .btn-next");
 
-                if (prevBtn) {
-                    prevBtn.addEventListener("click", () => {
-                        this.e_inputarea_candidates.scrollBy({ left: -100, behavior: "smooth" });
-                    });
-                }
-                if (nextBtn) {
-                    nextBtn.addEventListener("click", () => {
-                        this.e_inputarea_candidates.scrollBy({ left: 100, behavior: "smooth" });
-                    });
-                }
+                if (prevBtn) prevBtn.addEventListener("click", () => {
+                    this.e_inputarea_candidates.scrollBy({ left: -100, behavior: "smooth" });
+                });
+                if (nextBtn) nextBtn.addEventListener("click", () => {
+                    this.e_inputarea_candidates.scrollBy({ left: 100, behavior: "smooth" });
+                });
+
 
 
                 // 🔥 回车发送（原逻辑，保留）
