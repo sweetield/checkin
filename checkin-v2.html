@@ -8842,7 +8842,7 @@
                 });
 
                 // 点击事件绑定在容器（事件委托）
-                this.e_inputarea_candidates.addEventListener("click", (e) => { // ✅ 箭头函数
+                this.e_inputarea_candidates.addEventListener("click", () => { // ✅ 箭头函数
                     this.add_textarea_element("dddd");
                     const item = e.target.closest(".chat-session-inputarea-candidate-item");
                     this.add_textarea_element("0000");
