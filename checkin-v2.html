@@ -47,50 +47,53 @@
             50%  { box-shadow: 0 12px 30px rgba(59,130,246,0.28), inset 0 1px 0 rgba(255,255,255,0.6); }
             100% { box-shadow: 0 8px 20px rgba(59,130,246,0.18), inset 0 1px 0 rgba(255,255,255,0.6); }
         }
-
-        /*候选词 */
         /* 候选词容器 */
         .chat-session-inputarea-candidates {
             position: absolute;
-            bottom: calc(100% + 8px);
+            bottom: calc(100% + 12px);  /* 离输入框稍远一点 */
             left: 12px;
             right: 12px;
 
-            background: #fff;
-            border: 1px solid #ddd;
-            border-radius: 8px;
-            box-shadow: 0 8px 24px rgba(0,0,0,.15);
+            background: #ffffff;
+            border: 1px solid #ccc;        /* 较明显边框 */
+            border-radius: 10px;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2); /* 更清晰阴影 */
 
             display: flex;
-            flex-wrap: nowrap; /* 横向一行排列 */
-            gap: 8px;              /* 候选词间距 */
-
-            padding: 8px;
-            max-height: 100px;     /* 限制高度，多余滚动 */
-            overflow-y: auto;      /* 超出显示滚动条 */
+            flex-wrap: nowrap;
+            gap: 12px;              /* 候选词间距更大 */
+            
+            padding: 10px;          /* 内边距增加，滚动条不遮挡 */
+            max-height: 120px;      /* 增高一些，更舒服 */
+            overflow-y: auto;
             scroll-behavior: smooth;
 
             z-index: 9999;
         }
 
-
+        /* 隐藏状态 */
         .chat-session-inputarea-candidates.hidden {
             display: none;
         }
 
         /* 单个候选词 */
         .chat-session-inputarea-candidate-item {
-            flex: 0 0 auto;    /* 防止换行 */
-            padding: 6px 10px;
+            flex: 0 0 auto;
+            padding: 8px 14px;         /* 内边距增加，更容易点击 */
             cursor: pointer;
-            border-radius: 6px;
-            font-size: 14px;
-            background: #f5f5f5;
+            border-radius: 8px;
+            font-size: 16px;            /* 字体加大 */
+            font-weight: 500;           /* 稍微加粗 */
+            color: #333;                /* 字体颜色更清晰 */
+            background: #f0f0f0;        /* 背景色稍深，增强对比 */
             white-space: nowrap;
+            transition: all 0.2s ease;
         }
 
+        /* 悬停效果 */
         .chat-session-inputarea-candidate-item:hover {
-            background: #f0f5ff;
+            background: #cce0ff;        /* 蓝色高亮，更明显 */
+            color: #000;
         }
 
 
@@ -8820,6 +8823,7 @@
                   "节日安排","旅行安排","旅行计划","工作顺利吗","学习顺利吗","身体好吗","心情好吗","开心吗","累吗","困吗",
                   "饿吗","渴吗","疼吗","舒服吗","生气了吗","开心吗","惊讶吗","难过吗","兴奋吗","期待吗",
                   "听懂了吗","理解了吗","掌握了吗","学习效率高吗","学习状态怎么样","有没有问题",
+                   "小心摄像头", "小心被跟踪", "DOO来了", "有人被抓了",
                   
                   // 工作交流（接下来的 300 条）
                   "收到","已处理","正在处理","请确认","确认完成","请审批","已审批","需要补充资料","已转发","请查看",
