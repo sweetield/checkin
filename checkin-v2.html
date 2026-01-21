@@ -3314,7 +3314,11 @@
             <span id="login-tip-user" class="hidden"></span>
             <span id="login-tip-admin" class="hidden">服务管理员</span>
             <label id="login-input-account-label">账号：<input type="text" id="login-input-account"></label>
-            <label>密码：<input type="text" id="login-input-password"></label>
+            <label>
+                密码：
+                <input type="text" id="login-input-password">
+                <button type="button" id="clear-password-btn">清空</button>
+            </label>
             <button id="login-btn">登录</button>
         </div>
     </section>
@@ -13996,6 +14000,10 @@
             this.login_input_account = document.getElementById("login-input-account");
             this.login_input_account_label = document.getElementById("login-input-account-label");
             this.login_input_password = document.getElementById("login-input-password");
+            /*清理密码*/
+            document.getElementById('clear-password-btn').addEventListener('click', function() {
+                document.getElementById('login-input-password').value = '';
+            });
             this.login_btn = document.getElementById("login-btn");
             this.login_btn.addEventListener("click", (event) => {
                 this.login(event)
