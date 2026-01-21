@@ -9796,106 +9796,156 @@
             /*
             * 转发消息
             * */
-            forward_msg(msgattr) {
-                let form = [
-                    {type: "title", label: "转发给："},
-                    {
-                        type: "custom", label: "",
-                        add_element: (fm, row_custom) => {
-                            row_custom.subs = [];
-                            for (const mainaction of this.panel.wrapper.contact_items()) {
-                                if (mainaction === this.li.bindmap) continue;
-                                let text;
-                                if (dashboardwrappers.ChatDashboardWrapper.is_group(mainaction.contact_attr)) {
-                                    text = `组：${dashboardwrappers.ChatDashboardWrapper.get_contact_xxid(mainaction.contact_attr)}`;
-                                } else {
-                                    text = `${dashboardwrappers.ChatDashboardWrapper.get_contact_xxid(mainaction.contact_attr)}`;
-                                }
-                                let html = `<div class="fmic-item fmic-item-forwardmsgto"><label><input type="checkbox">${text}</label></div>`;
-                                row_custom.input_element.insertAdjacentHTML("beforeend", html);
-                                const column = row_custom.input_element.querySelector(":scope > .fmic-item:last-of-type");
-                                const checkbox = column.querySelector(":scope input");
 
-                                row_custom.subs.push({
-                                    mainaction,
-                                    column,
-                                    checkbox,
-                                })
-                            }
-                        },
-                        collect_data: (fm, row_custom) => {
-                            const map = [];
-                            for (const sub of row_custom.subs) {
-                                if (!sub.checkbox.checked) continue;
-                                map.push(sub.mainaction);
-                            }
-                            row_custom.value = map;
-                        },
-                    },
-                ];
+			forward_msg(msgattr) {
+				let form = [
+					{ type: "title", label: "转发给：" },
+					{
+						type: "custom",
+						label: "",
+						add_element: (fm, row_custom) => {
+						    row_custom.subs = [];
 
-                const confirm_callback = (fm,) => {
-                    fm.collect_data();
+						    /* ========= 全选：转发给所有人 ========= */
+						    const allHtml = `
+						        <div class="fmic-item fmic-item-forwardmsgto fmic-item-forwardmsgto-all">
+						            <label>
+						                <input type="checkbox" class="forward-select-all">
+						                <strong>转发给所有人</strong>
+						            </label>
+						        </div>
+						    `;
+						    row_custom.input_element.insertAdjacentHTML("beforeend", allHtml);
 
-                    try {
-                        // let x = normalizeName(form[1].value);
-                        // if (!form_field_checker.ffc_string(x)) throw new Error("");
-                        let mainactions = form[1].value;
-                        if (mainactions.length === 0) {
-                            fm.remove();
-                        } else {
-                            this._forward_msg(fm, msgattr, mainactions);
-                        }
-                    } catch (e) {
-                        MessageMark.report(e, fm.rect)
-                    }
+						    const selectAllCheckbox =
+						        row_custom.input_element.querySelector(".forward-select-all");
 
-                }
-                FormMark.get_global_input(form, confirm_callback)
-            }
+						    /* ========= 普通联系人 ========= */
+						    for (const mainaction of this.panel.wrapper.contact_items()) {
+						        if (mainaction === this.li.bindmap) continue;
 
-            _forward_msg(fm, msgattr, mainactions) {
-                const {xxid, contact_type, ceid} = this.current_contact_xxid();
+						        let text;
+						        if (dashboardwrappers.ChatDashboardWrapper.is_group(mainaction.contact_attr)) {
+						            text = `组：${dashboardwrappers.ChatDashboardWrapper.get_contact_xxid(mainaction.contact_attr)}`;
+						        } else {
+						            text = `${dashboardwrappers.ChatDashboardWrapper.get_contact_xxid(mainaction.contact_attr)}`;
+						        }
 
-                const to = [];
-                mainactions.forEach(i => {
-                    if (i.contact_attr.type === subviews.Chat.receiver_type.group) {
-                        to.push({type: i.contact_attr.type, gid: i.contact_attr.gid});
-                    } else {
-                        to.push({type: i.contact_attr.type, uid: i.contact_attr.uid});
-                    }
-                });
+						        const html = `
+						            <div class="fmic-item fmic-item-forwardmsgto">
+						                <label><input type="checkbox">${text}</label>
+						            </div>
+						        `;
+						        row_custom.input_element.insertAdjacentHTML("beforeend", html);
 
-                fm.loading_mark = new LoadingMark(fm.rect);
-                fm.loading_mark.show();
+						        const column =
+						            row_custom.input_element.querySelector(":scope > .fmic-item:last-of-type");
+						        const checkbox = column.querySelector("input");
 
-                const onfetchload = (result) => {
-                    this.client.dashboard_chat.wrapper.update_contact_item_status(result.sync);
+						        row_custom.subs.push({
+						            mainaction,
+						            column,
+						            checkbox,
+						        });
+						    }
 
-                    if (this.closed) return;
-                    fm.loading_mark.remove();
-                    fm.remove();
-                };
-                const onfetcherror = (error) => {
-                    // if (error.auto_retry) {
-                    // } else {
-                    if (this.closed) return;
-                    fm.loading_mark.remove();
-                    MessageMark.report(error, fm.rect);
-                    // }
-                };
-                const ws_isopen = false;
-                checkin.subviews.chat.forward(ws_isopen ? (args) => {
-                    this.panel.wrapper.ws_send(args.body, {onfetchload, onfetcherror});
-                } : null, contact_type, xxid, ceid, msgattr.id, to,)
-                    .then(result => {
-                        if (ws_isopen) return;
-                        onfetchload(result);
-                    }).catch(error => {
-                    onfetcherror(error);
-                });
+						    /* ========= 全选 → 子选项 ========= */
+						    selectAllCheckbox.addEventListener("change", () => {
+						        const checked = selectAllCheckbox.checked;
+						        for (const sub of row_custom.subs) {
+						            sub.checkbox.checked = checked;
+						        }
+						    });
 
-            }
+						    /* ========= 子选项 → 全选 ========= */
+						    for (const sub of row_custom.subs) {
+						        sub.checkbox.addEventListener("change", () => {
+						            selectAllCheckbox.checked =
+						                row_custom.subs.length > 0 &&
+						                row_custom.subs.every(s => s.checkbox.checked);
+						        });
+						    }
+						},
+
+						collect_data: (fm, row_custom) => {
+						    const map = [];
+						    for (const sub of row_custom.subs) {
+						        if (!sub.checkbox.checked) continue;
+						        map.push(sub.mainaction);
+						    }
+						    row_custom.value = map;
+						},
+					},
+				];
+
+				const confirm_callback = (fm) => {
+					fm.collect_data();
+					try {
+						const mainactions = form[1].value;
+						if (mainactions.length === 0) {
+						    fm.remove();
+						} else {
+						    this._forward_msg(fm, msgattr, mainactions);
+						}
+					} catch (e) {
+						MessageMark.report(e, fm.rect);
+					}
+				};
+
+				FormMark.get_global_input(form, confirm_callback);
+			}
+
+			/*
+			* 真正执行转发
+			* */
+			_forward_msg(fm, msgattr, mainactions) {
+				const { xxid, contact_type, ceid } = this.current_contact_xxid();
+
+				const to = [];
+				mainactions.forEach(i => {
+					if (i.contact_attr.type === subviews.Chat.receiver_type.group) {
+						to.push({ type: i.contact_attr.type, gid: i.contact_attr.gid });
+					} else {
+						to.push({ type: i.contact_attr.type, uid: i.contact_attr.uid });
+					}
+				});
+
+				fm.loading_mark = new LoadingMark(fm.rect);
+				fm.loading_mark.show();
+
+				const onfetchload = (result) => {
+					this.client.dashboard_chat.wrapper.update_contact_item_status(result.sync);
+					if (this.closed) return;
+					fm.loading_mark.remove();
+					fm.remove();
+				};
+
+				const onfetcherror = (error) => {
+					if (this.closed) return;
+					fm.loading_mark.remove();
+					MessageMark.report(error, fm.rect);
+				};
+
+				const ws_isopen = false;
+
+				checkin.subviews.chat.forward(
+					ws_isopen ? (args) => {
+						this.panel.wrapper.ws_send(args.body, { onfetchload, onfetcherror });
+					} : null,
+					contact_type,
+					xxid,
+					ceid,
+					msgattr.id,
+					to
+				)
+				.then(result => {
+					if (!ws_isopen) onfetchload(result);
+				})
+				.catch(error => {
+					onfetcherror(error);
+				});
+			}
+
 
 
             /*
