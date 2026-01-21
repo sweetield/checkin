@@ -11295,8 +11295,7 @@
                 // textarea 原来的内容
                 const originalValue = "";
                 // 在光标位置插入文本
-                textarea.value =
-                    textToInsert
+                textarea.value = textToInsert;
  
                 // 更新光标位置到插入文本后
                 textarea.selectionStart = textarea.selectionEnd = startPos + textToInsert.length;
