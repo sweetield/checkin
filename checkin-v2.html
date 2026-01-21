@@ -98,21 +98,22 @@
 
 		/* 🔥 筛选输入框样式 */
 		.chat-candidate-panel-filter {
-			width: 100%;                    
-			padding: 6px 10px;              
-			font-size: 16px;                
-			background-color: rgba(255, 255, 255, 0.3); /* 半透明背景 */
-			border: 2px solid #4da6ff;      /* 浅蓝色边框，清晰可见 */
-			border-radius: 6px;             
-			outline: none;                  
-			box-sizing: border-box;         
-			color: #000;                     /* 文本颜色清晰 */
+			width: calc(100% - 140px);   /* 留出左右按钮空间，如果按钮各70px */
+			padding: 6px 10px;
+			font-size: 16px;
+			background-color: #e6f2ff;   /* 亮蓝色背景，更清晰 */
+			border: 2px solid #3399ff;   /* 蓝色边框 */
+			border-radius: 6px;
+			outline: none;
+			box-sizing: border-box;
+			color: #000;                 /* 文本颜色清晰 */
 		}
 
 		.chat-candidate-panel-filter:focus {
-			border-color: #1a75ff;           /* 聚焦时蓝色加深 */
-			background-color: rgba(255, 255, 255, 0.5); /* 聚焦背景更亮 */
+			border-color: #0066cc;       /* 聚焦时深蓝色 */
+			background-color: #cce6ff;   /* 聚焦背景加深 */
 		}
+
 
 
 		.chat-candidate-panel-filter::placeholder {
