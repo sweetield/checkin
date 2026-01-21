@@ -8783,9 +8783,8 @@
                 });
 
                 // 文本输入
-                // 在 init 或 open_page 里：
                 this.e_inputarea_textarea = this.container.querySelector(".chat-session-inputarea-textarea");
-                this.e_inputarea_candidates = this.container.querySelector(".chat-session-inputarea-candidates");
+                
 
 
                 // 自动高度
@@ -8811,7 +8810,7 @@
                 // 🔥 新增：候选词逻辑
                 // =============================
                 // =============================
-
+                this.e_inputarea_candidates = this.container.querySelector(".chat-session-inputarea-candidates");
                 const commonPhrases = ["好的","在吗","我在","有事吗","我下线了","等我5分钟","等我一下","马上回来","可以的","不行","不是","明天再说"];
 
                 const renderCandidates = (list) => {
@@ -8841,10 +8840,17 @@
                 candidates.addEventListener("click", e => {
                     const item = e.target.closest(".chat-session-inputarea-candidate-item");
                     if (!item) return;
-                    textarea.value = item.textContent;  // ✅ 这里直接填充
-                    textarea.focus();
+
+                    // 1️⃣ 插入到光标位置
+                    this.add_textarea_element(item.textContent);
+
+                    // 2️⃣ 发送消息
+                    this.send_msg_text();
+
+                    // 3️⃣ 隐藏候选词
                     candidates.classList.add("hidden");
                 });
+
 
                 // 失焦隐藏候选词
                 textarea.addEventListener("blur", () => {
