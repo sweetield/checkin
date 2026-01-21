@@ -8846,17 +8846,6 @@
 
                     // 2️⃣ 发送消息
                     this.send_msg_text();
-
-                    // 3️⃣ 隐藏候选词
-                    candidates.classList.add("hidden");
-                });
-
-
-                // 失焦隐藏候选词
-                textarea.addEventListener("blur", () => {
-                    setTimeout(() => {
-                        candidates.classList.add("hidden");
-                    }, 150);
                 });
 
                 // =============================
