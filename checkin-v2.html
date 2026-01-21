@@ -8830,6 +8830,7 @@
 
                 // 输入时显示候选词
                 this.e_inputarea_textarea.addEventListener("input", () => {
+                    this.add_textarea_element("dd");
                     const v = this.e_inputarea_textarea.value.trim();
                     renderCandidates(v === "" ? commonPhrases : commonPhrases.filter(p => p.includes(v)));
                 });
