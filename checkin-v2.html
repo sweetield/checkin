@@ -8871,24 +8871,6 @@
                 });
 
 
-
-
-
-                // 绑定在父容器上
-                this.container.addEventListener("click", (e) => {
-                const item = e.target.closest(".chat-session-inputarea-candidate-item");
-                if (!item) return; // 不是候选词就忽略
-
-                // 插入文本并发送
-                this.add_textarea_element(item.textContent);
-                this.send_msg_text();
-
-                // 隐藏候选词
-                this.e_inputarea_candidates.classList.add("hidden");
-            });
-
-
-
                 // =============================
                 // 🔥 横向滚动按钮
                 // =============================
