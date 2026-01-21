@@ -51,21 +51,11 @@
         /*候选词 */
         .chat-session-inputarea-candidates {
             position: absolute;
-
-            /* 关键：往上浮 */
-            bottom: calc(100% + 8px);
-
-            left: 12px;
-            right: 12px;
-
+            bottom: 100%;          /* 在输入框正上方 */
+            left: 0;
+            width: 100%;
             background: #fff;
-            border: 1px solid #ddd;
-            border-radius: 8px;
-            box-shadow: 0 8px 24px rgba(0,0,0,.15);
-
-            max-height: 180px;
-            overflow-y: auto;
-
+            border: 1px solid #ccc;
             z-index: 9999;
         }
 
@@ -1375,7 +1365,6 @@
             position: relative; /* 关键：让 子div 以它为定位基准 */
             /*overflow: hidden; !* 防止 子div 溢出 *!*/
 
-            overflow: visible;
         }
 
         div.blank-mark {
@@ -2426,7 +2415,6 @@
             width: 100%;
             box-sizing: border-box;
             position: relative; /* 定位基准，必须有 */
-            overflow: visible;
         }
 
         .theme-dark .chat-session-inputarea {
@@ -8545,8 +8533,7 @@
     </div>
     <button class="chat-session-msgflow-btn-scroll2end hidden" title="滚动到底部">∨</button>
 </div>
-    <!-- 候选词容器（关键） -->
-    <div class="chat-session-inputarea-candidates hidden"></div>
+
 <div class="chat-session-inputarea">
     <div class="chat-session-inputarea-othertypes">
         <button class="chat-session-inputarea-othertypes-image">
@@ -8556,6 +8543,9 @@
             <input type="file" class="hidden">文件
         </button>
     </div>
+
+    <!-- 候选词容器（关键） -->
+    <div class="chat-session-inputarea-candidates hidden"></div>
 
     <!-- 编辑消息提示 -->
     <div class="chat-session-inputarea-tip-editing hidden">
