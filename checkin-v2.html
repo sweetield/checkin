@@ -74,19 +74,19 @@
 			height: 48px;
 			display: flex;
 			align-items: center;
+			justify-content: space-between; /* 关键：左右按钮固定，中间输入框居中或留空 */
 			padding: 0 6px;
-			border-bottom: 1px solid #eee;
-			gap: 4px;
+			gap: 6px;
 		}
 
-		/* 翻页按钮 */
+		/* 左右按钮 */
 		.chat-candidate-panel-prev,
 		.chat-candidate-panel-next {
-			flex: 0 0 70px;         /* 固定宽度 70px，不被压扁 */
+			flex: 0 0 70px;    /* 固定宽度 */
 			height: 36px;
 			font-size: 16px;
 			font-weight: bold;
-			line-height: 36px;      /* 文字垂直居中 */
+			line-height: 36px;
 			text-align: center;
 			background-color: #3399ff;
 			color: #fff;
@@ -111,7 +111,7 @@
 		
 		/* 🔥 筛选输入框样式 */
 		.chat-candidate-panel-filter {
-			flex: 0 1 200px;     /* 宽度最多 200px，允许收缩，但不超过 */
+			width: 180px;         /* 固定宽度，避免挤压按钮 */
 			padding: 6px 10px;
 			font-size: 16px;
 			background-color: #e6f2ff;
