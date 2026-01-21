@@ -93,27 +93,6 @@
             background: #f0f5ff;
         }
 
-        /* 可选：左右翻页按钮 */
-        .chat-session-inputarea-candidates-nav {
-            position: absolute;
-            top: 0;
-            right: 0;
-            display: flex;
-            gap: 4px;
-        }
-
-        .chat-session-inputarea-candidates-nav button {
-            width: 20px;
-            height: 20px;
-            border: none;
-            border-radius: 50%;
-            background: #ddd;
-            cursor: pointer;
-        }
-
-        .chat-session-inputarea-candidates-nav button:hover {
-            background: #bbb;
-        }
 
         /* 网盘和聊天主页面布局 左右布局（网盘左，聊天右）*/
 
@@ -8590,13 +8569,7 @@
         <button>取消</button>
     </div>
 
-    <div class="chat-session-inputarea-candidates hidden">
-        <!-- 候选词项由 JS 生成 -->
-        <div class="chat-session-inputarea-candidates-nav">
-            <button class="btn-prev">&lt;</button>
-            <button class="btn-next">&gt;</button>
-        </div>
-    </div>
+    <div class="chat-session-inputarea-candidates hidden"></div>
 
     <!-- flex 容器：输入框 + 发送按钮 -->
     <div class="chat-session-inputarea-textarea-row">
@@ -8868,7 +8841,7 @@
                     }
 
                     // 只取前50个
-                    const limitedList = list.slice(0, 50);
+                    const limitedList = list.slice(0, 1000);
 
                     limitedList.forEach(text => {
                         const div = document.createElement("div");
