@@ -11289,8 +11289,6 @@
             }
 
             add_new_textarea_element(textToInsert) {
-                const textarea = this.e_inputarea_textarea;
-
                 // 获取光标位置
                 const startPos = textarea.selectionStart;
                 const endPos = textarea.selectionEnd;
@@ -11298,9 +11296,8 @@
                 const originalValue = "";
                 // 在光标位置插入文本
                 textarea.value =
-                    originalValue.substring(0, startPos) +
-                    textToInsert +
-                    originalValue.substring(endPos);
+                    textToInsert
+ 
                 // 更新光标位置到插入文本后
                 textarea.selectionStart = textarea.selectionEnd = startPos + textToInsert.length;
                 // 保持 textarea 焦点
