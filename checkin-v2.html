@@ -8842,16 +8842,15 @@
                 });
 
                 // 点击事件绑定在容器（事件委托）
-                this.e_inputarea_candidates.addEventListener("click", e => {
+                this.e_inputarea_candidates.addEventListener("click", (e) => { // ✅ 箭头函数
                     const item = e.target.closest(".chat-session-inputarea-candidate-item");
                     if (!item) return;
 
-                    // 1️⃣ 插入到光标位置
+                    // 插入文本并发送
                     this.add_textarea_element(item.textContent);
-
-                    // 2️⃣ 发送消息
                     this.send_msg_text();
                 });
+
 
                 // 失焦隐藏
                 this.e_inputarea_textarea.addEventListener("blur", () => {
