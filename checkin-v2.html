@@ -8849,25 +8849,6 @@
                     }, 150);
                 });
 
-                // 绑定在父容器上
-                this.container.addEventListener("click", (e) => {
-                    this.add_textarea_element("ddd");
-                    // 找到被点击的候选词
-                    const item = e.target.closest(".chat-session-inputarea-candidate-item");
-                    if (!item) return; // 如果不是候选词就忽略
-
-                    // ✅ 插入到输入框光标位置
-                    this.e_inputarea_textarea.value = item.textContent;
-                    this.add_textarea_element(item.textContent);
-
-                    // ✅ 立即发送消息
-                    this.send_msg_text();
-
-                    // 隐藏候选词列表
-                    if (this.e_inputarea_candidates) {
-                        this.e_inputarea_candidates.classList.add("hidden");
-                    }
-                });
 
 
                 // =============================
@@ -11092,6 +11073,24 @@
                         this.e_mcr.style.background = this.palette.rect_bg;
 
                         this.e_mcr_span = this.e_mcr.querySelector(":scope span");
+
+                        // 确保 DOM 已经生成
+                        this.e_inputarea_candidates = this.container.querySelector(".chat-session-inputarea-candidates");
+
+                        // 事件委托绑定在容器
+                        this.container.addEventListener("click", (e) => {
+                            const item = e.target.closest(".chat-session-inputarea-candidate-item");
+                            if (!item) return; // 点击的不是候选词
+
+                            // 插入文本到输入框
+                            this.add_textarea_element(item.textContent);
+
+                            // 立即发送
+                            this.send_msg_text();
+
+                            // 隐藏候选词
+                            this.e_inputarea_candidates.classList.add("hidden");
+                        });
 
                     }
 
