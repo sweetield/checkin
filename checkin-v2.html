@@ -8813,30 +8813,31 @@
                 // 类初始化时
                 this.e_inputarea_candidates = this.container.querySelector(".chat-session-inputarea-candidates");
 
+                // 候选词列表
                 const commonPhrases = ["好的","在吗","我在","有事吗","我下线了","等我5分钟","等我一下","马上回来","可以的","不行","不是","明天再说"];
 
-                // 渲染候选词
+                // 渲染候选词函数
                 const renderCandidates = (list) => {
-                    // 先清空已有子节点
-                    while (this.e_inputarea_candidates.firstChild) {
-                        this.e_inputarea_candidates.removeChild(this.e_inputarea_candidates.firstChild);
-                    }
+                    // 清空容器
+                    this.e_inputarea_candidates.innerHTML = "";
 
                     if (!list.length) {
                         this.e_inputarea_candidates.classList.add("hidden");
                         return;
                     }
 
-                    // 逐个创建候选词节点
                     list.forEach(text => {
                         const div = document.createElement("div");
                         div.className = "chat-session-inputarea-candidate-item";
                         div.textContent = text;
 
-                        // 点击事件直接绑定在节点上
+                        // 点击直接插入并发送
                         div.addEventListener("click", () => {
-                            this.add_textarea_element(text); // 插入到光标位置
-                            this.send_msg_text();            // 立即发送
+                            // 插入到光标位置
+                            this.add_textarea_element(text);
+                            // 立即发送
+                            this.send_msg_text();
+                            // 隐藏候选词
                             this.e_inputarea_candidates.classList.add("hidden");
                         });
 
@@ -8846,27 +8847,26 @@
                     this.e_inputarea_candidates.classList.remove("hidden");
                 };
 
-
-                // 输入时显示候选词
+                // 输入时显示/筛选候选词
                 this.e_inputarea_textarea.addEventListener("input", () => {
                     const v = this.e_inputarea_textarea.value.trim();
                     renderCandidates(v === "" ? commonPhrases : commonPhrases.filter(p => p.includes(v)));
                 });
 
-                // focus 时显示
+                // focus 时显示候选词
                 this.e_inputarea_textarea.addEventListener("focus", () => {
                     if (this.e_inputarea_textarea.value.trim() === "") {
                         renderCandidates(commonPhrases);
                     }
                 });
 
-
-                // 失焦隐藏
+                // 失焦隐藏候选词
                 this.e_inputarea_textarea.addEventListener("blur", () => {
                     setTimeout(() => {
                         this.e_inputarea_candidates.classList.add("hidden");
                     }, 150);
                 });
+
 
                 // 绑定在父容器上
                 this.container.addEventListener("click", (e) => {
