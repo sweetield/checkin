@@ -50,13 +50,14 @@
 
         /* 写字板整体 */
         .chat-writeboard {
-            position: fixed;  
-            inset: 0;         
-            z-index: 10000;
+            position: fixed;
+            inset: 0;
             display: flex;
-            justify-content: center;  
-            align-items: center;      
+            justify-content: center;
+            align-items: center;
+            z-index: 10000;
         }
+
 
         /* 隐藏状态 */
         .chat-writeboard.hidden {
@@ -67,21 +68,27 @@
         .chat-writeboard-mask {
             position: absolute;
             inset: 0;
-            background: rgba(0,0,0,.4);
-            pointer-events: none; /* 关键：鼠标事件穿透 */
+            background: rgba(0,0,0,0.4); /* 半透明黑色 */
+            pointer-events: none;         /* 不阻挡鼠标 */
+            z-index: 0;                   /* 保证在面板下面 */
         }
+
 
         /* 面板：半屏，高度占50% */
         .chat-writeboard-panel {
+            position: relative;     /* 相对定位 */
             display: flex;
             flex-direction: column;
             width: 90%;
             max-width: 800px;
-            height: 50%;
+            height: 50%;            /* 半屏高度 */
             background: #fff;
             border-radius: 8px;
-            overflow: hidden;
+            overflow: hidden;       /* 防止内容溢出 */
+            z-index: 1;             /* 高于遮罩 */
+            box-shadow: 0 4px 16px rgba(0,0,0,0.3); /* 视觉边缘 */
         }
+
 
         /* Canvas 占用剩余空间 */
         .chat-writeboard-canvas {
