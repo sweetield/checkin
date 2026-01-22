@@ -9187,7 +9187,7 @@
                    "什么时候可以视频？", "下次开会什么时候？", "你什么时候空闲？", "今天安排一下时间吧。", "我们周末见面可以吗？", "明天下午几点？", "你什么时候方便打电话？", "今天中午几点？", "我们什么时候碰面？", "下午见面可以吗？", "明天中午方便吗？", "什么时候约个时间？", 
                     "我们明天几点见？", "你周五有空吗？", "今天晚上能聊吗？", "明天早上几点？", "我们什么时候吃饭？", "你什么时候方便开会？", "今天下午几点合适？", "周末什么时候见？", "我们什么时候视频？", "明天晚上几点见？", "你明天中午方便吗？", "今天什么时候可以聊？", "我们约个时间吃午饭吧。", "你什么时候方便面谈？", "明天几点开会？", "我们什么时候电话沟通？", "今天下午方便开会吗？", "你什么时候可以碰面？", "明天上午方便吗？", "我们约个时间讨论工作吧。", "今天晚上几点见？", "你什么时候方便视频？",
                   "晚安","早上好","中午好","下午好","晚上好", "好吧！",
-                  "路上小心","加油","拜拜","再见","小心点","没关系","放心吧","我试试","嗯嗯",
+                  "路上小心","加油","拜拜","再见","小心点","没关系","放心吧","我试试","嗯嗯","嗯","哦",
                   "太棒了","厉害","明白","懂了","知道了","好的，谢谢","抱歉","没问题","加油","辛苦啦",
                   "开心","生气了","累了","饿了","困了","想睡觉","吃饱了吗","出去吗","回来了吗",
                   "等你","等我","快点","慢点","不要急","放松点","小心","别忘了","记得","快来了",
@@ -11486,7 +11486,7 @@
                         let html = `
 <div class="chat-message-content-rect chat-mcr-image">
 <img src="" alt="" draggable="false">
-<span>[图片]</span>
+<span>[🖼️图片]</span>
 </div>
 `;
                         this.e_container.insertAdjacentHTML("beforeend", html);
@@ -11569,119 +11569,70 @@
 
                     }
 
-                   // 构造函数或初始化时创建 Observer
-                   // ==================== 构造函数或初始化 ====================
-                    this.imgObserver = new IntersectionObserver(entries => {
-                        entries.forEach(entry => {
-                            const imgElem = entry.target;
-                            const msg = imgElem.msgattr;
-                            if (!msg) return;
-
-                            if (entry.isIntersecting) {
-                                // 加密文件且未解密
-                                if ((msg.status & dashboardwrappers.ChatDashboardWrapper.message_status.encrypted) && !msg.plain_file_data) {
-                                    // 先下载或获取加密文件 Blob，再解密
-                                    fetchEncryptedFile(msg.file_attr.name) // 假设返回 Blob
-                                        .then(encryptedBlob => encryptors.decryptBlob(encryptedBlob)) // 返回可显示 Blob
-                                        .then(decryptedBlob => {
-                                            msg.plain_file_data = decryptedBlob;
-                                            msg.plain_file_name = msg.file_attr.name;
-
-                                            // 设置 img.src
-                                            if (msg.img_urlobj) URL.revokeObjectURL(msg.img_urlobj);
-                                            const url = URL.createObjectURL(decryptedBlob);
-                                            msg.img_urlobj = url;
-                                            imgElem.src = url;
-
-                                            imgElem.classList.remove("hidden");
-                                            if (msg.e_mcr_span) msg.e_mcr_span.classList.add("hidden");
-                                        })
-                                        .catch(err => {
-                                            if (msg.e_mcr_span) {
-                                                msg.e_mcr_span.classList.add("red");
-                                                set_textContent_if_different(msg.e_mcr_span, `[图片] 解密失败`);
-                                            }
-                                        });
-                                } else if (msg.plain_file_data && !imgElem.src) {
-                                    // 已下载文件显示
-                                    if (msg.img_urlobj) URL.revokeObjectURL(msg.img_urlobj);
-                                    const url = URL.createObjectURL(msg.plain_file_data);
-                                    msg.img_urlobj = url;
-                                    imgElem.src = url;
-                                    imgElem.classList.remove("hidden");
-                                    if (msg.e_mcr_span) msg.e_mcr_span.classList.add("hidden");
-                                }
-                            } else {
-                                // 离开视口释放 Blob
-                                if (msg.img_urlobj) {
-                                    URL.revokeObjectURL(msg.img_urlobj);
-                                    msg.img_urlobj = null;
-                                    imgElem.src = "";
-                                }
-                            }
-                        });
-                    }, { threshold: 0.1 });
-
                     update() {
                         super.update();
 
                         if (!this.msgattr.is_sent) {
                             this.e_mcr_img.classList.add("hidden");
                             if (this.msgattr.upload_task) {
-                                set_textContent_if_different(this.e_mcr_span, `[图片] ${this.msgattr.file_name} ${this.panel.wrapper.format_text_for_msgview(this.msgattr.upload_task.backtask_status_text.textContent)}`);
+                                set_textContent_if_different(this.e_mcr_span, `[🖼️图片] ${this.msgattr.file_name} ${this.panel.wrapper.format_text_for_msgview(this.msgattr.upload_task.backtask_status_text.textContent)}`);
                             } else {
-                                set_textContent_if_different(this.e_mcr_span, `[图片] ${this.msgattr.file_name} 正在上传...`);
+                                set_textContent_if_different(this.e_mcr_span, `[🖼️图片] ${this.msgattr.file_name} 正在上传...`);
                             }
-                            return;
-                        }
-
-                        if (!this.msgattr.download_task) { // 未下载
-                            if (!(this.msgattr.status & dashboardwrappers.ChatDashboardWrapper.message_status.encrypted)) {
-                                set_textContent_if_different(this.e_mcr_span, `[图片] ${this.msgattr.file_attr.name} 点击下载`);
-                                this.msgattr.plain_file_name = this.msgattr.file_attr.name;
+                        } else {
+                            if (!this.msgattr.download_task) { // 未下载
                                 this.e_mcr_img.classList.add("hidden");
-                            } else {
-                                set_textContent_if_different(this.e_mcr_span, `[图片] 加密文件，滚动可解密`);
-                                if (!this.e_mcr_img._isObserved) {
-                                    this.imgObserver.observe(this.e_mcr_img);
-                                    this.e_mcr_img._isObserved = true;
-                                }
-                            }
-                        } else { // 已下载或有任务
-                            if (this.msgattr.plain_file_data) {
-                                this.e_mcr_img.classList.remove("hidden");
-                                this.e_mcr_span.classList.add("hidden");
-                                if (!this.e_mcr_img.src) {
-                                    const url = URL.createObjectURL(this.msgattr.plain_file_data);
-                                    this.msgattr.img_urlobj = url;
-                                    this.e_mcr_img.src = url;
+                                if (this.msgattr.status & dashboardwrappers.ChatDashboardWrapper.message_status.encrypted) {
+                                    encryptors.decrypt2string(this.msgattr.file_attr.name).then(result => {
+                                        set_textContent_if_different(this.e_mcr_span, `[🖼️图片] ${result} 点击下载`);
+                                        this.msgattr.plain_file_name = result;
+                                    }).catch(error => {
+                                        this.e_mcr_span.classList.add("red");
+                                        set_textContent_if_different(this.e_mcr_span, `[🖼️图片] ${decrypt_error_string}`);
+                                    });
+                                } else {
+                                    set_textContent_if_different(this.e_mcr_span, `[🖼️图片] ${this.msgattr.file_attr.name} 点击下载`);
+                                    this.msgattr.plain_file_name = this.msgattr.file_attr.name;
                                 }
                             } else {
-                                set_textContent_if_different(this.e_mcr_span, `[图片] ${this.msgattr.plain_file_name} ${this.panel.wrapper.format_text_for_msgview(this.msgattr.download_task.backtask_status_text.textContent)}`);
-                                if (this.msgattr.download_task.args.plain_file_data) {
+                                // task的状态变化时，会调用msgobj的update
+                                // if (this.msgattr.download_task.status === floatball.taskstatus.finished) {
+                                // }
+
+                                if (this.msgattr.plain_file_data) {
                                     this.e_mcr_img.classList.remove("hidden");
                                     this.e_mcr_span.classList.add("hidden");
 
-                                    this.msgattr.plain_file_data = this.msgattr.download_task.args.plain_file_data;
-                                    this.msgattr.download_task.args.plain_file_data = null;
+                                    if (!this.e_mcr_img.src.startsWith("blob")) {
+                                        this.set_img_src(this.msgattr.plain_file_data);
+                                    }
 
-                                    const url = URL.createObjectURL(this.msgattr.plain_file_data);
-                                    this.msgattr.img_urlobj = url;
-                                    this.e_mcr_img.src = url;
+                                } else {
+                                    set_textContent_if_different(this.e_mcr_span, `[🖼️图片] ${this.msgattr.plain_file_name} ${this.panel.wrapper.format_text_for_msgview(this.msgattr.download_task.backtask_status_text.textContent)}`);
+
+                                    if (this.msgattr.download_task.args.plain_file_data) {
+                                        this.e_mcr_img.classList.remove("hidden");
+                                        this.e_mcr_span.classList.add("hidden");
+
+                                        this.msgattr.plain_file_data = this.msgattr.download_task.args.plain_file_data; // 在全屏查看时用到
+                                        this.msgattr.download_task.args.plain_file_data = null;
+
+                                        this.set_img_src(this.msgattr.plain_file_data);
+
+                                    }
                                 }
                             }
+
                         }
 
-                        // 关联元素和消息对象给 observer 使用
-                        this.e_mcr_img.msgattr = this.msgattr;
-                        this.msgattr.e_mcr_span = this.e_mcr_span;
                     }
 
                     remove_from_group() {
                         super.remove_from_group();
-                        if (this.msgattr.img_urlobj) {
-                            URL.revokeObjectURL(this.msgattr.img_urlobj);
-                            this.msgattr.img_urlobj = null;
+                        // elements_can_select_text_when_alt_pressed.remove(this.e_mcr_span);
+                        if (this.e_mcr_img__urlobj) {
+                            URL.revokeObjectURL(this.e_mcr_img__urlobj);
+                            this.e_mcr_img__urlobj = null;
                         }
                     }
 
@@ -12204,7 +12155,7 @@
                             s = `[${format_timestamp_utc8(msgattr.sent_time)} ${msgattr.sender}]\n${msgattr.plain_data_text}`;
                         } else if (dashboardwrappers.ChatDashboardWrapper.message_type_checker.is_drive_item(msgattr.type)) {
                             if (dashboardwrappers.ChatDashboardWrapper.message_type_checker.is_image(msgattr.type)) {
-                                s = `[${format_timestamp_utc8(msgattr.sent_time)} ${msgattr.sender}] [图片] ${msgattr.plain_file_name}`;
+                                s = `[${format_timestamp_utc8(msgattr.sent_time)} ${msgattr.sender}] [🖼️图片] ${msgattr.plain_file_name}`;
                             } else if (dashboardwrappers.ChatDashboardWrapper.message_type_checker.is_file(msgattr.type)) {
                                 s = `[${format_timestamp_utc8(msgattr.sent_time)} ${msgattr.sender}] [文件] ${msgattr.plain_file_name}`;
                             }
@@ -14289,7 +14240,7 @@
                     } else if (dashboardwrappers.ChatDashboardWrapper.message_type_checker.is_drive_item(newest_msg.type)) {
                         let prefix;
                         if (dashboardwrappers.ChatDashboardWrapper.message_type_checker.is_image(newest_msg.type)) {
-                            prefix = "[图片]";
+                            prefix = "[🖼️图片]";
                         } else if (dashboardwrappers.ChatDashboardWrapper.message_type_checker.is_file(newest_msg.type)) {
                             prefix = "[文件]";
                         }
