@@ -48,6 +48,58 @@
             100% { box-shadow: 0 8px 20px rgba(59,130,246,0.18), inset 0 1px 0 rgba(255,255,255,0.6); }
         }
 
+        /*写字板*/
+        .chat-writeboard {
+            position: fixed;
+            inset: 0;
+            z-index: 10000;
+        }
+
+        .chat-writeboard.hidden {
+            display: none;
+        }
+
+        .chat-writeboard-mask {
+            position: absolute;
+            inset: 0;
+            background: rgba(0,0,0,.4);
+        }
+
+        .chat-writeboard-panel {
+            position: absolute;
+            left: 50%;
+            top: 50%;
+            transform: translate(-50%, -50%);
+            width: 90%;
+            max-width: 600px;
+            background: #fff;
+            border-radius: 8px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .chat-writeboard-header {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 12px;
+            border-bottom: 1px solid #eee;
+        }
+
+        .chat-writeboard-canvas {
+            width: 100%;
+            height: 300px;
+            cursor: crosshair;
+        }
+
+        .chat-writeboard-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 8px;
+            padding: 8px;
+            border-top: 1px solid #eee;
+        }
+
+
 		/*候选词面板*/
 		.chat-candidate-panel {
 			position: fixed;
@@ -8733,6 +8785,10 @@
 		<button class="chat-session-inputarea-othertypes-candidates">
 		    候选词
 		</button>
+        <button class="chat-session-inputarea-othertypes-write">
+            ✍️写字
+        </button>
+
     </div>
 
     <!-- 编辑消息提示 -->
@@ -8759,9 +8815,25 @@
 		<button class="chat-candidate-panel-next">下一页 →</button>
 		<button class="chat-candidate-panel-close">✕</button>
 	</div>
-
-
     <div class="chat-candidate-panel-body"></div>
+</div>
+
+<!-- ✍️ 写字白板 -->
+<div class="chat-writeboard hidden">
+    <div class="chat-writeboard-mask"></div>
+    <div class="chat-writeboard-panel">
+        <div class="chat-writeboard-header">
+            <span>✍️写字</span>
+            <button class="chat-writeboard-close">✕</button>
+        </div>
+
+        <canvas class="chat-writeboard-canvas"></canvas>
+
+        <div class="chat-writeboard-actions">
+            <button class="chat-writeboard-clear">清空</button>
+            <button class="chat-writeboard-confirm">确定</button>
+        </div>
+    </div>
 </div>
 
 
@@ -9474,6 +9546,71 @@
                 this.refresh();
                 this.start_timer__fetch_unread_msgs(false);
                 this.start_timer__update_read_progress(false);
+                // ⚡ 新增写字功能 DOM
+                this.e_writeboard = this.container.querySelector(".chat-writeboard");
+                this.e_writeboard_canvas = this.container.querySelector(".chat-writeboard-canvas");
+                this.e_writeboard_btn = this.container.querySelector(".chat-session-inputarea-othertypes-write");
+                this.e_writeboard_close = this.container.querySelector(".chat-writeboard-close");
+                this.e_writeboard_clear = this.container.querySelector(".chat-writeboard-clear");
+                this.e_writeboard_confirm = this.container.querySelector(".chat-writeboard-confirm");
+
+                // 点击按钮打开白板
+                this.e_writeboard_btn.addEventListener("click", () => {
+                    this.e_writeboard.classList.remove("hidden");
+                    this.init_writeboard(); // 初始化 canvas
+                });
+
+                // 点击关闭按钮隐藏白板
+                this.e_writeboard_close.addEventListener("click", () => {
+                    this.e_writeboard.classList.add("hidden");
+                });
+
+                // ⚡ 初始化写字白板
+                this.init_writeboard = () => {
+                    const canvas = this.e_writeboard_canvas;
+                    const rect = canvas.getBoundingClientRect();
+
+                    canvas.width = rect.width;
+                    canvas.height = rect.height;
+
+                    this.write_ctx = canvas.getContext("2d");
+                    this.write_ctx.strokeStyle = "#000";
+                    this.write_ctx.lineWidth = 4;
+                    this.write_ctx.lineCap = "round";
+
+                    this.write_drawing = false;
+
+                    // 鼠标事件
+                    canvas.onmousedown = (e) => {
+                        this.write_drawing = true;
+                        this.write_ctx.beginPath();
+                        this.write_ctx.moveTo(e.offsetX, e.offsetY);
+                    };
+                    canvas.onmousemove = (e) => {
+                        if (!this.write_drawing) return;
+                        this.write_ctx.lineTo(e.offsetX, e.offsetY);
+                        this.write_ctx.stroke();
+                    };
+                    canvas.onmouseup = canvas.onmouseleave = () => {
+                        this.write_drawing = false;
+                    };
+                };
+
+                    /*清空按钮*/
+                    this.e_writeboard_clear.addEventListener("click", () => {
+                        const canvas = this.e_writeboard_canvas;
+                        this.write_ctx.clearRect(0, 0, canvas.width, canvas.height);
+                    });
+
+                    /*确定按钮（生成图片并发送）*/
+                    this.e_writeboard_confirm.addEventListener("click", () => {
+                        const canvas = this.e_writeboard_canvas;
+                        canvas.toBlob((blob) => {
+                            const file = new File([blob], "handwrite.png", { type: "image/png" });
+                            this.start__send_msg_image(file); // 调用你现有发图片逻辑
+                            this.e_writeboard.classList.add("hidden");
+                        });
+                    });
 
                 setTimeout(() => {
                     check_scroll_to_end();
