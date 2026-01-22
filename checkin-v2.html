@@ -11570,23 +11570,26 @@
                     }
 
                    // 构造函数或初始化时创建 Observer
+                   // ==================== 构造函数或初始化 ====================
                     this.imgObserver = new IntersectionObserver(entries => {
                         entries.forEach(entry => {
                             const imgElem = entry.target;
                             const msg = imgElem.msgattr;
-
                             if (!msg) return;
 
                             if (entry.isIntersecting) {
-                                if ((msg.status & dashboardwrappers.ChatDashboardWrapper.message_status.encrypted) && !msg.plain_file_name) {
-                                    encryptors.decrypt2string(msg.file_attr.name)
-                                        .then(resultBlob => { // 假设返回 Blob
-                                            msg.plain_file_data = resultBlob; 
-                                            msg.plain_file_name = msg.file_attr.name; // 可选，记录原文件名
-                                            
-                                            // 生成 URL 显示图片
+                                // 加密文件且未解密
+                                if ((msg.status & dashboardwrappers.ChatDashboardWrapper.message_status.encrypted) && !msg.plain_file_data) {
+                                    // 先下载或获取加密文件 Blob，再解密
+                                    fetchEncryptedFile(msg.file_attr.name) // 假设返回 Blob
+                                        .then(encryptedBlob => encryptors.decryptBlob(encryptedBlob)) // 返回可显示 Blob
+                                        .then(decryptedBlob => {
+                                            msg.plain_file_data = decryptedBlob;
+                                            msg.plain_file_name = msg.file_attr.name;
+
+                                            // 设置 img.src
                                             if (msg.img_urlobj) URL.revokeObjectURL(msg.img_urlobj);
-                                            const url = URL.createObjectURL(resultBlob);
+                                            const url = URL.createObjectURL(decryptedBlob);
                                             msg.img_urlobj = url;
                                             imgElem.src = url;
 
@@ -11599,19 +11602,37 @@
                                                 set_textContent_if_different(msg.e_mcr_span, `[图片] 解密失败`);
                                             }
                                         });
+                                } else if (msg.plain_file_data && !imgElem.src) {
+                                    // 已下载文件显示
+                                    if (msg.img_urlobj) URL.revokeObjectURL(msg.img_urlobj);
+                                    const url = URL.createObjectURL(msg.plain_file_data);
+                                    msg.img_urlobj = url;
+                                    imgElem.src = url;
+                                    imgElem.classList.remove("hidden");
+                                    if (msg.e_mcr_span) msg.e_mcr_span.classList.add("hidden");
+                                }
+                            } else {
+                                // 离开视口释放 Blob
+                                if (msg.img_urlobj) {
+                                    URL.revokeObjectURL(msg.img_urlobj);
+                                    msg.img_urlobj = null;
+                                    imgElem.src = "";
                                 }
                             }
-
                         });
                     }, { threshold: 0.1 });
 
+                    // ==================== update 方法 ====================
                     update() {
                         super.update();
 
                         if (!this.msgattr.is_sent) {
                             this.e_mcr_img.classList.add("hidden");
                             if (this.msgattr.upload_task) {
-                                set_textContent_if_different(this.e_mcr_span, `[图片] ${this.msgattr.file_name} ${this.panel.wrapper.format_text_for_msgview(this.msgattr.upload_task.backtask_status_text.textContent)}`);
+                                set_textContent_if_different(
+                                    this.e_mcr_span,
+                                    `[图片] ${this.msgattr.file_name} ${this.panel.wrapper.format_text_for_msgview(this.msgattr.upload_task.backtask_status_text.textContent)}`
+                                );
                             } else {
                                 set_textContent_if_different(this.e_mcr_span, `[图片] ${this.msgattr.file_name} 正在上传...`);
                             }
@@ -11640,7 +11661,10 @@
                                     this.e_mcr_img.src = url;
                                 }
                             } else {
-                                set_textContent_if_different(this.e_mcr_span, `[图片] ${this.msgattr.plain_file_name} ${this.panel.wrapper.format_text_for_msgview(this.msgattr.download_task.backtask_status_text.textContent)}`);
+                                set_textContent_if_different(
+                                    this.e_mcr_span,
+                                    `[图片] ${this.msgattr.plain_file_name} ${this.panel.wrapper.format_text_for_msgview(this.msgattr.download_task.backtask_status_text.textContent)}`
+                                );
                                 if (this.msgattr.download_task.args.plain_file_data) {
                                     this.e_mcr_img.classList.remove("hidden");
                                     this.e_mcr_span.classList.add("hidden");
@@ -11660,6 +11684,7 @@
                         this.msgattr.e_mcr_span = this.e_mcr_span;
                     }
 
+                    // ==================== remove_from_group 方法 ====================
                     remove_from_group() {
                         super.remove_from_group();
                         if (this.msgattr.img_urlobj) {
@@ -11667,6 +11692,7 @@
                             this.msgattr.img_urlobj = null;
                         }
                     }
+
 
                     set_img_src(plain_file_data) {
                         const blob = new Blob([plain_file_data]); // blob不能指定名称
