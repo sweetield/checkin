@@ -131,13 +131,14 @@
             position: absolute;
             width: 16px;
             height: 16px;
-            right: 4px;
-            bottom: 4px;
-            cursor: se-resize; /* 右下角拖拽 */
+            right: 0;
+            bottom: 0;
+            cursor: se-resize;
             background: rgba(0,0,0,0.3);
             border-radius: 4px;
             z-index: 2;
         }
+
 
 		/*候选词面板*/
 		.chat-candidate-panel {
@@ -9628,16 +9629,33 @@
 
                     // 将 canvas HTML 宽高同步为 CSS 尺寸
                     const resizeCanvas = () => {
+                        const tempData = canvas.toDataURL(); // 暂存内容，防止清屏
                         canvas.width = canvas.clientWidth;
                         canvas.height = canvas.clientHeight;
+
+                        // 获取 2D 上下文
+                        this.write_ctx = canvas.getContext("2d");
+
+                        // 默认背景白色
+                        this.write_ctx.fillStyle = "#fff";
+                        this.write_ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+                        // 如果有之前内容，绘回去
+                        if (tempData) {
+                            const img = new Image();
+                            img.src = tempData;
+                            img.onload = () => {
+                                this.write_ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+                            };
+                        }
+
+                        // 设置画笔属性
+                        this.write_ctx.strokeStyle = "#000";
+                        this.write_ctx.lineWidth = 4;
+                        this.write_ctx.lineCap = "round";
                     };
                     resizeCanvas();
                     window.addEventListener("resize", resizeCanvas);
-
-                    this.write_ctx = canvas.getContext("2d");
-                    this.write_ctx.strokeStyle = "#000";   // 黑色画笔
-                    this.write_ctx.lineWidth = 4;
-                    this.write_ctx.lineCap = "round";
 
                     // 鼠标绘图
                     canvas.onmousedown = (e) => {
@@ -9654,7 +9672,7 @@
                         this.write_drawing = false;
                     };
 
-                    // ⚡ 拖拽调整面板大小
+                    // ⚡ 拖拽调整面板大小（右下角）
                     const panel = this.e_writeboard.querySelector(".chat-writeboard-panel");
 
                     // 创建右下角拖拽手柄（如果不存在）
@@ -9683,12 +9701,35 @@
                         const dx = e.clientX - startX;
                         const dy = e.clientY - startY;
 
-                        panel.style.width = `${startWidth + dx}px`;
-                        panel.style.height = `${startHeight + dy}px`;
+                        let newWidth = startWidth + dx;
+                        let newHeight = startHeight + dy;
+
+                        // 限制最小尺寸
+                        newWidth = Math.max(newWidth, 300);
+                        newHeight = Math.max(newHeight, 200);
+
+                        // 暂存画布内容
+                        const tempData = canvas.toDataURL();
+
+                        panel.style.width = `${newWidth}px`;
+                        panel.style.height = `${newHeight}px`;
 
                         // 同步 canvas 尺寸
                         canvas.width = canvas.clientWidth;
                         canvas.height = canvas.clientHeight;
+
+                        // 白色背景
+                        this.write_ctx.fillStyle = "#fff";
+                        this.write_ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+                        // 绘回原内容
+                        if (tempData) {
+                            const img = new Image();
+                            img.src = tempData;
+                            img.onload = () => {
+                                this.write_ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+                            };
+                        }
                     });
 
                     window.addEventListener("mouseup", () => {
@@ -9696,17 +9737,15 @@
                     });
                 };
 
-
                 // 点击按钮打开写字板
                 this.e_writeboard_btn.addEventListener("click", () => {
                     this.e_writeboard.classList.remove("hidden");
-                    this.init_writeboard(); // 初始化 canvas
+                    this.init_writeboard();
                 });
 
                 // 点击关闭按钮隐藏写字板
                 this.e_writeboard_close.addEventListener("click", () => {
                     this.e_writeboard.classList.add("hidden");
-                    // 可选：清空画布
                     if (this.write_ctx) {
                         this.write_ctx.clearRect(0, 0, this.e_writeboard_canvas.width, this.e_writeboard_canvas.height);
                     }
@@ -9715,7 +9754,8 @@
                 // 清空按钮
                 this.e_writeboard_clear.addEventListener("click", () => {
                     if (this.write_ctx) {
-                        this.write_ctx.clearRect(0, 0, this.e_writeboard_canvas.width, this.e_writeboard_canvas.height);
+                        this.write_ctx.fillStyle = "#fff";
+                        this.write_ctx.fillRect(0, 0, this.e_writeboard_canvas.width, this.e_writeboard_canvas.height);
                     }
                 });
 
@@ -9730,9 +9770,11 @@
                         this.e_writeboard.classList.add("hidden");
 
                         // 清空画布，下一次打开是空白
-                        this.write_ctx.clearRect(0, 0, canvas.width, canvas.height);
+                        this.write_ctx.fillStyle = "#fff";
+                        this.write_ctx.fillRect(0, 0, canvas.width, canvas.height);
                     }, "image/png");
                 });
+
 
 
                 setTimeout(() => {
