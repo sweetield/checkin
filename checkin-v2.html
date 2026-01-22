@@ -11578,21 +11578,17 @@
                             if (!msg) return;
 
                             if (entry.isIntersecting) {
-                                // 加密文件且未解密
                                 if ((msg.status & dashboardwrappers.ChatDashboardWrapper.message_status.encrypted) && !msg.plain_file_name) {
                                     encryptors.decrypt2string(msg.file_attr.name)
-                                        .then(result => {
-                                            msg.plain_file_name = result;
-
-                                            // 设置图片源
-                                            if (msg.plain_file_data instanceof Blob) {
-                                                if (msg.img_urlobj) URL.revokeObjectURL(msg.img_urlobj);
-                                                const url = URL.createObjectURL(msg.plain_file_data);
-                                                msg.img_urlobj = url;
-                                                imgElem.src = url;
-                                            } else {
-                                                imgElem.src = result; // 如果是文件名，需要额外处理下载显示
-                                            }
+                                        .then(resultBlob => { // 假设返回 Blob
+                                            msg.plain_file_data = resultBlob; 
+                                            msg.plain_file_name = msg.file_attr.name; // 可选，记录原文件名
+                                            
+                                            // 生成 URL 显示图片
+                                            if (msg.img_urlobj) URL.revokeObjectURL(msg.img_urlobj);
+                                            const url = URL.createObjectURL(resultBlob);
+                                            msg.img_urlobj = url;
+                                            imgElem.src = url;
 
                                             imgElem.classList.remove("hidden");
                                             if (msg.e_mcr_span) msg.e_mcr_span.classList.add("hidden");
@@ -11603,23 +11599,9 @@
                                                 set_textContent_if_different(msg.e_mcr_span, `[图片] 解密失败`);
                                             }
                                         });
-                                } else if (msg.plain_file_data && !imgElem.src) {
-                                    // 已下载的 Blob 数据直接显示
-                                    if (msg.img_urlobj) URL.revokeObjectURL(msg.img_urlobj);
-                                    const url = URL.createObjectURL(msg.plain_file_data);
-                                    msg.img_urlobj = url;
-                                    imgElem.src = url;
-                                    imgElem.classList.remove("hidden");
-                                    if (msg.e_mcr_span) msg.e_mcr_span.classList.add("hidden");
-                                }
-                            } else {
-                                // 离开视口，释放 Blob
-                                if (msg.img_urlobj) {
-                                    URL.revokeObjectURL(msg.img_urlobj);
-                                    msg.img_urlobj = null;
-                                    imgElem.src = "";
                                 }
                             }
+
                         });
                     }, { threshold: 0.1 });
 
