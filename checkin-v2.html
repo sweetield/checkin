@@ -48,28 +48,36 @@
             100% { box-shadow: 0 8px 20px rgba(59,130,246,0.18), inset 0 1px 0 rgba(255,255,255,0.6); }
         }
 
-        /*写字板*/
+        /* 写字板整体 */
         .chat-writeboard {
-            position: fixed;
-            inset: 0;
+            position: fixed;  
+            inset: 0;         
             z-index: 10000;
+            display: flex;
+            justify-content: center;  
+            align-items: center;      
         }
 
+        /* 隐藏状态 */
         .chat-writeboard.hidden {
             display: none;
         }
 
+        /* 半透明遮罩，不拦截鼠标 */
         .chat-writeboard-mask {
             position: absolute;
             inset: 0;
             background: rgba(0,0,0,.4);
+            pointer-events: none; /* 关键：鼠标事件穿透 */
         }
 
+        /* 面板：半屏，高度占50% */
         .chat-writeboard-panel {
             display: flex;
             flex-direction: column;
-            height: 50%;       /* 半屏 */
+            width: 90%;
             max-width: 800px;
+            height: 50%;
             background: #fff;
             border-radius: 8px;
             overflow: hidden;
@@ -77,8 +85,8 @@
 
         /* Canvas 占用剩余空间 */
         .chat-writeboard-canvas {
-            flex: 1;           /* 占满 header+按钮剩余空间 */
-            min-height: 100px; /* 防止太小 */
+            flex: 1;           
+            min-height: 100px; 
             background: #fff;
             border: 1px solid #ddd;
             border-radius: 4px;
@@ -86,7 +94,7 @@
 
         /* 按钮区域固定显示 */
         .chat-writeboard-actions {
-            flex: 0 0 auto;    /* 固定高度，不被 canvas 挤掉 */
+            flex: 0 0 auto;    
             display: flex;
             justify-content: flex-end;
             gap: 12px;
@@ -105,9 +113,11 @@
             border: none;
         }
 
+        /* 清空按钮单独红色 */
         .chat-writeboard-actions button.clear-btn {
             background-color: #ff4d4f;
         }
+
 
 
 
@@ -9590,33 +9600,28 @@
                 this.e_writeboard_clear = this.container.querySelector(".chat-writeboard-clear");
                 this.e_writeboard_confirm = this.container.querySelector(".chat-writeboard-confirm");
 
-                // 点击按钮打开白板
-                this.e_writeboard_btn.addEventListener("click", () => {
-                    this.e_writeboard.classList.remove("hidden");
-                    this.init_writeboard(); // 初始化 canvas
-                });
+                // 鼠标绘图状态
+                this.write_ctx = null;
+                this.write_drawing = false;
 
-                // 点击关闭按钮隐藏白板
-                this.e_writeboard_close.addEventListener("click", () => {
-                    this.e_writeboard.classList.add("hidden");
-                });
-
-                // ⚡ 初始化写字白板
+                // ⚡ 初始化写字板
                 this.init_writeboard = () => {
                     const canvas = this.e_writeboard_canvas;
-                    const rect = canvas.getBoundingClientRect();
 
-                    canvas.width = rect.width;
-                    canvas.height = rect.height;
+                    // 将 canvas HTML 宽高同步为 CSS 尺寸
+                    const resizeCanvas = () => {
+                        canvas.width = canvas.clientWidth;
+                        canvas.height = canvas.clientHeight;
+                    };
+                    resizeCanvas();
+                    window.addEventListener("resize", resizeCanvas);
 
                     this.write_ctx = canvas.getContext("2d");
-                    this.write_ctx.strokeStyle = "#000";
+                    this.write_ctx.strokeStyle = "#000";   // 黑色画笔
                     this.write_ctx.lineWidth = 4;
                     this.write_ctx.lineCap = "round";
 
-                    this.write_drawing = false;
-
-                    // 鼠标事件
+                    // 鼠标绘图
                     canvas.onmousedown = (e) => {
                         this.write_drawing = true;
                         this.write_ctx.beginPath();
@@ -9632,21 +9637,43 @@
                     };
                 };
 
-                    /*清空按钮*/
-                    this.e_writeboard_clear.addEventListener("click", () => {
-                        const canvas = this.e_writeboard_canvas;
-                        this.write_ctx.clearRect(0, 0, canvas.width, canvas.height);
-                    });
+                // 点击按钮打开写字板
+                this.e_writeboard_btn.addEventListener("click", () => {
+                    this.e_writeboard.classList.remove("hidden");
+                    this.init_writeboard(); // 初始化 canvas
+                });
 
-                    /*确定按钮（生成图片并发送）*/
-                    this.e_writeboard_confirm.addEventListener("click", () => {
-                        const canvas = this.e_writeboard_canvas;
-                        canvas.toBlob((blob) => {
-                            const file = new File([blob], "handwrite.png", { type: "image/png" });
-                            this.start__send_msg_image(file); // 调用你现有发图片逻辑
-                            this.e_writeboard.classList.add("hidden");
-                        });
-                    });
+                // 点击关闭按钮隐藏写字板
+                this.e_writeboard_close.addEventListener("click", () => {
+                    this.e_writeboard.classList.add("hidden");
+                    // 可选：清空画布
+                    if (this.write_ctx) {
+                        this.write_ctx.clearRect(0, 0, this.e_writeboard_canvas.width, this.e_writeboard_canvas.height);
+                    }
+                });
+
+                // 清空按钮
+                this.e_writeboard_clear.addEventListener("click", () => {
+                    if (this.write_ctx) {
+                        this.write_ctx.clearRect(0, 0, this.e_writeboard_canvas.width, this.e_writeboard_canvas.height);
+                    }
+                });
+
+                // 确定按钮（生成图片并发送）
+                this.e_writeboard_confirm.addEventListener("click", () => {
+                    const canvas = this.e_writeboard_canvas;
+                    if (!this.write_ctx) return;
+
+                    canvas.toBlob((blob) => {
+                        const file = new File([blob], "handwrite.png", { type: "image/png" });
+                        this.start__send_msg_image(file); // 调用你现有发图片逻辑
+                        this.e_writeboard.classList.add("hidden");
+
+                        // 清空画布，下一次打开是空白
+                        this.write_ctx.clearRect(0, 0, canvas.width, canvas.height);
+                    }, "image/png");
+                });
+
 
                 setTimeout(() => {
                     check_scroll_to_end();
