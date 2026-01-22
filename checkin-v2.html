@@ -139,6 +139,19 @@
             z-index: 2;
         }
 
+        /*显示图片状态*/
+        .status-download { color: #007bff; background: #e6f0ff; }
+        .status-ready { color: #28a745; background: #e6ffe6; }
+        .status-encrypted { color: #6f42c1; background: #f0e6ff; }
+        .status-error { color: #dc3545; background: #ffe6e6; }
+
+        .chat-message-content-rect span {
+            cursor: pointer;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: all 0.2s;
+        }
 
 		/*候选词面板*/
 		.chat-candidate-panel {
@@ -11613,34 +11626,47 @@
                     update() {
                         super.update();
 
+                        // 先清理状态类
+                        this.e_mcr_span.classList.remove("status-download", "status-ready", "status-encrypted", "status-error");
+
                         if (!this.msgattr.is_sent) {
                             this.e_mcr_img.classList.add("hidden");
+
                             if (this.msgattr.upload_task) {
-                                set_textContent_if_different(this.e_mcr_span, `[🖼️图片] ${this.msgattr.file_name} ${this.panel.wrapper.format_text_for_msgview(this.msgattr.upload_task.backtask_status_text.textContent)}`);
+                                this.e_mcr_span.classList.add("status-download");
+                                set_textContent_if_different(this.e_mcr_span,
+                                    `[🖼️图片] ${this.msgattr.file_name} ${this.panel.wrapper.format_text_for_msgview(this.msgattr.upload_task.backtask_status_text.textContent)}`);
                             } else {
+                                this.e_mcr_span.classList.add("status-download");
                                 set_textContent_if_different(this.e_mcr_span, `[🖼️图片] ${this.msgattr.file_name} 正在上传...`);
                             }
+
                         } else {
                             if (!this.msgattr.download_task) { // 未下载
                                 this.e_mcr_img.classList.add("hidden");
+
                                 if (this.msgattr.status & dashboardwrappers.ChatDashboardWrapper.message_status.encrypted) {
-                                    encryptors.decrypt2string(this.msgattr.file_attr.name).then(result => {
-                                        set_textContent_if_different(this.e_mcr_span, `[🖼️图片] ${result} 点击下载`);
-                                        this.msgattr.plain_file_name = result;
-                                    }).catch(error => {
-                                        this.e_mcr_span.classList.add("red");
-                                        set_textContent_if_different(this.e_mcr_span, `[🖼️图片] ${decrypt_error_string}`);
-                                    });
+                                    this.e_mcr_span.classList.add("status-encrypted");
+
+                                    encryptors.decrypt2string(this.msgattr.file_attr.name)
+                                        .then(result => {
+                                            set_textContent_if_different(this.e_mcr_span, `[🔒图片] ${result} 点击解密显示`);
+                                            this.msgattr.plain_file_name = result;
+                                        })
+                                        .catch(error => {
+                                            this.e_mcr_span.classList.add("status-error");
+                                            set_textContent_if_different(this.e_mcr_span, `[⚠️图片] ${decrypt_error_string}`);
+                                        });
+
                                 } else {
-                                    set_textContent_if_different(this.e_mcr_span, `[🖼️图片] ${this.msgattr.file_attr.name} 点击下载`);
+                                    this.e_mcr_span.classList.add("status-download");
+                                    set_textContent_if_different(this.e_mcr_span,
+                                        `[🖼️图片] ${this.msgattr.file_attr.name} 点击下载查看`);
                                     this.msgattr.plain_file_name = this.msgattr.file_attr.name;
                                 }
-                            } else {
-                                // task的状态变化时，会调用msgobj的update
-                                // if (this.msgattr.download_task.status === floatball.taskstatus.finished) {
-                                // }
 
-                                if (this.msgattr.plain_file_data) {
+                            } else { // 已有下载任务
+                                if (this.msgattr.plain_file_data) { // 已下载完成
                                     this.e_mcr_img.classList.remove("hidden");
                                     this.e_mcr_span.classList.add("hidden");
 
@@ -11648,25 +11674,26 @@
                                         this.set_img_src(this.msgattr.plain_file_data);
                                     }
 
-                                } else {
-                                    set_textContent_if_different(this.e_mcr_span, `[🖼️图片] ${this.msgattr.plain_file_name} ${this.panel.wrapper.format_text_for_msgview(this.msgattr.download_task.backtask_status_text.textContent)}`);
+                                } else { // 下载中
+                                    this.e_mcr_span.classList.add("status-download");
+
+                                    const statusText = this.panel.wrapper.format_text_for_msgview(this.msgattr.download_task.backtask_status_text.textContent);
+                                    set_textContent_if_different(this.e_mcr_span, `[🖼️图片] ${this.msgattr.plain_file_name} ${statusText}`);
 
                                     if (this.msgattr.download_task.args.plain_file_data) {
                                         this.e_mcr_img.classList.remove("hidden");
                                         this.e_mcr_span.classList.add("hidden");
 
-                                        this.msgattr.plain_file_data = this.msgattr.download_task.args.plain_file_data; // 在全屏查看时用到
+                                        this.msgattr.plain_file_data = this.msgattr.download_task.args.plain_file_data; // 全屏查看用
                                         this.msgattr.download_task.args.plain_file_data = null;
 
                                         this.set_img_src(this.msgattr.plain_file_data);
-
                                     }
                                 }
                             }
-
                         }
-
                     }
+
 
                     remove_from_group() {
                         super.remove_from_group();
