@@ -48,6 +48,98 @@
             100% { box-shadow: 0 8px 20px rgba(59,130,246,0.18), inset 0 1px 0 rgba(255,255,255,0.6); }
         }
 
+        /* 写字板整体 */
+        .chat-writeboard {
+            position: fixed;
+            inset: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 10000;
+        }
+
+
+        /* 隐藏状态 */
+        .chat-writeboard.hidden {
+            display: none;
+        }
+
+        /* 半透明遮罩，不拦截鼠标 */
+        .chat-writeboard-mask {
+            position: absolute;
+            inset: 0;
+            background: rgba(0,0,0,0.4); /* 半透明黑色 */
+            pointer-events: none;         /* 不阻挡鼠标 */
+            z-index: 0;                   /* 保证在面板下面 */
+        }
+
+
+        /* 面板：半屏，高度占50% */
+        .chat-writeboard-panel {
+            position: relative;     /* 相对定位 */
+            display: flex;
+            flex-direction: column;
+            width: 90%;
+            max-width: 800px;
+            height: 60%;            /* 半屏高度 */
+            background: #fff;
+            border-radius: 8px;
+            overflow: hidden;       /* 防止内容溢出 */
+            z-index: 1;             /* 高于遮罩 */
+            box-shadow: 0 4px 16px rgba(0,0,0,0.3); /* 视觉边缘 */
+        }
+
+
+        /* Canvas 占用剩余空间 */
+        .chat-writeboard-canvas {
+            flex: 1;           
+            min-height: 100px; 
+            background: #fff;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+
+        /* 按钮区域固定显示 */
+        .chat-writeboard-actions {
+            flex: 0 0 auto;    
+            display: flex;
+            justify-content: flex-end;
+            gap: 12px;
+            padding: 12px 16px;
+            border-top: 1px solid #eee;
+        }
+
+        /* 按钮字体大 */
+        .chat-writeboard-actions button {
+            font-size: 1.2rem;
+            padding: 8px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            background-color: #007aff;
+            color: #fff;
+            border: none;
+        }
+
+        /* 清空按钮单独红色 */
+        .chat-writeboard-actions button.clear-btn {
+            background-color: #ff4d4f;
+        }
+
+
+        /*CSS 拖拽手柄*/
+        .chat-writeboard-resizer {
+            position: absolute;
+            width: 16px;
+            height: 16px;
+            right: 0;
+            bottom: 0;
+            cursor: se-resize;
+            background: rgba(0,0,0,0.3);
+            border-radius: 4px;
+            z-index: 2;
+        }
+
+
 		/*候选词面板*/
 		.chat-candidate-panel {
 			position: fixed;
@@ -78,6 +170,31 @@
 			border-bottom: 1px solid #eee;
 			gap: 8px;
 		}
+
+        /* 清空 & 确定按钮字体变大 */
+        .chat-writeboard-actions button {
+            font-size: 1.2rem;       /* 字体更大 */
+            padding: 8px 16px;       /* 按钮更显眼 */
+            border-radius: 6px;
+            cursor: pointer;
+            background-color: #007aff;
+            color: #fff;
+            border: none;
+            transition: background 0.2s;
+        }
+
+        .chat-writeboard-actions button:hover {
+            background-color: #005bb5;
+        }
+
+        /* 可针对“清空”按钮单独设置颜色 */
+        .chat-writeboard-actions button.clear-btn {
+            background-color: #ff4d4f;
+        }
+
+        .chat-writeboard-actions button.clear-btn:hover {
+            background-color: #c0392b;
+        }
 
 		/* 翻页按钮 */
 		.chat-candidate-panel-prev,
@@ -8733,6 +8850,10 @@
 		<button class="chat-session-inputarea-othertypes-candidates">
 		    候选词
 		</button>
+        <button class="chat-session-inputarea-othertypes-write">
+            ✍️写字
+        </button>
+
     </div>
 
     <!-- 编辑消息提示 -->
@@ -8759,9 +8880,25 @@
 		<button class="chat-candidate-panel-next">下一页 →</button>
 		<button class="chat-candidate-panel-close">✕</button>
 	</div>
-
-
     <div class="chat-candidate-panel-body"></div>
+</div>
+
+<!-- ✍️ 写字白板 -->
+<div class="chat-writeboard hidden">
+    <div class="chat-writeboard-mask"></div>
+    <div class="chat-writeboard-panel">
+        <div class="chat-writeboard-header">
+            <span>✍️写字</span>
+            <button class="chat-writeboard-close">✕</button>
+        </div>
+
+        <canvas class="chat-writeboard-canvas"></canvas>
+
+        <div class="chat-writeboard-actions">
+            <button class="chat-writeboard-clear">清空</button>
+            <button class="chat-writeboard-confirm">确定</button>
+        </div>
+    </div>
 </div>
 
 
@@ -9474,6 +9611,171 @@
                 this.refresh();
                 this.start_timer__fetch_unread_msgs(false);
                 this.start_timer__update_read_progress(false);
+                // ⚡ 新增写字功能 DOM
+                this.e_writeboard = this.container.querySelector(".chat-writeboard");
+                this.e_writeboard_canvas = this.container.querySelector(".chat-writeboard-canvas");
+                this.e_writeboard_btn = this.container.querySelector(".chat-session-inputarea-othertypes-write");
+                this.e_writeboard_close = this.container.querySelector(".chat-writeboard-close");
+                this.e_writeboard_clear = this.container.querySelector(".chat-writeboard-clear");
+                this.e_writeboard_confirm = this.container.querySelector(".chat-writeboard-confirm");
+
+                // 鼠标绘图状态
+                this.write_ctx = null;
+                this.write_drawing = false;
+
+                // ⚡ 初始化写字板
+                this.init_writeboard = () => {
+                    const canvas = this.e_writeboard_canvas;
+
+                    // 将 canvas HTML 宽高同步为 CSS 尺寸
+                    const resizeCanvas = () => {
+                        const tempData = canvas.toDataURL(); // 暂存内容，防止清屏
+                        canvas.width = canvas.clientWidth;
+                        canvas.height = canvas.clientHeight;
+
+                        // 获取 2D 上下文
+                        this.write_ctx = canvas.getContext("2d");
+
+                        // 默认背景白色
+                        this.write_ctx.fillStyle = "#fff";
+                        this.write_ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+                        // 如果有之前内容，绘回去
+                        if (tempData) {
+                            const img = new Image();
+                            img.src = tempData;
+                            img.onload = () => {
+                                this.write_ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+                            };
+                        }
+
+                        // 设置画笔属性
+                        this.write_ctx.strokeStyle = "#000";
+                        this.write_ctx.lineWidth = 4;
+                        this.write_ctx.lineCap = "round";
+                    };
+                    resizeCanvas();
+                    window.addEventListener("resize", resizeCanvas);
+
+                    // 鼠标绘图
+                    canvas.onmousedown = (e) => {
+                        this.write_drawing = true;
+                        this.write_ctx.beginPath();
+                        this.write_ctx.moveTo(e.offsetX, e.offsetY);
+                    };
+                    canvas.onmousemove = (e) => {
+                        if (!this.write_drawing) return;
+                        this.write_ctx.lineTo(e.offsetX, e.offsetY);
+                        this.write_ctx.stroke();
+                    };
+                    canvas.onmouseup = canvas.onmouseleave = () => {
+                        this.write_drawing = false;
+                    };
+
+                    // ⚡ 拖拽调整面板大小（右下角）
+                    const panel = this.e_writeboard.querySelector(".chat-writeboard-panel");
+
+                    // 创建右下角拖拽手柄（如果不存在）
+                    let resizer = panel.querySelector(".chat-writeboard-resizer");
+                    if (!resizer) {
+                        resizer = document.createElement("div");
+                        resizer.classList.add("chat-writeboard-resizer");
+                        panel.appendChild(resizer);
+                    }
+
+                    let isResizing = false;
+                    let startX, startY, startWidth, startHeight;
+
+                    resizer.addEventListener("mousedown", e => {
+                        isResizing = true;
+                        startX = e.clientX;
+                        startY = e.clientY;
+                        startWidth = panel.offsetWidth;
+                        startHeight = panel.offsetHeight;
+                        e.preventDefault();
+                    });
+
+                    window.addEventListener("mousemove", e => {
+                        if (!isResizing) return;
+
+                        const dx = e.clientX - startX;
+                        const dy = e.clientY - startY;
+
+                        let newWidth = startWidth + dx;
+                        let newHeight = startHeight + dy;
+
+                        // 限制最小尺寸
+                        newWidth = Math.max(newWidth, 300);
+                        newHeight = Math.max(newHeight, 200);
+
+                        // 暂存画布内容
+                        const tempData = canvas.toDataURL();
+
+                        panel.style.width = `${newWidth}px`;
+                        panel.style.height = `${newHeight}px`;
+
+                        // 同步 canvas 尺寸
+                        canvas.width = canvas.clientWidth;
+                        canvas.height = canvas.clientHeight;
+
+                        // 白色背景
+                        this.write_ctx.fillStyle = "#fff";
+                        this.write_ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+                        // 绘回原内容
+                        if (tempData) {
+                            const img = new Image();
+                            img.src = tempData;
+                            img.onload = () => {
+                                this.write_ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+                            };
+                        }
+                    });
+
+                    window.addEventListener("mouseup", () => {
+                        isResizing = false;
+                    });
+                };
+
+                // 点击按钮打开写字板
+                this.e_writeboard_btn.addEventListener("click", () => {
+                    this.e_writeboard.classList.remove("hidden");
+                    this.init_writeboard();
+                });
+
+                // 点击关闭按钮隐藏写字板
+                this.e_writeboard_close.addEventListener("click", () => {
+                    this.e_writeboard.classList.add("hidden");
+                    if (this.write_ctx) {
+                        this.write_ctx.clearRect(0, 0, this.e_writeboard_canvas.width, this.e_writeboard_canvas.height);
+                    }
+                });
+
+                // 清空按钮
+                this.e_writeboard_clear.addEventListener("click", () => {
+                    if (this.write_ctx) {
+                        this.write_ctx.fillStyle = "#fff";
+                        this.write_ctx.fillRect(0, 0, this.e_writeboard_canvas.width, this.e_writeboard_canvas.height);
+                    }
+                });
+
+                // 确定按钮（生成图片并发送）
+                this.e_writeboard_confirm.addEventListener("click", () => {
+                    const canvas = this.e_writeboard_canvas;
+                    if (!this.write_ctx) return;
+
+                    canvas.toBlob((blob) => {
+                        const file = new File([blob], "handwrite.png", { type: "image/png" });
+                        this.start__send_msg_image(file); // 调用你现有发图片逻辑
+                        this.e_writeboard.classList.add("hidden");
+
+                        // 清空画布，下一次打开是空白
+                        this.write_ctx.fillStyle = "#fff";
+                        this.write_ctx.fillRect(0, 0, canvas.width, canvas.height);
+                    }, "image/png");
+                });
+
+
 
                 setTimeout(() => {
                     check_scroll_to_end();
