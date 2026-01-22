@@ -139,8 +139,8 @@
             z-index: 2;
         }
 
-        /*显示图片状态*/
-       .chat-message-content-rect span {
+        /* 仅图片状态 span */
+        .chat-message-content-rect span.mcr-status {
             cursor: pointer;
             padding: 2px 6px;
             border-radius: 4px;
@@ -150,8 +150,8 @@
         }
 
         /* 下载中 / 解密中 小点闪烁 */
-        .status-download::after,
-        .status-encrypted::after {
+        .mcr-status.status-download::after,
+        .mcr-status.status-encrypted::after {
             content: "";
             display: inline-block;
             width: 6px;
@@ -169,27 +169,28 @@
         }
 
         /* 已就绪 */
-        .status-ready {
+        .mcr-status.status-ready {
             color: #28a745;
             background: #e6ffe6;
         }
 
         /* 下载 / 上传 / 解密中 */
-        .status-download { 
+        .mcr-status.status-download { 
             color: #007bff; 
             background: #e6f0ff;
         }
 
-        .status-encrypted { 
+        .mcr-status.status-encrypted { 
             color: #6f42c1; 
             background: #f0e6ff;
         }
 
         /* 错误 */
-        .status-error { 
+        .mcr-status.status-error { 
             color: #dc3545; 
             background: #ffe6e6;
         }
+
 
 
 		/*候选词面板*/
@@ -11672,10 +11673,12 @@
                             this.e_mcr_img.classList.add("hidden");
 
                             if (this.msgattr.upload_task) {
+                                this.e_mcr_span.classList.add("mcr-status");
                                 this.e_mcr_span.classList.add("status-download");
                                 set_textContent_if_different(this.e_mcr_span,
                                     `[🖼️图片] ${this.msgattr.file_name} ${this.panel.wrapper.format_text_for_msgview(this.msgattr.upload_task.backtask_status_text.textContent)}`);
                             } else {
+                                this.e_mcr_span.classList.add("mcr-status");
                                 this.e_mcr_span.classList.add("status-download");
                                 set_textContent_if_different(this.e_mcr_span, `[🖼️图片] ${this.msgattr.file_name} 正在上传...`);
                             }
@@ -11685,6 +11688,7 @@
                                 this.e_mcr_img.classList.add("hidden");
 
                                 if (this.msgattr.status & dashboardwrappers.ChatDashboardWrapper.message_status.encrypted) {
+                                    this.e_mcr_span.classList.add("mcr-status");
                                     this.e_mcr_span.classList.add("status-encrypted");
 
                                     encryptors.decrypt2string(this.msgattr.file_attr.name)
@@ -11693,11 +11697,13 @@
                                             this.msgattr.plain_file_name = result;
                                         })
                                         .catch(error => {
+                                            this.e_mcr_span.classList.add("mcr-status");
                                             this.e_mcr_span.classList.add("status-error");
                                             set_textContent_if_different(this.e_mcr_span, `[⚠️图片] ${decrypt_error_string}`);
                                         });
 
                                 } else {
+                                    this.e_mcr_span.classList.add("mcr-status");
                                     this.e_mcr_span.classList.add("status-download");
                                     set_textContent_if_different(this.e_mcr_span,
                                         `[🖼️图片] ${this.msgattr.file_attr.name} 点击下载查看`);
@@ -11714,6 +11720,7 @@
                                     }
 
                                 } else { // 下载中
+                                    this.e_mcr_span.classList.add("mcr-status");
                                     this.e_mcr_span.classList.add("status-download");
 
                                     const statusText = this.panel.wrapper.format_text_for_msgview(this.msgattr.download_task.backtask_status_text.textContent);
