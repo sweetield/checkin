@@ -144,15 +144,15 @@
             cursor: pointer;
             padding: 2px 6px;
             border-radius: 4px;
-            font-weight: 500;
-            transition: all 0.2s;
+            font-weight: 700; /* 加粗 */
             display: inline-block;
+            transition: all 0.2s;
         }
 
-        /* 下载中 / 解密中 动态效果 */
+        /* 下载中 / 解密中 小点闪烁 */
         .status-download::after,
         .status-encrypted::after {
-            content: " ";
+            content: "";
             display: inline-block;
             width: 6px;
             height: 6px;
@@ -162,13 +162,19 @@
             animation: blink 1s infinite;
         }
 
+        /* 闪烁关键帧 */
+        @keyframes blink {
+            0%, 20%, 50%, 80%, 100% { opacity: 0; transform: translateY(0); }
+            10%, 30%, 60%, 90% { opacity: 1; transform: translateY(-2px); }
+        }
+
         /* 已就绪 */
         .status-ready {
-            color: #28a745; 
+            color: #28a745;
             background: #e6ffe6;
         }
 
-        /* 下载/上传/解密中 */
+        /* 下载 / 上传 / 解密中 */
         .status-download { 
             color: #007bff; 
             background: #e6f0ff;
@@ -185,11 +191,29 @@
             background: #ffe6e6;
         }
 
-        /* 动画关键帧：点点闪烁 */
-        @keyframes blink {
-            0%, 20%, 50%, 80%, 100% { opacity: 0; transform: translateY(0); }
-            10%, 30%, 60%, 90% { opacity: 1; transform: translateY(-2px); }
+        /* 动态文字变化：下载中… */
+        .status-download span,
+        .status-encrypted span {
+            display: inline-block;
         }
+
+        .status-download::before {
+            content: "下载中";
+            animation: dots 1s steps(3, end) infinite;
+        }
+
+        .status-encrypted::before {
+            content: "解密中";
+            animation: dots 1s steps(3, end) infinite;
+        }
+
+        @keyframes dots {
+            0% { content: "下载中"; }
+            33% { content: "下载中."; }
+            66% { content: "下载中.."; }
+            100% { content: "下载中..."; }
+        }
+
 
 
 		/*候选词面板*/
