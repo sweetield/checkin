@@ -140,18 +140,57 @@
         }
 
         /*显示图片状态*/
-        .status-download { color: #007bff; background: #e6f0ff; }
-        .status-ready { color: #28a745; background: #e6ffe6; }
-        .status-encrypted { color: #6f42c1; background: #f0e6ff; }
-        .status-error { color: #dc3545; background: #ffe6e6; }
-
         .chat-message-content-rect span {
             cursor: pointer;
             padding: 2px 6px;
             border-radius: 4px;
             font-weight: 500;
             transition: all 0.2s;
+            display: inline-block;
         }
+
+        /* 下载中 / 解密中 动态效果 */
+        .status-download::after,
+        .status-encrypted::after {
+            content: " ";
+            display: inline-block;
+            width: 6px;
+            height: 6px;
+            margin-left: 4px;
+            border-radius: 50%;
+            background-color: currentColor;
+            animation: blink 1s infinite;
+        }
+
+        /* 已就绪 */
+        .status-ready {
+            color: #28a745; 
+            background: #e6ffe6;
+        }
+
+        /* 下载/上传/解密中 */
+        .status-download { 
+            color: #007bff; 
+            background: #e6f0ff;
+        }
+
+        .status-encrypted { 
+            color: #6f42c1; 
+            background: #f0e6ff;
+        }
+
+        /* 错误 */
+        .status-error { 
+            color: #dc3545; 
+            background: #ffe6e6;
+        }
+
+        /* 动画关键帧：点点闪烁 */
+        @keyframes blink {
+            0%, 20%, 50%, 80%, 100% { opacity: 0; transform: translateY(0); }
+            10%, 30%, 60%, 90% { opacity: 1; transform: translateY(-2px); }
+        }
+
 
 		/*候选词面板*/
 		.chat-candidate-panel {
