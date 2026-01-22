@@ -11472,7 +11472,7 @@
                     }
 
                     set_img_src(plain_file_data) {
-                        const blob = new Blob([plain_file_data]); // blob不能指定名称
+                        const blob = new Blob([plain_file_data], { type: "image/png" }); // blob不能指定名称
                         // const file = new File([this.msgattr.download_task.args.plain_file_data], // img也不读取file的name
                         //     this.msgattr.plain_file_name, {type: "image/png"});
 
