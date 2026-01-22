@@ -192,8 +192,7 @@
         }
 
         /* 动态文字变化：下载中… */
-        .status-download span,
-        .status-encrypted span {
+        .status-download span {
             display: inline-block;
         }
 
@@ -11714,7 +11713,7 @@
 
                                     encryptors.decrypt2string(this.msgattr.file_attr.name)
                                         .then(result => {
-                                            set_textContent_if_different(this.e_mcr_span, `[🔒图片] ${result} 点击解密显示`);
+                                            set_textContent_if_different(this.e_mcr_span, `[🔒图片] ${result} 点击显示图片`);
                                             this.msgattr.plain_file_name = result;
                                         })
                                         .catch(error => {
