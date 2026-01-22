@@ -49,6 +49,30 @@
         }
 
         /* 写字板整体 */
+        /* Header */
+        .chat-writeboard-header {
+            display: flex;
+            justify-content: space-between; /* 左右分开 */
+            align-items: center;
+            padding: 8px 12px;
+            border-bottom: 1px solid #eee;
+        }
+
+        /* 标题文字 */
+        .chat-writeboard-title {
+            font-size: 1.2rem;
+            font-weight: 500;
+        }
+
+        /* 关闭按钮固定右上 */
+        .chat-writeboard-close {
+            background: transparent;
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: #333;
+        }
+
         .chat-writeboard {
             position: fixed;
             inset: 0;
@@ -8941,7 +8965,7 @@
     <div class="chat-writeboard-mask"></div>
     <div class="chat-writeboard-panel">
         <div class="chat-writeboard-header">
-            <span>✍️写字</span>
+            <span class="chat-writeboard-title">✍️ 写字白板</span>
             <button class="chat-writeboard-close">✕</button>
         </div>
 
