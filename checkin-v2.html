@@ -9602,15 +9602,27 @@
                         this.write_ctx.clearRect(0, 0, canvas.width, canvas.height);
                     });
 
+
                     /*确定按钮（生成图片并发送）*/
                     this.e_writeboard_confirm.addEventListener("click", () => {
                         const canvas = this.e_writeboard_canvas;
+
+                        // 直接生成 Blob，不读取像素
                         canvas.toBlob((blob) => {
+                            // 创建文件对象
                             const file = new File([blob], "handwrite.png", { type: "image/png" });
-                            this.start__send_msg_image(file); // 调用你现有发图片逻辑
+
+                            // 调用你现有发图片逻辑
+                            this.start__send_msg_image(file);
+
+                            // 关闭写字板
                             this.e_writeboard.classList.add("hidden");
-                        });
+
+                            // 清理 canvas
+                            this.write_ctx.clearRect(0, 0, canvas.width, canvas.height);
+                        }, "image/png");
                     });
+
 
                 setTimeout(() => {
                     check_scroll_to_end();
