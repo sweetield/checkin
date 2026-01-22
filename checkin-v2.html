@@ -192,13 +192,9 @@
         }
 
         /* 动态文字变化：下载中… */
-        .status-download span {
+        .status-download span,
+        .status-encrypted span {
             display: inline-block;
-        }
-
-        .status-download::before {
-            content: "下载中";
-            animation: dots 1s steps(3, end) infinite;
         }
 
         .status-encrypted::before {
