@@ -3906,21 +3906,16 @@
         const btn = document.getElementById("ai-alert-ok");
 
         text.textContent = message;
-        modal.classList.add("show");
+        modal.classList.remove("hidden");
 
         const closeModal = () => {
-            modal.classList.remove("show");
+            modal.classList.add("hidden");
             btn.removeEventListener("click", closeModal);
-            document.removeEventListener("keydown", escHandler);
-        };
-
-        const escHandler = (e) => {
-            if (e.key === "Escape") closeModal();
         };
 
         btn.addEventListener("click", closeModal);
-        document.addEventListener("keydown", escHandler);
     }
+
 
 
 
