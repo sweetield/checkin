@@ -59,21 +59,31 @@
             align-items: center;
             justify-content: center;
             z-index: 9999;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.25s ease;
         }
 
-        .ai-alert-modal.hidden {
-            display: none;
+        .ai-alert-modal.show {
+            opacity: 1;
+            pointer-events: all;
         }
 
         .ai-alert-content {
             background: white;
-            padding: 20px 30px;
-            border-radius: 8px;
+            padding: 25px 35px;
+            border-radius: 10px;
             text-align: center;
-            max-width: 400px;
-            font-size: 1.2rem; /* 字体加大 */
+            max-width: 420px;
+            font-size: 1.25rem; /* 字体大 */
             font-weight: 600;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+            box-shadow: 0 6px 20px rgba(0,0,0,0.35);
+            transform: scale(0.8);
+            transition: transform 0.25s ease;
+        }
+
+        .ai-alert-modal.show .ai-alert-content {
+            transform: scale(1);
         }
 
         .ai-alert-content p {
@@ -81,13 +91,18 @@
         }
 
         .ai-alert-content button {
-            padding: 8px 20px;
+            padding: 10px 25px;
             font-size: 1rem;
             cursor: pointer;
-            border-radius: 4px;
+            border-radius: 6px;
             border: none;
             background-color: #1e90ff;
             color: white;
+            transition: background-color 0.2s;
+        }
+
+        .ai-alert-content button:hover {
+            background-color: #0d6efd;
         }
 
 
@@ -3891,15 +3906,22 @@
         const btn = document.getElementById("ai-alert-ok");
 
         text.textContent = message;
-        modal.classList.remove("hidden");
+        modal.classList.add("show");
 
         const closeModal = () => {
-            modal.classList.add("hidden");
+            modal.classList.remove("show");
             btn.removeEventListener("click", closeModal);
+            document.removeEventListener("keydown", escHandler);
+        };
+
+        const escHandler = (e) => {
+            if (e.key === "Escape") closeModal();
         };
 
         btn.addEventListener("click", closeModal);
+        document.addEventListener("keydown", escHandler);
     }
+
 
 
     // ===== 标题闪烁 =====
@@ -9285,21 +9307,23 @@
                     const userText = this.e_inputarea_textarea.value.trim();
 
                     if (!userText) {
-                        showAiAlert("📘 请先输入你的问题，然后 AI 老师才能帮你讲解哦！");
+                        showAiAlert("📘 请先在输入框输入你的问题，然后再点击“AI咨询”按钮，AI 老师才能帮你讲解哦！");
                         return;
                     }
 
+                    const prompt = build_ai_teacher_prompt(userText);
+                    const encodedPrompt = encodeURIComponent(prompt);
+
+                    window.open(`https://chatgpt.com/?q=${encodedPrompt}`, "_blank");
+                });
+
+                // 快捷键 Ctrl + Shift + Enter 触发 AI 咨询
                 this.e_inputarea_textarea.addEventListener("keydown", (e) => {
                     if (e.ctrlKey && e.shiftKey && e.key === "Enter") {
                         this.e_ai_teacher_btn.click();
                     }
                 });
-                    const prompt = build_ai_teacher_prompt(userText);
-                    const encodedPrompt = encodeURIComponent(prompt);
 
-                    // 跳转 AI 咨询页面
-                    window.open(`https://chatgpt.com/?q=${encodedPrompt}`, "_blank");
-                });
 
 				// =============================
 				// 🔥 半屏候选词：DOM 引用
