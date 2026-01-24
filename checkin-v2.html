@@ -47,7 +47,8 @@
             50%  { box-shadow: 0 12px 30px rgba(59,130,246,0.28), inset 0 1px 0 rgba(255,255,255,0.6); }
             100% { box-shadow: 0 8px 20px rgba(59,130,246,0.18), inset 0 1px 0 rgba(255,255,255,0.6); }
         }
-        /* AI弹框提示 */
+
+        /* AI提示框 */
         .ai-alert-modal {
             position: fixed;
             top: 0;
@@ -59,21 +60,31 @@
             align-items: center;
             justify-content: center;
             z-index: 9999;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.25s ease;
         }
 
-        .ai-alert-modal.hidden {
-            display: none;
+        .ai-alert-modal.show {
+            opacity: 1;
+            pointer-events: all;
         }
 
         .ai-alert-content {
             background: white;
-            padding: 20px 30px;
-            border-radius: 8px;
+            padding: 25px 35px;
+            border-radius: 10px;
             text-align: center;
-            max-width: 400px;
-            font-size: 1.2rem; /* 字体加大 */
+            max-width: 420px;
+            font-size: 1.25rem; /* 字体大 */
             font-weight: 600;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+            box-shadow: 0 6px 20px rgba(0,0,0,0.35);
+            transform: scale(0.8);
+            transition: transform 0.25s ease;
+        }
+
+        .ai-alert-modal.show .ai-alert-content {
+            transform: scale(1);
         }
 
         .ai-alert-content p {
@@ -81,15 +92,19 @@
         }
 
         .ai-alert-content button {
-            padding: 8px 20px;
+            padding: 10px 25px;
             font-size: 1rem;
             cursor: pointer;
-            border-radius: 4px;
+            border-radius: 6px;
             border: none;
             background-color: #1e90ff;
             color: white;
+            transition: background-color 0.2s;
         }
 
+        .ai-alert-content button:hover {
+            background-color: #0d6efd;
+        }
 
 
         /* 写字板整体 */
@@ -3886,25 +3901,28 @@
     `;
     }
 
+
     function showAiAlert(message) {
         const modal = document.getElementById("ai-alert-modal");
         const text = document.getElementById("ai-alert-text");
         const btn = document.getElementById("ai-alert-ok");
 
         text.textContent = message;
-        modal.classList.remove("hidden");
+        modal.classList.add("show");
 
         const closeModal = () => {
-            modal.classList.add("hidden");
+            modal.classList.remove("show");
             btn.removeEventListener("click", closeModal);
+            document.removeEventListener("keydown", escHandler);
+        };
+
+        const escHandler = (e) => {
+            if (e.key === "Escape") closeModal();
         };
 
         btn.addEventListener("click", closeModal);
+        document.addEventListener("keydown", escHandler);
     }
-
-
-
-
 
     // ===== 标题闪烁 =====
     let titleTimer = null;
@@ -9091,13 +9109,6 @@
     </div>
 </div>
 
-<!-- AI 提示弹窗 -->
-<div id="ai-alert-modal" class="ai-alert-modal hidden">
-    <div class="ai-alert-content">
-        <p id="ai-alert-text"></p>
-        <button id="ai-alert-ok">知道了</button>
-    </div>
-</div>
 
 </div>
 `;
@@ -9289,7 +9300,7 @@
                     const userText = this.e_inputarea_textarea.value.trim();
 
                     if (!userText) {
-                        showAiAlert("📘 请在输入框输入你的问题，再点击AI咨询按钮，然后 AI 老师才能帮你讲解哦！");
+                        showAiAlert("📘 请先输入你的问题，然后 AI 老师才能帮你讲解哦！");
                         return;
                     }
 
@@ -15543,4 +15554,13 @@ textarea.addEventListener('input', () => {
 </a>
 
 </body>
+<!-- AI 提示弹窗 -->
+<div id="ai-alert-modal" class="ai-alert-modal hidden">
+    <div class="ai-alert-content">
+        <p id="ai-alert-text"></p>
+        <button id="ai-alert-ok">知道了</button>
+    </div>
+</div>
+
 </html>
+
