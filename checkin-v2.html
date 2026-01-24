@@ -47,6 +47,21 @@
             50%  { box-shadow: 0 12px 30px rgba(59,130,246,0.28), inset 0 1px 0 rgba(255,255,255,0.6); }
             100% { box-shadow: 0 8px 20px rgba(59,130,246,0.18), inset 0 1px 0 rgba(255,255,255,0.6); }
         }
+        /* AI咨询提示 */
+        .chat-session-inputarea-warning {
+            color: #d9534f;           /* 红色醒目 */
+            font-size: 0.95rem;       /* 比默认字体稍大 */
+            margin-top: 4px;
+            font-weight: 600;
+        }
+
+        .chat-session-inputarea-warning.show {
+            display: block;
+        }
+
+        .chat-session-inputarea-warning.hidden {
+            display: none;
+        }
 
         /* 写字板整体 */
         /* Header */
@@ -3799,38 +3814,49 @@
 <script>
     function build_ai_teacher_prompt(text) {
         return `
-    你现在的角色是一位【新手导师型 AI】。
+    你现在是一位【新手导师型 AI 教练】，目标是让完全没有基础的人能够理解、操作并掌握问题。假设我完全不懂相关背景、术语或隐含规则。
 
-    请默认我：
-    - 完全是小白
-    - 对相关背景、术语、隐含规则一无所知
-    - 不知道“为什么要这样做”，也不知道“下一步是什么”
+    请严格遵循以下规范回答：
 
-    请严格按照以下方式回答：
+    【讲解结构】
+    1. **概念层**  
+       - 对出现的关键术语或概念，用生动故事、生活类比或小案例解释  
+       - 再解释技术含义  
+       - 指出常见误区和容易混淆的点
 
-    【讲解原则】
-    1. 用非常通俗的语言讲解，避免任何“业内默认你懂”的说法
-    2. 所有步骤必须一步一步来，不能跳步
-    3. 每一步都要回答两个问题：
-       - 这一步“在做什么”
-       - 为什么“必须这样做”
-    4. 遇到概念或术语时：
-       - 先用生活中的例子或小故事解释
-       - 再告诉我它在技术里的含义
-    5. 主动指出常见误区、容易踩坑的地方，并说明为什么会错
-    6. 如果有多种做法，请说明：
-       - 推荐哪一种
-       - 为什么更适合新手
+    2. **原理层**  
+       - 每个步骤背后的原理或原因  
+       - 为什么必须这样做，跳过会出现什么问题  
+       - 如果有多种方法，说明适合新手的推荐方法及原因
+
+    3. **操作层**  
+       - 详细列出每一步操作  
+       - 每步包含：
+           1. **标题**（简短描述）
+           2. **做什么**（具体动作）
+           3. **为什么**（操作原因/原理）
+           4. **注意事项/误区**（容易错的地方）
+           5. **结果预期**（做完后会看到什么）
+
+    4. **扩展层（可选）**  
+       - 提供进阶技巧或变体方法  
+       - 给出理解背后的思路，帮助迁移到类似问题
 
     【表达风格】
-    - 像老师当面教学生，而不是写说明书
-    - 可以适当用比喻、类比、故事
-    - 允许慢一点，但不允许含糊
+    - 面对面讲解的口吻，耐心、轻松  
+    - 尽量生动、有画面感  
+    - 避免只列清单或公式化指令
+
+    【输出格式】
+    - 分步编号 + 小标题，便于阅读  
+    - 每步保持完整结构（标题+做什么+为什么+注意事项+结果）  
+    - 遇到概念时穿插故事、类比或小案例
 
     【问题如下】
     ${text}
     `;
     }
+
 
 
     // ===== 标题闪烁 =====
@@ -8987,7 +9013,7 @@
         <button class="chat-session-inputarea-sendbtn">>>>点击发送<<<</button>
     </div>
 </div>
-
+<div class="chat-session-inputarea-warning hidden"></div>
 <!-- 🔥 半屏候选词面板 -->
 <div class="chat-candidate-panel hidden">
     <div class="chat-candidate-panel-header">
@@ -9204,25 +9230,37 @@
                     ".chat-session-inputarea-othertypes-ai"
                 );
 
+                // 假设在 open_page() 或初始化里，你已经在输入框下方加了一个提示容器
+                // <div class="chat-session-inputarea-warning hidden"></div>
+                const warningBox = this.container.querySelector(".chat-session-inputarea-warning");
 
                 this.e_ai_teacher_btn.addEventListener("click", () => {
                     const userText = this.e_inputarea_textarea.value.trim();
 
+                    // 如果没有输入内容，显示醒目提示
                     if (!userText) {
-                        alert("先输入问题，再让 AI 出场 🤖");
+                        warningBox.textContent = "📘 请先输入你的问题，然后 AI 老师才能帮你讲解哦！";
+                        warningBox.classList.remove("hidden");
+                        warningBox.classList.add("show");
                         return;
+                    } else {
+                        // 输入了内容，隐藏提示
+                        warningBox.textContent = "";
+                        warningBox.classList.remove("show");
+                        warningBox.classList.add("hidden");
                     }
 
+                    // 构建 Prompt 并跳转
+                    const prompt = build_ai_teacher_prompt(userText);
+                    const encodedPrompt = encodeURIComponent(prompt);
+                    window.open(`https://chatgpt.com/?q=${encodedPrompt}`, "_blank");
+                });
+
+                // 快捷键 Ctrl + Shift + Enter 触发 AI 咨询
                 this.e_inputarea_textarea.addEventListener("keydown", (e) => {
                     if (e.ctrlKey && e.shiftKey && e.key === "Enter") {
                         this.e_ai_teacher_btn.click();
                     }
-                });
-                    const prompt = build_ai_teacher_prompt(userText);
-                    const encodedPrompt = encodeURIComponent(prompt);
-
-                    // 跳转 AI 咨询页面
-                    window.open(`https://chatgpt.com/?q=${encodedPrompt}`, "_blank");
                 });
 
 				// =============================
