@@ -11131,21 +11131,6 @@
                                         if (!this.msgattr.plain_data_text) {
                                             _.disabled = true;
                                         }
-                                    }
-
-                                    if (dashboardwrappers.ChatDashboardWrapper.message_type_checker.is_drive_item(this.msgattr.type)) {
-                                        const _ = {
-                                            type: "button", text: "复制文件名称", callback: event => {
-                                                if (this.msgattr.plain_file_name) {
-                                                    navigator.clipboard.writeText(this.msgattr.plain_file_name);
-                                                }
-                                            },
-                                        }
-                                        items.push(_, {type: "section", text: "",},);
-                                        if (!this.msgattr.plain_file_name) {
-                                            _.disabled = true;
-                                        }
-
                                         // =========================
                                         // 🤖 AI 咨询（新增）
                                         // =========================
@@ -11167,6 +11152,22 @@
                                         if (!this.msgattr.plain_data_text) {
                                             aiConsultItem.disabled = true;
                                         }
+                                    }
+
+                                    if (dashboardwrappers.ChatDashboardWrapper.message_type_checker.is_drive_item(this.msgattr.type)) {
+                                        const _ = {
+                                            type: "button", text: "复制文件名称", callback: event => {
+                                                if (this.msgattr.plain_file_name) {
+                                                    navigator.clipboard.writeText(this.msgattr.plain_file_name);
+                                                }
+                                            },
+                                        }
+                                        items.push(_, {type: "section", text: "",},);
+                                        if (!this.msgattr.plain_file_name) {
+                                            _.disabled = true;
+                                        }
+
+                                        
                                     }
 
                                     if (dashboardwrappers.ChatDashboardWrapper.message_type_checker.is_text(this.msgattr.type) ||
