@@ -47,21 +47,49 @@
             50%  { box-shadow: 0 12px 30px rgba(59,130,246,0.28), inset 0 1px 0 rgba(255,255,255,0.6); }
             100% { box-shadow: 0 8px 20px rgba(59,130,246,0.18), inset 0 1px 0 rgba(255,255,255,0.6); }
         }
-        /* AI咨询提示 */
-        .chat-session-inputarea-warning {
-            color: #d9534f;           /* 红色醒目 */
-            font-size: 0.95rem;       /* 比默认字体稍大 */
-            margin-top: 4px;
-            font-weight: 600;
+        /* AI弹框提示 */
+        .ai-alert-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
         }
 
-        .chat-session-inputarea-warning.show {
-            display: block;
-        }
-
-        .chat-session-inputarea-warning.hidden {
+        .ai-alert-modal.hidden {
             display: none;
         }
+
+        .ai-alert-content {
+            background: white;
+            padding: 20px 30px;
+            border-radius: 8px;
+            text-align: center;
+            max-width: 400px;
+            font-size: 1.2rem; /* 字体加大 */
+            font-weight: 600;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+        }
+
+        .ai-alert-content p {
+            margin-bottom: 20px;
+        }
+
+        .ai-alert-content button {
+            padding: 8px 20px;
+            font-size: 1rem;
+            cursor: pointer;
+            border-radius: 4px;
+            border: none;
+            background-color: #1e90ff;
+            color: white;
+        }
+
 
         /* 写字板整体 */
         /* Header */
@@ -3857,6 +3885,21 @@
     `;
     }
 
+    function showAiAlert(message) {
+        const modal = document.getElementById("ai-alert-modal");
+        const text = document.getElementById("ai-alert-text");
+        const btn = document.getElementById("ai-alert-ok");
+
+        text.textContent = message;
+        modal.classList.remove("hidden");
+
+        const closeModal = () => {
+            modal.classList.add("hidden");
+            btn.removeEventListener("click", closeModal);
+        };
+
+        btn.addEventListener("click", closeModal);
+    }
 
 
     // ===== 标题闪烁 =====
@@ -9013,7 +9056,7 @@
         <button class="chat-session-inputarea-sendbtn">>>>点击发送<<<</button>
     </div>
 </div>
-<div class="chat-session-inputarea-warning hidden"></div>
+
 <!-- 🔥 半屏候选词面板 -->
 <div class="chat-candidate-panel hidden">
     <div class="chat-candidate-panel-header">
@@ -9044,6 +9087,13 @@
     </div>
 </div>
 
+<!-- AI 提示弹窗 -->
+<div id="ai-alert-modal" class="ai-alert-modal hidden">
+    <div class="ai-alert-content">
+        <p id="ai-alert-text"></p>
+        <button id="ai-alert-ok">知道了</button>
+    </div>
+</div>
 
 </div>
 `;
@@ -9230,37 +9280,25 @@
                     ".chat-session-inputarea-othertypes-ai"
                 );
 
-                // 假设在 open_page() 或初始化里，你已经在输入框下方加了一个提示容器
-                // <div class="chat-session-inputarea-warning hidden"></div>
-                const warningBox = this.container.querySelector(".chat-session-inputarea-warning");
 
                 this.e_ai_teacher_btn.addEventListener("click", () => {
                     const userText = this.e_inputarea_textarea.value.trim();
 
-                    // 如果没有输入内容，显示醒目提示
                     if (!userText) {
-                        warningBox.textContent = "📘 请先输入你的问题，然后 AI 老师才能帮你讲解哦！";
-                        warningBox.classList.remove("hidden");
-                        warningBox.classList.add("show");
+                        showAiAlert("📘 请先输入你的问题，然后 AI 老师才能帮你讲解哦！");
                         return;
-                    } else {
-                        // 输入了内容，隐藏提示
-                        warningBox.textContent = "";
-                        warningBox.classList.remove("show");
-                        warningBox.classList.add("hidden");
                     }
 
-                    // 构建 Prompt 并跳转
-                    const prompt = build_ai_teacher_prompt(userText);
-                    const encodedPrompt = encodeURIComponent(prompt);
-                    window.open(`https://chatgpt.com/?q=${encodedPrompt}`, "_blank");
-                });
-
-                // 快捷键 Ctrl + Shift + Enter 触发 AI 咨询
                 this.e_inputarea_textarea.addEventListener("keydown", (e) => {
                     if (e.ctrlKey && e.shiftKey && e.key === "Enter") {
                         this.e_ai_teacher_btn.click();
                     }
+                });
+                    const prompt = build_ai_teacher_prompt(userText);
+                    const encodedPrompt = encodeURIComponent(prompt);
+
+                    // 跳转 AI 咨询页面
+                    window.open(`https://chatgpt.com/?q=${encodedPrompt}`, "_blank");
                 });
 
 				// =============================
