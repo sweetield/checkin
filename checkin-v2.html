@@ -3907,11 +3907,18 @@
         const text = document.getElementById("ai-alert-text");
         const btn = document.getElementById("ai-alert-ok");
 
+        if (!modal || !text || !btn) {
+            console.error("AI 弹窗元素未找到！");
+            return;
+        }
+
         text.textContent = message;
+        modal.classList.remove("hidden");
         modal.classList.add("show");
 
         const closeModal = () => {
             modal.classList.remove("show");
+            modal.classList.add("hidden");
             btn.removeEventListener("click", closeModal);
             document.removeEventListener("keydown", escHandler);
         };
@@ -9106,6 +9113,13 @@
             <button class="chat-writeboard-clear">清空</button>
             <button class="chat-writeboard-confirm">确定</button>
         </div>
+    </div>
+</div>
+<!-- AI咨询弹窗 -->
+<div id="ai-alert-modal" class="ai-alert-modal hidden">
+    <div class="ai-alert-content">
+        <p id="ai-alert-text"></p>
+        <button id="ai-alert-ok">知道了</button>
     </div>
 </div>
 
@@ -15554,13 +15568,6 @@ textarea.addEventListener('input', () => {
 </a>
 
 </body>
-<!-- AI 提示弹窗 -->
-<div id="ai-alert-modal" class="ai-alert-modal hidden">
-    <div class="ai-alert-content">
-        <p id="ai-alert-text"></p>
-        <button id="ai-alert-ok">知道了</button>
-    </div>
-</div>
 
 </html>
 
