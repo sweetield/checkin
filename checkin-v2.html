@@ -8930,6 +8930,11 @@
         <button class="chat-session-inputarea-othertypes-write">
             ✍️写字
         </button>
+        <button
+            class="chat-session-inputarea-othertypes-ai"
+            title="让 AI 用通俗的方式一步一步教你解决问题">
+            🤖 AI咨询
+        </button>
 
     </div>
 
@@ -9159,6 +9164,41 @@
                 // 文本输入
                 this.e_inputarea_textarea = this.container.querySelector(".chat-session-inputarea-textarea");
                 
+                // AI咨询
+                this.e_ai_teacher_btn = this.container.querySelector(
+                    ".chat-session-inputarea-othertypes-ai"
+                );
+                this.AI_TEACHER_PROMPT = `
+                请把我当成完全的新手，用通俗易懂的语言一步一步指导我解决下面的问题。
+                每一步都说明为什么要这样做。
+                遇到概念或术语时，请用生活中的例子或小故事来解释，避免直接给抽象定义。
+                如果有常见误区或容易犯错的地方，请提前提醒。
+
+                问题如下：
+                `;
+
+                this.e_ai_teacher_btn.addEventListener("click", () => {
+                    const userText = this.e_inputarea_textarea.value.trim();
+
+                    if (!userText) {
+                        alert("先输入问题，再让 AI 出场 🤖");
+                        return;
+                    }
+
+                this.e_inputarea_textarea.addEventListener("keydown", (e) => {
+                    if (e.ctrlKey && e.shiftKey && e.key === "Enter") {
+                        this.e_ai_teacher_btn.click();
+                    }
+                });
+                    const fullPrompt =
+                        this.AI_TEACHER_PROMPT + "\n" + userText;
+
+                    const url =
+                        "https://chatgpt.com/?q=" +
+                        encodeURIComponent(fullPrompt);
+
+                    window.open(url, "_blank");
+                });
 
 				// =============================
 				// 🔥 半屏候选词：DOM 引用
