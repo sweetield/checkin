@@ -48,6 +48,65 @@
             100% { box-shadow: 0 8px 20px rgba(59,130,246,0.18), inset 0 1px 0 rgba(255,255,255,0.6); }
         }
 
+        /* AI提示框 */
+        .ai-alert-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.25s ease;
+        }
+
+        .ai-alert-modal.show {
+            opacity: 1;
+            pointer-events: all;
+        }
+
+        .ai-alert-content {
+            background: white;
+            padding: 25px 35px;
+            border-radius: 10px;
+            text-align: center;
+            max-width: 420px;
+            font-size: 1.25rem; /* 字体大 */
+            font-weight: 600;
+            box-shadow: 0 6px 20px rgba(0,0,0,0.35);
+            transform: scale(0.8);
+            transition: transform 0.25s ease;
+        }
+
+        .ai-alert-modal.show .ai-alert-content {
+            transform: scale(1);
+        }
+
+        .ai-alert-content p {
+            margin-bottom: 20px;
+        }
+
+        .ai-alert-content button {
+            padding: 10px 25px;
+            font-size: 1rem;
+            cursor: pointer;
+            border-radius: 6px;
+            border: none;
+            background-color: #1e90ff;
+            color: white;
+            transition: background-color 0.2s;
+        }
+
+        .ai-alert-content button:hover {
+            background-color: #0d6efd;
+        }
+
+
         /* 写字板整体 */
         /* Header */
         .chat-writeboard-header {
@@ -3843,6 +3902,34 @@
     }
 
 
+    function showAiAlert(message) {
+        const modal = document.getElementById("ai-alert-modal");
+        const text = document.getElementById("ai-alert-text");
+        const btn = document.getElementById("ai-alert-ok");
+
+        if (!modal || !text || !btn) {
+            console.error("AI 弹窗元素未找到！");
+            return;
+        }
+
+        text.textContent = message;
+        modal.classList.remove("hidden");
+        modal.classList.add("show");
+
+        const closeModal = () => {
+            modal.classList.remove("show");
+            modal.classList.add("hidden");
+            btn.removeEventListener("click", closeModal);
+            document.removeEventListener("keydown", escHandler);
+        };
+
+        const escHandler = (e) => {
+            if (e.key === "Escape") closeModal();
+        };
+
+        btn.addEventListener("click", closeModal);
+        document.addEventListener("keydown", escHandler);
+    }
 
     // ===== 标题闪烁 =====
     let titleTimer = null;
@@ -9028,6 +9115,13 @@
         </div>
     </div>
 </div>
+<!-- AI咨询弹窗 -->
+<div id="ai-alert-modal" class="ai-alert-modal hidden">
+    <div class="ai-alert-content">
+        <p id="ai-alert-text"></p>
+        <button id="ai-alert-ok">知道了</button>
+    </div>
+</div>
 
 
 </div>
@@ -9216,25 +9310,29 @@
                 );
 
 
-                this.e_ai_teacher_btn.addEventListener("click", () => {
-                    const userText = this.e_inputarea_textarea.value.trim();
-
-                    if (!userText) {
-                        alert("先输入问题，再让 AI 出场 🤖");
-                        return;
-                    }
-
+               // 1️⃣ 先绑定快捷键，独立于点击事件
                 this.e_inputarea_textarea.addEventListener("keydown", (e) => {
                     if (e.ctrlKey && e.shiftKey && e.key === "Enter") {
                         this.e_ai_teacher_btn.click();
                     }
                 });
+
+                // 2️⃣ 点击 AI 咨询按钮
+                this.e_ai_teacher_btn.addEventListener("click", () => {
+                    const userText = this.e_inputarea_textarea.value.trim();
+
+                    if (!userText) {
+                        showAiAlert("🤖 输入框没有输入问题，请在输入框先输入你的问题，然后 AI 老师才能帮你讲解哦！");
+                        return;
+                    }
+
                     const prompt = build_ai_teacher_prompt(userText);
                     const encodedPrompt = encodeURIComponent(prompt);
 
                     // 跳转 AI 咨询页面
                     window.open(`https://chatgpt.com/?q=${encodedPrompt}`, "_blank");
                 });
+
 
 				// =============================
 				// 🔥 半屏候选词：DOM 引用
@@ -15474,4 +15572,6 @@ textarea.addEventListener('input', () => {
 </a>
 
 </body>
+
 </html>
+
