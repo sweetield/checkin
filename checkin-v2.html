@@ -3797,6 +3797,41 @@
 <!---->
 
 <script>
+    function build_ai_teacher_prompt(text) {
+        return `
+    你现在的角色是一位【新手导师型 AI】。
+
+    请默认我：
+    - 完全是小白
+    - 对相关背景、术语、隐含规则一无所知
+    - 不知道“为什么要这样做”，也不知道“下一步是什么”
+
+    请严格按照以下方式回答：
+
+    【讲解原则】
+    1. 用非常通俗的语言讲解，避免任何“业内默认你懂”的说法
+    2. 所有步骤必须一步一步来，不能跳步
+    3. 每一步都要回答两个问题：
+       - 这一步“在做什么”
+       - 为什么“必须这样做”
+    4. 遇到概念或术语时：
+       - 先用生活中的例子或小故事解释
+       - 再告诉我它在技术里的含义
+    5. 主动指出常见误区、容易踩坑的地方，并说明为什么会错
+    6. 如果有多种做法，请说明：
+       - 推荐哪一种
+       - 为什么更适合新手
+
+    【表达风格】
+    - 像老师当面教学生，而不是写说明书
+    - 可以适当用比喻、类比、故事
+    - 允许慢一点，但不允许含糊
+
+    【问题如下】
+    ${text}
+    `;
+    }
+
 
     // ===== 标题闪烁 =====
     let titleTimer = null;
@@ -8932,7 +8967,7 @@
         </button>
         <button
             class="chat-session-inputarea-othertypes-ai"
-            title="让 AI 用通俗的方式一步一步教你解决问题">
+            title="让 AI 用通俗的方式一步一步教你解决问题，快捷键ctrl+shift+回车">
             🤖 AI咨询
         </button>
 
@@ -9170,7 +9205,7 @@
                 );
                 this.AI_TEACHER_PROMPT = `
                 请把我当成完全的新手，用通俗易懂的语言一步一步指导我解决下面的问题。
-                每一步都说明为什么要这样做。
+                每一步都说明为什么要这样做，越详细越好。
                 遇到概念或术语时，请用生活中的例子或小故事来解释，避免直接给抽象定义。
                 如果有常见误区或容易犯错的地方，请提前提醒。
 
@@ -11109,6 +11144,28 @@
                                         items.push(_, {type: "section", text: "",},);
                                         if (!this.msgattr.plain_file_name) {
                                             _.disabled = true;
+                                        }
+
+                                        // =========================
+                                        // 🤖 AI 咨询（新增）
+                                        // =========================
+                                        const aiConsultItem = {
+                                            type: "button",
+                                            text: "🤖 AI 咨询",
+                                            callback: event => {
+                                                if (!this.msgattr.plain_data_text) return;
+
+                                                const prompt = build_ai_teacher_prompt(this.msgattr.plain_data_text);
+                                                const encodedPrompt = encodeURIComponent(prompt);
+
+                                                // 跳转 AI 咨询页面
+                                                window.open(`/ai/consult?prompt=${encodedPrompt}`, "_blank");
+                                            },
+                                        };
+                                        items.push(aiConsultItem, { type: "section", text: "" });
+
+                                        if (!this.msgattr.plain_data_text) {
+                                            aiConsultItem.disabled = true;
                                         }
                                     }
 
