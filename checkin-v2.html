@@ -9203,14 +9203,7 @@
                 this.e_ai_teacher_btn = this.container.querySelector(
                     ".chat-session-inputarea-othertypes-ai"
                 );
-                this.AI_TEACHER_PROMPT = `
-                请把我当成完全的新手，用通俗易懂的语言一步一步指导我解决下面的问题。
-                每一步都说明为什么要这样做，越详细越好。
-                遇到概念或术语时，请用生活中的例子或小故事来解释，避免直接给抽象定义。
-                如果有常见误区或容易犯错的地方，请提前提醒。
 
-                问题如下：
-                `;
 
                 this.e_ai_teacher_btn.addEventListener("click", () => {
                     const userText = this.e_inputarea_textarea.value.trim();
@@ -9225,14 +9218,11 @@
                         this.e_ai_teacher_btn.click();
                     }
                 });
-                    const fullPrompt =
-                        this.AI_TEACHER_PROMPT + "\n" + userText;
+                    const prompt = build_ai_teacher_prompt(userText);
+                    const encodedPrompt = encodeURIComponent(prompt);
 
-                    const url =
-                        "https://chatgpt.com/?q=" +
-                        encodeURIComponent(fullPrompt);
-
-                    window.open(url, "_blank");
+                    // 跳转 AI 咨询页面
+                    window.open(`https://chatgpt.com/?q=${encodedPrompt}`, "_blank");
                 });
 
 				// =============================
