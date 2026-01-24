@@ -9310,6 +9310,14 @@
                 );
 
 
+               // 1️⃣ 先绑定快捷键，独立于点击事件
+                this.e_inputarea_textarea.addEventListener("keydown", (e) => {
+                    if (e.ctrlKey && e.shiftKey && e.key === "Enter") {
+                        this.e_ai_teacher_btn.click();
+                    }
+                });
+
+                // 2️⃣ 点击 AI 咨询按钮
                 this.e_ai_teacher_btn.addEventListener("click", () => {
                     const userText = this.e_inputarea_textarea.value.trim();
 
@@ -9318,17 +9326,13 @@
                         return;
                     }
 
-                this.e_inputarea_textarea.addEventListener("keydown", (e) => {
-                    if (e.ctrlKey && e.shiftKey && e.key === "Enter") {
-                        this.e_ai_teacher_btn.click();
-                    }
-                });
                     const prompt = build_ai_teacher_prompt(userText);
                     const encodedPrompt = encodeURIComponent(prompt);
 
                     // 跳转 AI 咨询页面
                     window.open(`https://chatgpt.com/?q=${encodedPrompt}`, "_blank");
                 });
+
 
 				// =============================
 				// 🔥 半屏候选词：DOM 引用
