@@ -9129,6 +9129,13 @@
 `;
 
                 this.container.insertAdjacentHTML("beforeend", html);
+                // 🔹 新增：给 blockquote 加点击跳转事件
+                this.e_msgflow.querySelectorAll(".md-line-blockquote").forEach(el => {
+                    const refId = el.dataset.refMessageId;
+                    if (refId) {
+                        el.onclick = () => scrollToMessage(refId);
+                    }
+                });
                 this.chat_rect = this.container.querySelector(":scope div.chat-rect");
                 this.e_header_info = this.container.querySelector(":scope div.chat-session-header-info");
                 this.e_header_info_clickmark = this.container.querySelector(":scope div.chat-session-header-info-clickmark");
@@ -14057,11 +14064,10 @@
                         parts.push(`</span>`);
                     } //
                     else if (token.type === "cite") {
-                        // 系统标记：不输出任何可见内容
-                        parts.push(
-                            `<span class="md-text-cite" data-message-id="${token.text}"></span>`
-                        );
+                        const id = token.text ?? "";
+                        parts.push(`<span class="md-text-cite" data-message-id="${id}"></span>`);
                     }
+
                      //
                 }
             }
@@ -14071,11 +14077,9 @@
 
                     // === 这里是唯一改动的地方 ===
                     if (lineObject.is_blockquote) {
-                        const citeId = extractCiteId(lineObject.tokens);
-                        if (citeId) {
-                            parts.push(
-                                `<div class="md-line-blockquote" data-ref-message-id="${citeId}">`
-                            );
+                        const citeId = extractCiteId(lineObject.tokens) ?? "";
+                        if (citeId !== "") {
+                            parts.push(`<div class="md-line-blockquote" data-ref-message-id="${citeId}">`);
                         } else {
                             parts.push(`<div class="md-line-blockquote">`);
                         }
