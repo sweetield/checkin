@@ -723,7 +723,7 @@
 
       .chatgpt-float {
             position: fixed;
-            right: -70px;          /* 关键：先藏到右边 */
+            right: -75px;          /* 关键：先藏到右边 */
             top: 35%;
             bottom: auto;
             z-index: 9999;
@@ -11196,7 +11196,10 @@
                                         items.push(
                                             {
                                                 type: "button", text: "引用", callback: event => {
-                                                    this.contentpage.add_textarea_element__cite(this.msgattr.id)
+                                                    this.contentpage.add_textarea_element__cite(
+                                                        this.msgattr.id,
+                                                        this.msgattr.plain_data_text
+                                                    );
                                                 },
                                             },
                                             {type: "section", text: "",},
@@ -12313,10 +12316,19 @@
                 this.add_textarea_element(textToInsert);
             }
 
-            add_textarea_element__cite(message_id) {
-                const textToInsert = `&${message_id} `;
+            add_textarea_element__cite(message_id, text) {
+                if (!text) return;
+
+                // 多行文本也能正常引用
+                const quoted = text
+                    .split("\n")
+                    .map(line => `> ${line}`)
+                    .join("\n");
+
+                const textToInsert = `${quoted}\n\n`;
                 this.add_textarea_element(textToInsert);
             }
+
 
             add_textarea_element(textToInsert) {
                 const textarea = this.e_inputarea_textarea;
