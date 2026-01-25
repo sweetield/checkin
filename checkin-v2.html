@@ -11196,7 +11196,7 @@
                                         items.push(
                                             {
                                                 type: "button", text: "引用", callback: event => {
-                                                    this.contentpage.add_textarea_element__cite(this.msgattr.id, this.msgattr.text, "aa");
+                                                    this.contentpage.add_textarea_element__cite(this.msgattr.id, this.msgattr.text);
                                                 },
                                             },
                                             {type: "section", text: "",},
@@ -12314,12 +12314,12 @@
             }
 
             // 在 contentpage 内部修改或新增此函数
-            add_textarea_element__cite(message_id, message_text, username) {
+            add_textarea_element__cite(message_id, message_text) {
                 // 1. 引用消息ID
                 const referenceTag = `&${message_id} `;
 
                 // 2. 添加用户名提示
-                const userLine = `回复： ${username}:`;
+                const userLine = `回复： :`;
 
                 // 3. Markdown 引用
                 const quotedText = message_text
