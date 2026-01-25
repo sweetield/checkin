@@ -12325,28 +12325,43 @@
             }
 
             add_textarea_element__cite(message_id, text, senderName) {
-                if (!text || !message_id) return;
+                // 必须有 message_id，否则无法做引用
+                if (!message_id) return;
 
-                // 机器标记（隐藏用）
+                // 确保 text 为字符串，避免 null/undefined
+                text = text ?? "";
+
+                // HTML/Markdown 特殊字符转义
+                const escapeHTML = (str) =>
+                    str.replace(/&/g, "&amp;")
+                       .replace(/</g, "&lt;")
+                       .replace(/>/g, "&gt;")
+                       .replace(/"/g, "&quot;")
+                       .replace(/'/g, "&#039;");
+
+                // 机器隐藏标记，用于引用关联
                 const sysMark = `&${message_id}\n`;
 
                 // 人类可读引用头
-                const header = senderName ? `@${senderName}：` : "";
+                const header = senderName ? `@${escapeHTML(senderName)}：` : "";
 
-                // Markdown 引用体
+                // Markdown 引用体，每行加 ">"，第一行带 header
                 const quoted = text
                     .split("\n")
                     .map((line, idx) =>
                         idx === 0
-                            ? `> ${header}${line}`
-                            : `> ${line}`
+                            ? `> ${header}${escapeHTML(line)}`
+                            : `> ${escapeHTML(line)}`
                     )
                     .join("\n");
 
+                // 拼接要插入的文本
                 const textToInsert = `${sysMark}${quoted}\n\n`;
 
+                // 调用原本的 textarea 插入方法
                 this.add_textarea_element(textToInsert);
             }
+
 
 
 
