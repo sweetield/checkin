@@ -12320,7 +12320,7 @@
 
             add_textarea_element__cite(message_id, text, user_name) {
                 if (!text) return;
-                const new_text = `&${message_id} ⮌**@${user_name}：*${text}`
+                const new_text = `&${message_id} ⮌**@${user_name}：**${text}`
                 // 多行文本也能正常引用
                 const quoted = new_text
                     .split("\n")
