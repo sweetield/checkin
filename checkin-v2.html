@@ -9129,13 +9129,6 @@
 `;
 
                 this.container.insertAdjacentHTML("beforeend", html);
-                // 🔹 新增：给 blockquote 加点击跳转事件
-                this.e_msgflow.querySelectorAll(".md-line-blockquote").forEach(el => {
-                    const refId = el.dataset.refMessageId;
-                    if (refId) {
-                        el.onclick = () => scrollToMessage(refId);
-                    }
-                });
                 this.chat_rect = this.container.querySelector(":scope div.chat-rect");
                 this.e_header_info = this.container.querySelector(":scope div.chat-session-header-info");
                 this.e_header_info_clickmark = this.container.querySelector(":scope div.chat-session-header-info-clickmark");
