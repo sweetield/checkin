@@ -11196,7 +11196,11 @@
                                         items.push(
                                             {
                                                 type: "button", text: "引用", callback: event => {
-                                                    this.contentpage.add_textarea_element__cite(this.msgattr.id, this.msgattr.text);
+                                                    this.contentpage.add_textarea_element__cite(
+                                                        this.msgattr.id,
+                                                        this.msgattr.plain_data_text,
+                                                        this.msgattr.sender
+                                                    );
                                                 },
                                             },
                                             {type: "section", text: "",},
@@ -12313,22 +12317,17 @@
                 this.add_textarea_element(textToInsert);
             }
 
-            // 在 contentpage 内部修改或新增此函数
-            add_textarea_element__cite(message_id, message_text) {
-                // 1. 引用消息ID
-                const referenceTag = `&${message_id} `;
 
-                // 2. 添加用户名提示
-                const userLine = `回复： :`;
+            add_textarea_element__cite(message_id, text, user_name) {
+                if (!text) return;
 
-                // 3. Markdown 引用
-                const quotedText = message_text
+                // 多行文本也能正常引用
+                const quoted = text
                     .split("\n")
                     .map(line => `> ${line}`)
                     .join("\n");
 
-                // 4. 插入到输入框
-                const textToInsert = `${referenceTag}\n${userLine}\n${quotedText}\n\n`;
+                const textToInsert = `&${message_id回复：${user_name}\n${quoted}\n\n`;
                 this.add_textarea_element(textToInsert);
             }
 
@@ -14041,7 +14040,6 @@
                         parts.push(token.text);
                         parts.push(`</span>`);
                     } //
-
                 }
             }
 
@@ -15591,3 +15589,4 @@ textarea.addEventListener('input', () => {
 </body>
 
 </html>
+
