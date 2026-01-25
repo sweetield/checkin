@@ -9129,6 +9129,13 @@
 `;
 
                 this.container.insertAdjacentHTML("beforeend", html);
+                // 🔹 新增：给 blockquote 加点击跳转事件
+                this.e_msgflow.querySelectorAll(".md-line-blockquote").forEach(el => {
+                    const refId = el.dataset.refMessageId;
+                    if (refId) {
+                        el.onclick = () => scrollToMessage(refId);
+                    }
+                });
                 this.chat_rect = this.container.querySelector(":scope div.chat-rect");
                 this.e_header_info = this.container.querySelector(":scope div.chat-session-header-info");
                 this.e_header_info_clickmark = this.container.querySelector(":scope div.chat-session-header-info-clickmark");
@@ -11197,8 +11204,9 @@
                                             {
                                                 type: "button", text: "引用", callback: event => {
                                                     this.contentpage.add_textarea_element__cite(
-                                                        this.msgattr.id,
-                                                        this.msgattr.plain_data_text
+                                                            this.msgattr.id,                  // &message_id
+                                                            this.msgattr.plain_data_text,     // 引用内容
+                                                            this.msgattr.sender_name          // 显示名
                                                     );
                                                 },
                                             },
@@ -12316,18 +12324,30 @@
                 this.add_textarea_element(textToInsert);
             }
 
-            add_textarea_element__cite(message_id, text) {
-                if (!text) return;
+            add_textarea_element__cite(message_id, text, senderName) {
+                if (!text || !message_id) return;
 
-                // 多行文本也能正常引用
+                // 机器标记（隐藏用）
+                const sysMark = `&${message_id}\n`;
+
+                // 人类可读引用头
+                const header = senderName ? `@${senderName}：` : "";
+
+                // Markdown 引用体
                 const quoted = text
                     .split("\n")
-                    .map(line => `> ${line}`)
+                    .map((line, idx) =>
+                        idx === 0
+                            ? `> ${header}${line}`
+                            : `> ${line}`
+                    )
                     .join("\n");
 
-                const textToInsert = `${quoted}\n\n`;
+                const textToInsert = `${sysMark}${quoted}\n\n`;
+
                 this.add_textarea_element(textToInsert);
             }
+
 
 
             add_textarea_element(textToInsert) {
@@ -13990,6 +14010,17 @@
             const line_objects = MarkdownResolver.resolve(text);
 
             const parts = [];
+            // 点击引用 → 跳原消息
+            function extractCiteId(tokens) {
+                for (const t of tokens) {
+                    if (t.type === "cite") return t.text;
+                    if (t.children) {
+                        const r = extractCiteId(t.children);
+                        if (r) return r;
+                    }
+                }
+                return null;
+            }
 
             function resolve_tokens(tokens) {
                 for (const token of tokens) {
@@ -14033,27 +14064,57 @@
                         parts.push(`</span>`);
                     } //
                     else if (token.type === "cite") {
-                        parts.push(`<span class="md-text-cite" data-message-id="${token.text.slice(1)}">`);
-                        if (token.children) resolve_tokens(token.children);
-                        parts.push(token.text);
-                        parts.push(`</span>`);
-                    } //
+                        // 系统标记：不输出任何可见内容
+                        parts.push(
+                            `<span class="md-text-cite" data-message-id="${token.text}"></span>`
+                        );
+                    }
+                     //
                 }
             }
 
             for (const lineObject of line_objects) {
                 if (lineObject.type === MarkdownResolver.line_object_types.plain_line) {
-                    if (lineObject.is_blockquote) parts.push(`<div class="md-line-blockquote">`);
-                    else if (lineObject.title_level > 0) parts.push(`<div class="md-line-title" data-title-level="${lineObject.title_level}">`);
+
+                    // === 这里是唯一改动的地方 ===
+                    if (lineObject.is_blockquote) {
+                        const citeId = extractCiteId(lineObject.tokens);
+                        if (citeId) {
+                            parts.push(
+                                `<div class="md-line-blockquote" data-ref-message-id="${citeId}">`
+                            );
+                        } else {
+                            parts.push(`<div class="md-line-blockquote">`);
+                        }
+                    }
+                    else if (lineObject.title_level > 0) {
+                        parts.push(
+                            `<div class="md-line-title" data-title-level="${lineObject.title_level}">`
+                        );
+                    }
+
+                    // 原有逻辑，完全不动
                     parts.push(`<p class="md-line">`);
                     resolve_tokens(lineObject.tokens);
                     parts.push(`</p>`);
-                    if (lineObject.is_blockquote) parts.push(`</div>`);
-                    else if (lineObject.title_level > 0) parts.push(`</div>`);
-                } else if (lineObject.type === MarkdownResolver.line_object_types.code_area) {
-                    parts.push(`<div class="md-area-code-wrap"><pre class="md-area-code">${MarkdownResolver.escapeHTML(lineObject.data.join("\n"))}</pre><button class="md-area-code-btn-copy">复制</button></div>`);
+
+                    if (lineObject.is_blockquote)
+                        parts.push(`</div>`);
+                    else if (lineObject.title_level > 0)
+                        parts.push(`</div>`);
+                }
+                else if (lineObject.type === MarkdownResolver.line_object_types.code_area) {
+                    parts.push(
+                        `<div class="md-area-code-wrap">
+                            <pre class="md-area-code">
+            ${MarkdownResolver.escapeHTML(lineObject.data.join("\n"))}
+                            </pre>
+                            <button class="md-area-code-btn-copy">复制</button>
+                         </div>`
+                    );
                 }
             }
+
 
             return parts.join("\n");
         },
