@@ -9129,13 +9129,6 @@
 `;
 
                 this.container.insertAdjacentHTML("beforeend", html);
-                // 🔹 新增：给 blockquote 加点击跳转事件
-                this.e_msgflow.querySelectorAll(".md-line-blockquote").forEach(el => {
-                    const refId = el.dataset.refMessageId;
-                    if (refId) {
-                        el.onclick = () => scrollToMessage(refId);
-                    }
-                });
                 this.chat_rect = this.container.querySelector(":scope div.chat-rect");
                 this.e_header_info = this.container.querySelector(":scope div.chat-session-header-info");
                 this.e_header_info_clickmark = this.container.querySelector(":scope div.chat-session-header-info-clickmark");
@@ -11203,11 +11196,7 @@
                                         items.push(
                                             {
                                                 type: "button", text: "引用", callback: event => {
-                                                    this.contentpage.add_textarea_element__cite(
-                                                            this.msgattr.id,                  // &message_id
-                                                            this.msgattr.plain_data_text,     // 引用内容
-                                                            this.msgattr.sender_name          // 显示名
-                                                    );
+                                                    this.contentpage.add_textarea_element__cite(this.msgattr.id, this.msgattr.text, this.msgattr.sender_name);
                                                 },
                                             },
                                             {type: "section", text: "",},
@@ -12324,45 +12313,24 @@
                 this.add_textarea_element(textToInsert);
             }
 
-            add_textarea_element__cite(message_id, text, senderName) {
-                // 必须有 message_id，否则无法做引用
-                if (!message_id) return;
+            // 在 contentpage 内部修改或新增此函数
+            add_textarea_element__cite(message_id, message_text, username) {
+                // 1. 引用消息ID
+                const referenceTag = `&${message_id} `;
 
-                // 确保 text 为字符串，避免 null/undefined
-                text = text ?? "";
+                // 2. 添加用户名提示
+                const userLine = `回复： ${username}:`;
 
-                // HTML/Markdown 特殊字符转义
-                const escapeHTML = (str) =>
-                    str.replace(/&/g, "&amp;")
-                       .replace(/</g, "&lt;")
-                       .replace(/>/g, "&gt;")
-                       .replace(/"/g, "&quot;")
-                       .replace(/'/g, "&#039;");
-
-                // 机器隐藏标记，用于引用关联
-                const sysMark = `&${message_id}\n`;
-
-                // 人类可读引用头
-                const header = senderName ? `@${escapeHTML(senderName)}：` : "";
-
-                // Markdown 引用体，每行加 ">"，第一行带 header
-                const quoted = text
+                // 3. Markdown 引用
+                const quotedText = message_text
                     .split("\n")
-                    .map((line, idx) =>
-                        idx === 0
-                            ? `> ${header}${escapeHTML(line)}`
-                            : `> ${escapeHTML(line)}`
-                    )
+                    .map(line => `> ${line}`)
                     .join("\n");
 
-                // 拼接要插入的文本
-                const textToInsert = `${sysMark}${quoted}\n\n`;
-
-                // 调用原本的 textarea 插入方法
+                // 4. 插入到输入框
+                const textToInsert = `${referenceTag}\n${userLine}\n${quotedText}\n\n`;
                 this.add_textarea_element(textToInsert);
             }
-
-
 
 
             add_textarea_element(textToInsert) {
@@ -14025,17 +13993,6 @@
             const line_objects = MarkdownResolver.resolve(text);
 
             const parts = [];
-            // 点击引用 → 跳原消息
-            function extractCiteId(tokens) {
-                for (const t of tokens) {
-                    if (t.type === "cite") return t.text;
-                    if (t.children) {
-                        const r = extractCiteId(t.children);
-                        if (r) return r;
-                    }
-                }
-                return null;
-            }
 
             function resolve_tokens(tokens) {
                 for (const token of tokens) {
@@ -14079,54 +14036,31 @@
                         parts.push(`</span>`);
                     } //
                     else if (token.type === "cite") {
-                        const id = token.text ?? "";
-                        parts.push(`<span class="md-text-cite" data-message-id="${id}"></span>`);
+                        const messageId = token.text.slice(1); // 去掉 &
+                        parts.push(`<span class="md-text-cite" data-message-id="${messageId}" 
+                            onclick="document.getElementById('msg-${messageId}')?.scrollIntoView({behavior: 'smooth', block: 'center'})"
+                            style="cursor:pointer; color:#007aff;">`);
+                        if (token.children) resolve_tokens(token.children);
+                        parts.push(token.text);
+                        parts.push(`</span>`);
                     }
 
-                     //
                 }
             }
 
             for (const lineObject of line_objects) {
                 if (lineObject.type === MarkdownResolver.line_object_types.plain_line) {
-
-                    // === 这里是唯一改动的地方 ===
-                    if (lineObject.is_blockquote) {
-                        const citeId = extractCiteId(lineObject.tokens) ?? "";
-                        if (citeId !== "") {
-                            parts.push(`<div class="md-line-blockquote" data-ref-message-id="${citeId}">`);
-                        } else {
-                            parts.push(`<div class="md-line-blockquote">`);
-                        }
-                    }
-                    else if (lineObject.title_level > 0) {
-                        parts.push(
-                            `<div class="md-line-title" data-title-level="${lineObject.title_level}">`
-                        );
-                    }
-
-                    // 原有逻辑，完全不动
+                    if (lineObject.is_blockquote) parts.push(`<div class="md-line-blockquote">`);
+                    else if (lineObject.title_level > 0) parts.push(`<div class="md-line-title" data-title-level="${lineObject.title_level}">`);
                     parts.push(`<p class="md-line">`);
                     resolve_tokens(lineObject.tokens);
                     parts.push(`</p>`);
-
-                    if (lineObject.is_blockquote)
-                        parts.push(`</div>`);
-                    else if (lineObject.title_level > 0)
-                        parts.push(`</div>`);
-                }
-                else if (lineObject.type === MarkdownResolver.line_object_types.code_area) {
-                    parts.push(
-                        `<div class="md-area-code-wrap">
-                            <pre class="md-area-code">
-            ${MarkdownResolver.escapeHTML(lineObject.data.join("\n"))}
-                            </pre>
-                            <button class="md-area-code-btn-copy">复制</button>
-                         </div>`
-                    );
+                    if (lineObject.is_blockquote) parts.push(`</div>`);
+                    else if (lineObject.title_level > 0) parts.push(`</div>`);
+                } else if (lineObject.type === MarkdownResolver.line_object_types.code_area) {
+                    parts.push(`<div class="md-area-code-wrap"><pre class="md-area-code">${MarkdownResolver.escapeHTML(lineObject.data.join("\n"))}</pre><button class="md-area-code-btn-copy">复制</button></div>`);
                 }
             }
-
 
             return parts.join("\n");
         },
@@ -15660,4 +15594,3 @@ textarea.addEventListener('input', () => {
 </body>
 
 </html>
-
