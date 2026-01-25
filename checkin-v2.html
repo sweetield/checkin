@@ -14036,14 +14036,11 @@
                         parts.push(`</span>`);
                     } //
                     else if (token.type === "cite") {
-                        const messageId = token.text.slice(1); // 去掉 &
-                        parts.push(`<span class="md-text-cite" data-message-id="${messageId}" 
-                            onclick="document.getElementById('msg-${messageId}')?.scrollIntoView({behavior: 'smooth', block: 'center'})"
-                            style="cursor:pointer; color:#007aff;">`);
+                        parts.push(`<span class="md-text-cite" data-message-id="${token.text.slice(1)}">`);
                         if (token.children) resolve_tokens(token.children);
                         parts.push(token.text);
                         parts.push(`</span>`);
-                    }
+                    } //
 
                 }
             }
