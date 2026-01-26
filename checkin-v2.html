@@ -10257,65 +10257,48 @@
             async handle_response__fetch_unread_msgs(last_msgattr, result, is_background = true) {
                 if (!this.client.dashboard_chat.wrapper.is_active()) return;
 
+                let new_msgattrs = [];
+
                 if (result.is_found_last_message) { // 按请求的起始消息
-                    if (result.previous_message_id !== last_msgattr.id) {
-                        console.warn(`previous_message_id不匹配，last_msgattr.id=${last_msgattr.id}，result=${JSON.stringify(result)}`);
-                    } else {
-                        const new_msgattrs = this.msgflow_manage.store_msgs(last_msgattr, result.messages);
-                        if (new_msgattrs.length > 0) {
-                            const msg = new_msgattrs.find(i => i.sender !== logged_user.uid);
-                            if (msg) {
-                                msg.msgobj.highlight();
-                                if (!is_background) msg.msgobj.scroll_to_view(true);
-                            }
-                        }
+                    if (result.previous_message_id !== last_msgattr?.id) {
+                        console.warn(`previous_message_id不匹配，last_msgattr.id=${last_msgattr?.id}，result=${JSON.stringify(result)}`);
                     }
-                } else if (result.is_found_read_message && !result.is_no_more_unread) { // 按已读进度
+                    new_msgattrs = this.msgflow_manage.store_msgs(last_msgattr, result.messages);
+                } else { // 已读进度或没有缓存
                     this.msgflow_manage.clear_msgs();
-                    const new_msgattrs = this.msgflow_manage.store_msgs(null, result.messages);
-                    if (new_msgattrs.length > 0) {
-                        const msg = new_msgattrs.find(i => {
-                            if (result.sync.read_message_id !== null) { // 因如果未读消息太少，会自动填充点历史
-                                return i.sender !== logged_user.uid && i.id > result.sync.read_message_id;
-                            } else {
-                                return i.sender !== logged_user.uid;
-                            }
+                    new_msgattrs = this.msgflow_manage.store_msgs(null, result.messages);
+                }
+
+                if (new_msgattrs.length > 0) {
+                    // 倒序找最新一条对方发的消息
+                    const lastMsg = [...new_msgattrs].reverse().find(msg => msg.sender !== logged_user.uid);
+                    if (lastMsg) {
+                        // 高亮显示
+                        lastMsg.msgobj.highlight();
+                        lastMsg.msgobj.scroll_to_view(true);
+
+                        // 右下角冒泡显示
+                        showChatToast({
+                            title: lastMsg.sender || "未知",
+                            content: lastMsg.plain_data_text || "[无法显示消息内容]",
+                            onClick: () => {
+                                this.open_chat_by_contact(this.li.bindmap.contact_attr);
+                            },
                         });
-                        if (msg) {
-                            msg.msgobj.highlight();
-                            msg.msgobj.scroll_to_view(true);
-                        }
-                    }
-                } else if (result.is_found_read_message && result.is_no_more_unread) { // 按已读进度，本地没有缓存时，算是加载历史吧
-                    this.msgflow_manage.clear_msgs();
-                    const new_msgattrs = this.msgflow_manage.store_msgs(null, result.messages);
-                    if (new_msgattrs.length > 0) {
-                        const msg = new_msgattrs.at(-1);
-                        if (msg) {
-                            msg.msgobj.highlight();
-                            msg.msgobj.scroll_to_view(false);
-                        }
-                    }
-                } else { // 已读记录都没有
-                    this.msgflow_manage.clear_msgs();
-                    const new_msgattrs = this.msgflow_manage.store_msgs(null, result.messages);
-                    if (new_msgattrs.length > 0) {
-                        const msg = new_msgattrs.find(i => i.sender !== logged_user.uid);
-                        if (msg) {
-                            msg.msgobj.highlight();
-                            msg.msgobj.scroll_to_view(true);
-                        }
                     }
                 }
 
                 this.stop_timer__fetch_unread_msgs();
                 if (this.closed) return;
-                if (this.client.dashboard_chat.wrapper.is_active()) this.timer__fetch_unread_msgs = setTimeout(() => {
-                    this.fetch_unread_msgs()
-                }, this.panel.wrapper.ws_isopen() ? this.interval__fetch_unread_msgs__ws : this.interval__fetch_unread_msgs);
+                if (this.client.dashboard_chat.wrapper.is_active()) {
+                    this.timer__fetch_unread_msgs = setTimeout(() => {
+                        this.fetch_unread_msgs()
+                    }, this.panel.wrapper.ws_isopen() ? this.interval__fetch_unread_msgs__ws : this.interval__fetch_unread_msgs);
+                }
 
                 this.e_msgflow__checknew_timer__enabled = true;
             }
+
 
             /*
             * 更新已读进度
