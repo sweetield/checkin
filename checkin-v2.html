@@ -14260,8 +14260,8 @@
 
             async _update_contact_item_status(item, status_attr, for_refresh = false) {
                 if (for_refresh && item.status_attr !== status_attr) return;
-                
-                // 保存旧状态，用于判断新消息
+
+                // 保存旧未读数，用于判断新消息
                 const old_unread = item.status_attr?.unread_count || 0;
                 item.status_attr = status_attr;
 
@@ -14308,25 +14308,32 @@
                     }
                 }
 
-                // ========= 新增：右下角消息冒泡 =========
-                // ========= 新增：右下角消息冒泡 =========
+                // =======================
+                // 新增：右下角消息冒泡显示最新未读消息
+                // =======================
                 const new_unread = status_attr.unread_count;
-                if (new_unread > (item.old_unread_count || 0)) {
-                    // 倒序找最新未读消息
-                    let lastMsg = null;
+
+                if (new_unread > old_unread) {
+                    // 倒序查找最新未读消息
+                    let lastUnreadMsg = null;
                     for (let i = item.msgs.length - 1; i >= 0; i--) {
                         const msg = item.msgs[i];
-                        if (!msg.is_read) { // 或者用 msg.status & unread_flag
-                            lastMsg = msg;
+                        if (!msg.is_read && msg.sender !== logged_user.uid) {
+                            lastUnreadMsg = msg;
                             break;
                         }
                     }
 
-                    if (lastMsg) {
-                        const content = lastMsg.plain_data_text || "[无法显示消息内容]";
-                        const sender = lastMsg.sender || "未知";
+                    // 如果没有找到未读消息，尝试取最新消息
+                    if (!lastUnreadMsg && item.msgs.length > 0) {
+                        lastUnreadMsg = item.msgs.at(-1);
+                    }
 
-                        // 调用冒泡显示函数
+                    if (lastUnreadMsg) {
+                        const content = lastUnreadMsg.plain_data_text || "[无法显示消息内容]";
+                        const sender = lastUnreadMsg.sender || "未知";
+
+                        // 调用右下角冒泡显示
                         showChatToast({
                             title: sender,
                             content: content,
@@ -14339,8 +14346,6 @@
 
                 // 保存当前未读数，用于下一次对比
                 item.old_unread_count = new_unread;
-
-                // =====================================
 
                 // 更新当前打开聊天窗口状态栏
                 if (checkin.current_content_page && checkin.current_content_page.li.bindmap === item) {
@@ -14355,6 +14360,7 @@
                     }
                 }
             }
+
 
 
             sync_edited_messages(item, former_ceid, status_attr, message_ids) {
