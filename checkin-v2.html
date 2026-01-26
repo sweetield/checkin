@@ -47,6 +47,17 @@
             50%  { box-shadow: 0 12px 30px rgba(59,130,246,0.28), inset 0 1px 0 rgba(255,255,255,0.6); }
             100% { box-shadow: 0 8px 20px rgba(59,130,246,0.18), inset 0 1px 0 rgba(255,255,255,0.6); }
         }
+        /* 消息冒泡 */
+        .chat-message-bubble {
+            max-width: 70%;
+            padding: 8px 12px;
+            border-radius: 14px;
+            background: var(--bubble-bg);
+        }
+
+        .chat-message.sent-by-me .chat-message-bubble {
+            margin-left: auto;
+        }
 
         /* AI提示框 */
         .ai-alert-modal {
@@ -4795,7 +4806,7 @@
                 this.btn_group.insertAdjacentHTML("beforeend", `<button class="form-mark-btn">确定</button>`);
                 let btn = this.btn_group.querySelector(":scope button:last-of-type");
                 btn.addEventListener("click", (event) => {
-                    this.confirm_callback(this,)
+                    this.confirm_callback(this)
                 });
             }
             {
@@ -9422,7 +9433,7 @@
                 // 公共短语
                 const commonPhrases = [
                   // 日常聊天（前 200 条）
-                  "好的","在吗","在","不在","有事吗？","有事找你","是的","不是","拜拜","我下线了","🔥特急！","有时间吗？", "没时间","你好","有急事找你", "有事请留言", "会","不会","听懂了","等我5分钟", "可以","收到了","明天按时去","等我一下","马上回来","可以的","不行","我还不没掌握", "收到信了吗","这边出事了","😄","😂","😅","😭","😡",
+                  "好的","在吗","在","不在","有事吗？","有事找你","是的","不是","拜拜","我下线了","🔥特急！","有时间吗？", "没时间","你好","有急事找你", "有事请留言", "会","不会","听懂了","等我5分钟", "可以","收到了","明天按时去","等我一下","马上回来","可以的","不行","我不没掌握", "收到信了吗","这边出事了","😄","😂","😅","😭","😡",
                   "不是","明天再说","辛苦了","谢谢","没事","等一下","吃了吗","忙吗","我懂了","哈哈","在家吗","忙吗","有空吗","你好吗？","30分钟后再见","注意安全",
                   "你什么时候有空？","明天有空吗？", "我们几点见？","安装","抓","被","了","上门","摄像头","跟踪","我", "你", "有人","不知道",
                   "今天下午可以吗？", "可以约个时间吗？", "周末有空吗？", "警察","明晚方便吗？", "你什么时候方便？", "能去吗？", 
@@ -9479,20 +9490,6 @@
                   "收到","已处理","正在处理","请确认","确认完成","需要补充资料","已转发","请查看",
                   "请回复","紧急","尽快处理","稍后回复","更新完成","请跟进","会议开始了","会议结束了","明天开会","稍等",
                   "请安排","已安排","请检查","系统异常","测试通过","上线完成","记得交回报",
-                  // 常用汉字单字
-                  "的","一","是","了","我","不","人","在","他","有",
-				  "这","个","上","们","来","到","时","大","地","为",
-				  "子","中","你","说","生","国","年","着","就","那",
-				  "和","要","她","出","也","得","里","后","自","以",
-				  "会","家","可","下","而","过","天","去","能","对",
-				  "小","多","然","于","心","学","么","之","都","好",
-				  "看","起","发","成","法","当","只","如","想","作",
-				  "日","用","然","于","事","成","都","动","面","与",
-				  "后","无","里","起","所","情","些","两","长","意",
-				  "样","现","本","次","新","两","于","或","然","己",
-				  "知","重","定","进","其","先","所","向","用","所",
-				  "名","问","法","间","从","现","意","利","各","因",
-				  "点","问","等","开","主","题","看","公","理","各",
                 // 表情：情绪类
                 "😄","😂","😅","😭","😡","😆","🤣","😢","😠","😲","😌","😘","😐","😫","😴","🤒","😳","😱","🤯","😤",
                 "😜","😝","🤪","😋","😛","🥰","😍","🤩","🥳","😎","🧐","🤓","😔","😕","🙁","☹️","😣","😖","😞","😓",
@@ -11178,13 +11175,21 @@
                         {
                             const temp_parent_element = document.createElement('template');
                             let html = `
-<div class="chat-message-content-container">
-</div>
-`;
+                        <div class="chat-message-bubble">
+                            <div class="chat-message-content-container"></div>
+                        </div>
+                        `;
                             temp_parent_element.insertAdjacentHTML("beforeend", html);
-                            this.e_container = temp_parent_element.querySelector(":scope .chat-message-content-container");
+
+                            this.e_bubble = temp_parent_element.querySelector(":scope .chat-message-bubble");
+                            this.e_container = this.e_bubble.querySelector(":scope .chat-message-content-container");
+
                             temp_parent_element.remove();
+
+                            this.e_bubble.msgobj = this;
                             this.e_container.msgobj = this;
+
+                            this.msgelement.appendChild(this.e_bubble);
 
                             const showMenu = (event) => {
                                 const rect = this.e_container.getBoundingClientRect();
