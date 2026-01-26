@@ -48,19 +48,21 @@
             100% { box-shadow: 0 8px 20px rgba(59,130,246,0.18), inset 0 1px 0 rgba(255,255,255,0.6); }
         }
 
-        /* 消息冒泡 */
+        /* ================= 消息冒泡 - 顶部右上角 ================= */
         #chat-toast-container {
             position: fixed;
-            right: 20px;
-            top: 200px;
+            top: 20px;       /* 距离页面顶部 */
+            right: 20px;     /* 距离页面右侧 */
             z-index: 99999;
             display: flex;
-            flex-direction: column;
+            flex-direction: column-reverse; /* 最新消息在上方 */
             gap: 10px;
+            pointer-events: none;           /* 不挡界面点击 */
         }
 
         .chat-toast {
-            font-size: 15px; /* 整体基础字体 */
+            pointer-events: auto;           /* 让自己可点击 */
+            font-size: 15px;                /* 基础字体大小 */
             min-width: 260px;
             max-width: 320px;
             background: #1f1f1f;
@@ -70,23 +72,25 @@
             box-shadow: 0 10px 30px rgba(0,0,0,.35);
             cursor: pointer;
             animation: toast-in .25s ease-out;
+            opacity: 0;
         }
 
         .chat-toast .sender {
             font-weight: 600;
             margin-bottom: 4px;
-            font-size: 1.2em; /* 相对 .chat-toast 基础字体 */
+            font-size: 1.2em;  /* 相对 .chat-toast 基础字体 */
         }
 
         .chat-toast .content {
-            font-size: 1em; /* 相对 .chat-toast 基础字体 */
-            opacity: .9;
+            font-size: 1em;    /* 相对 .chat-toast 基础字体 */
+            opacity: 0.9;
             line-height: 1.4;
         }
 
+        /* 顶部向下弹出动画 */
         @keyframes toast-in {
             from {
-                transform: translateY(20px);
+                transform: translateY(-20px);
                 opacity: 0;
             }
             to {
@@ -94,6 +98,23 @@
                 opacity: 1;
             }
         }
+
+        /* 消息淡出动画（可选） */
+        .chat-toast.fade-out {
+            animation: toast-out 0.3s forwards;
+        }
+
+        @keyframes toast-out {
+            from {
+                opacity: 1;
+                transform: translateY(0);
+            }
+            to {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+        }
+
 
         /* AI提示框 */
         .ai-alert-modal {
