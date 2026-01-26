@@ -47,11 +47,12 @@
             50%  { box-shadow: 0 12px 30px rgba(59,130,246,0.28), inset 0 1px 0 rgba(255,255,255,0.6); }
             100% { box-shadow: 0 8px 20px rgba(59,130,246,0.18), inset 0 1px 0 rgba(255,255,255,0.6); }
         }
+
         /* 消息冒泡 */
         #chat-toast-container {
             position: fixed;
             right: 20px;
-            bottom: 90px;
+            bottom: 150px;
             z-index: 99999;
             display: flex;
             flex-direction: column;
@@ -59,6 +60,7 @@
         }
 
         .chat-toast {
+            font-size: 32px; /* 整体基础字体 */
             min-width: 260px;
             max-width: 320px;
             background: #1f1f1f;
@@ -14856,7 +14858,7 @@
 
                     const preview =
                         newMessageItem.status_attr.last_message?.content ||
-                        "你收到了一条新消息,注意看消息";
+                        "你收到了一条新消息,注意看未读消息";
 
                     showChatToast({
                         title: senderName,
