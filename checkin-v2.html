@@ -10277,7 +10277,7 @@
                     // 调用右下角冒泡显示，只显示谁发的消息，不显示内容
                     showChatToast({
                         title: sender,
-                        content: "你有新消息", // 固定提示内容
+                        content: `${sender}你有新消息`, // 固定提示内容
                         onClick: () => {
                             this.open_chat_by_contact(this.li.bindmap.contact_attr);
                         },
