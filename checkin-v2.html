@@ -3975,61 +3975,31 @@
         btn.addEventListener("click", closeModal);
         document.addEventListener("keydown", escHandler);
     }
-    // ===== 新增函数：显示右下角冒泡 =====
-    function showChatToast({title, content, onClick, duration = 5000}) {
-        // 创建容器
+    /*消息冒泡*/
+    function showChatToast({ title, content, onClick }) {
+        const container = document.getElementById("chat-toast-container");
+        if (!container) return;
+
         const toast = document.createElement("div");
-        toast.className = "chat-toast-notification";
+        toast.className = "chat-toast";
+
         toast.innerHTML = `
-            <strong>${title}</strong>
-            <p>${content}</p>
+            <div class="sender">${title}</div>
+            <div class="content">${content}</div>
         `;
-        document.body.appendChild(toast);
 
-        // 点击跳转
-        toast.addEventListener("click", () => {
-            if (onClick) onClick();
+        toast.onclick = () => {
+            onClick && onClick();
             toast.remove();
-        });
+        };
 
-        // 自动消失
+        container.appendChild(toast);
+
+        // 5 秒自动消失
         setTimeout(() => {
             toast.remove();
-        }, duration);
-
-        // 可选：淡入动画
-        toast.style.opacity = 0;
-        toast.style.transition = "opacity 0.3s";
-        requestAnimationFrame(() => toast.style.opacity = 1);
+        }, 5000);
     }
-
-    // ===== 在 _update_contact_item_status 或 handle_response__sync 中调用 =====
-    if (status_attr.unread_count > 0) {
-        // 倒序找最新未读消息
-        let newMsg = null;
-        for (let i = item.msgs.length - 1; i >= 0; i--) {
-            const msg = item.msgs[i];
-            if (!msg.is_read) { // 根据你的消息模型调整属性
-                newMsg = msg;
-                break;
-            }
-        }
-
-        if (newMsg) {
-            const content = newMsg.plain_data_text || "[无法显示消息内容]";
-            const sender = newMsg.sender || "未知";
-
-            showChatToast({
-                title: sender,
-                content: content,
-                onClick: () => {
-                    // 跳转到对应聊天窗口
-                    this.open_chat_by_contact(item.contact_attr);
-                }
-            });
-        }
-    }
-
 
     // ===== 标题闪烁 =====
     let titleTimer = null;
@@ -14339,10 +14309,19 @@
                 }
 
                 // ========= 新增：右下角消息冒泡 =========
+                // ========= 新增：右下角消息冒泡 =========
                 const new_unread = status_attr.unread_count;
-                if (new_unread > old_unread) {
-                    // 获取最新一条消息
-                    const lastMsg = item.msgs.at(-1);
+                if (new_unread > (item.old_unread_count || 0)) {
+                    // 倒序找最新未读消息
+                    let lastMsg = null;
+                    for (let i = item.msgs.length - 1; i >= 0; i--) {
+                        const msg = item.msgs[i];
+                        if (!msg.is_read) { // 或者用 msg.status & unread_flag
+                            lastMsg = msg;
+                            break;
+                        }
+                    }
+
                     if (lastMsg) {
                         const content = lastMsg.plain_data_text || "[无法显示消息内容]";
                         const sender = lastMsg.sender || "未知";
@@ -14352,12 +14331,15 @@
                             title: sender,
                             content: content,
                             onClick: () => {
-                                // 点击跳转到对应聊天窗口
                                 this.open_chat_by_contact(item.contact_attr);
                             },
                         });
                     }
                 }
+
+                // 保存当前未读数，用于下一次对比
+                item.old_unread_count = new_unread;
+
                 // =====================================
 
                 // 更新当前打开聊天窗口状态栏
