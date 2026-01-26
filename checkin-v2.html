@@ -10253,61 +10253,59 @@
                 });
 
             }
+        async handle_response__fetch_unread_msgs(last_msgattr, result, is_background = true) {
+            if (!this.client.dashboard_chat.wrapper.is_active()) return;
 
-            async handle_response__fetch_unread_msgs(last_msgattr, result, is_background = true) {
-                if (!this.client.dashboard_chat.wrapper.is_active()) return;
+            // 先把消息存入 msgflow_manage
+            const new_msgattrs = this.msgflow_manage.store_msgs(last_msgattr, result.messages);
 
-                // 先把消息存入 msgflow_manage
-                const new_msgattrs = this.msgflow_manage.store_msgs(last_msgattr, result.messages);
-
-                // ====== 新增右下角冒泡显示最新消息 ======
-                if (new_msgattrs.length > 0) {
-                    // 倒序找最新的未读消息（非自己发的）
-                    let lastMsg = null;
-                    for (let i = new_msgattrs.length - 1; i >= 0; i--) {
-                        const msg = new_msgattrs[i];
-                        if (msg.sender !== logged_user.uid) {
-                            lastMsg = msg;
-                            break;
-                        }
-                    }
-
-                    if (lastMsg) {
-                        const content = lastMsg.plain_data_text || "[无法显示消息内容]";
-                        const sender = lastMsg.sender || "未知";
-
-                        // 调用右下角冒泡显示
-                        showChatToast({
-                            title: sender,
-                            content: content,
-                            onClick: () => {
-                                this.open_chat_by_contact(this.li.bindmap.contact_attr);
-                            },
-                        });
-                    }
-                }
-                // =======================================
-
-                // 旧逻辑：处理消息高亮和滚动
-                if (new_msgattrs.length > 0) {
-                    const msg = new_msgattrs.find(i => i.sender !== logged_user.uid);
-                    if (msg) {
-                        msg.msgobj.highlight();
-                        if (!is_background) msg.msgobj.scroll_to_view(true);
+            // ====== 新增右下角冒泡显示提醒谁发消息 ======
+            if (new_msgattrs.length > 0) {
+                // 倒序找最新的非自己发的消息
+                let lastMsg = null;
+                for (let i = new_msgattrs.length - 1; i >= 0; i--) {
+                    const msg = new_msgattrs[i];
+                    if (msg.sender !== logged_user.uid) {
+                        lastMsg = msg;
+                        break;
                     }
                 }
 
-                // 定时继续拉取
-                this.stop_timer__fetch_unread_msgs();
-                if (this.closed) return;
-                if (this.client.dashboard_chat.wrapper.is_active()) {
-                    this.timer__fetch_unread_msgs = setTimeout(() => {
-                        this.fetch_unread_msgs();
-                    }, this.panel.wrapper.ws_isopen() ? this.interval__fetch_unread_msgs__ws : this.interval__fetch_unread_msgs);
-                }
+                if (lastMsg) {
+                    const sender = lastMsg.sender || "未知";
 
-                this.e_msgflow__checknew_timer__enabled = true;
+                    // 调用右下角冒泡显示，只显示谁发的消息，不显示内容
+                    showChatToast({
+                        title: sender,
+                        content: "你有新消息", // 固定提示内容
+                        onClick: () => {
+                            this.open_chat_by_contact(this.li.bindmap.contact_attr);
+                        },
+                    });
+                }
             }
+            // =======================================
+
+            // 旧逻辑：处理消息高亮和滚动（可选保留）
+            if (new_msgattrs.length > 0) {
+                const msg = new_msgattrs.find(i => i.sender !== logged_user.uid);
+                if (msg) {
+                    msg.msgobj.highlight();
+                    if (!is_background) msg.msgobj.scroll_to_view(true);
+                }
+            }
+
+            // 定时继续拉取
+            this.stop_timer__fetch_unread_msgs();
+            if (this.closed) return;
+            if (this.client.dashboard_chat.wrapper.is_active()) {
+                this.timer__fetch_unread_msgs = setTimeout(() => {
+                    this.fetch_unread_msgs();
+                }, this.panel.wrapper.ws_isopen() ? this.interval__fetch_unread_msgs__ws : this.interval__fetch_unread_msgs);
+            }
+
+            this.e_msgflow__checknew_timer__enabled = true;
+        }
 
 
 
