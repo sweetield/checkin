@@ -48,21 +48,21 @@
             100% { box-shadow: 0 8px 20px rgba(59,130,246,0.18), inset 0 1px 0 rgba(255,255,255,0.6); }
         }
 
-        /* ================= 消息冒泡 - 顶部右上角 ================= */
+         /* ================= 消息冒泡 - 顶部右上角 ================= */
         #chat-toast-container {
             position: fixed;
-            top: 20px;       /* 距离页面顶部 */
-            right: 20px;     /* 距离页面右侧 */
+            top: 20px;
+            right: 20px;
             z-index: 99999;
             display: flex;
             flex-direction: column-reverse; /* 最新消息在上方 */
             gap: 10px;
-            pointer-events: none;           /* 不挡界面点击 */
+            pointer-events: none;
         }
 
         .chat-toast {
-            pointer-events: auto;           /* 让自己可点击 */
-            font-size: 15px;                /* 基础字体大小 */
+            pointer-events: auto;
+            font-size: 15px;
             min-width: 260px;
             max-width: 320px;
             background: #1f1f1f;
@@ -71,23 +71,26 @@
             padding: 12px 14px;
             box-shadow: 0 10px 30px rgba(0,0,0,.35);
             cursor: pointer;
-            animation: toast-in .25s ease-out;
-            opacity: 0;
+            animation: toast-in 0.25s ease-out;
+            opacity: 1; /* 默认可见 */
+            transition: opacity 0.5s ease-out; /* 淡出过渡 */
         }
 
+        /* 发件人名字 */
         .chat-toast .sender {
             font-weight: 600;
             margin-bottom: 4px;
-            font-size: 1.2em;  /* 相对 .chat-toast 基础字体 */
+            font-size: 1.2em;
         }
 
+        /* 消息内容 */
         .chat-toast .content {
-            font-size: 1em;    /* 相对 .chat-toast 基础字体 */
+            font-size: 1em;
             opacity: 0.9;
             line-height: 1.4;
         }
 
-        /* 顶部向下弹出动画 */
+        /* 顶部向下弹入 */
         @keyframes toast-in {
             from {
                 transform: translateY(-20px);
@@ -99,6 +102,11 @@
             }
         }
 
+        /* 淡出动画，延迟停留 3 秒再开始淡出 */
+        .chat-toast.fade-out {
+            animation: toast-out 0.8s forwards;
+            animation-delay: 3s; /* 先显示 3 秒，再淡出 */
+        }
 
         @keyframes toast-out {
             from {
