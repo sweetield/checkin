@@ -14811,10 +14811,11 @@
 
             }
 
+
             async handle_response__sync(result) {
                 if (!this.is_active()) return;
 
-                let newMessageItem = null;
+                let _have_new_unread = false;
 
                 const items = this.contact_items();
                 for (const status_attr of result) {
@@ -14825,29 +14826,18 @@
                         item = items.find(i => i.contact_attr.uid === status_attr.uid);
                     }
 
-                    // 关键：判断是否是“新增未读”
-                    if (
-                        item &&
-                        status_attr.unread_count > item.status_attr.unread_count
-                    ) {
-                        newMessageItem = item;
-                    }
+                    if ((!item.status_attr.unread_count && status_attr.unread_count) || status_attr.unread_count > item.status_attr.unread_count) _have_new_unread = true;
 
                     await this._update_contact_item_status(item, status_attr);
                 }
-
                 this.stop_timer__sync();
-                if (this.is_active()) {
-                    this.timer__sync = setTimeout(() => {
-                        this.sync()
-                    }, this.ws_isopen() ? this.interval__sync__ws : this.interval__sync);
-                }
+                if (this.is_active()) this.timer__sync = setTimeout(() => {
+                    this.sync()
+                }, this.ws_isopen() ? this.interval__sync__ws : this.interval__sync);
 
-                // 🎯 真正显示消息冒泡的地方
-                if (newMessageItem) {
+                if (_have_new_unread) {
                     playSound();
                     startTitleFlash();
-
                     const senderName =
                         newMessageItem.contact_attr.nickname ||
                         newMessageItem.contact_attr.name ||
@@ -14855,15 +14845,14 @@
 
                     const preview =
                         newMessageItem.status_attr.last_message?.content ||
-                        "你收到了一条新消息";
+                        "你收到了一条新消息,注意看消息";
 
                     showChatToast({
                         title: senderName,
                         content: preview,
                         onClick: () => {
                             this.open_chat(newMessageItem.contact_attr);
-                        }
-                    });
+
                 }
             }
 
