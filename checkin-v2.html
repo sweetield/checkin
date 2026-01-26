@@ -48,15 +48,48 @@
             100% { box-shadow: 0 8px 20px rgba(59,130,246,0.18), inset 0 1px 0 rgba(255,255,255,0.6); }
         }
         /* 消息冒泡 */
-        .chat-message-bubble {
-            max-width: 70%;
-            padding: 8px 12px;
-            border-radius: 14px;
-            background: var(--bubble-bg);
+        #chat-toast-container {
+            position: fixed;
+            right: 20px;
+            bottom: 20px;
+            z-index: 99999;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
         }
 
-        .chat-message.sent-by-me .chat-message-bubble {
-            margin-left: auto;
+        .chat-toast {
+            min-width: 260px;
+            max-width: 320px;
+            background: #1f1f1f;
+            color: #fff;
+            border-radius: 10px;
+            padding: 12px 14px;
+            box-shadow: 0 10px 30px rgba(0,0,0,.35);
+            cursor: pointer;
+            animation: toast-in .25s ease-out;
+        }
+
+        .chat-toast .sender {
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+
+        .chat-toast .content {
+            font-size: 14px;
+            opacity: .9;
+            line-height: 1.4;
+        }
+
+        @keyframes toast-in {
+            from {
+                transform: translateY(20px);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
         }
 
         /* AI提示框 */
@@ -3942,6 +3975,31 @@
         btn.addEventListener("click", closeModal);
         document.addEventListener("keydown", escHandler);
     }
+    /*消息冒泡*/
+    function showChatToast({ title, content, onClick }) {
+        const container = document.getElementById("chat-toast-container");
+        if (!container) return;
+
+        const toast = document.createElement("div");
+        toast.className = "chat-toast";
+
+        toast.innerHTML = `
+            <div class="sender">${title}</div>
+            <div class="content">${content}</div>
+        `;
+
+        toast.onclick = () => {
+            onClick && onClick();
+            toast.remove();
+        };
+
+        container.appendChild(toast);
+
+        // 5 秒自动消失
+        setTimeout(() => {
+            toast.remove();
+        }, 5000);
+    }
 
     // ===== 标题闪烁 =====
     let titleTimer = null;
@@ -4806,7 +4864,7 @@
                 this.btn_group.insertAdjacentHTML("beforeend", `<button class="form-mark-btn">确定</button>`);
                 let btn = this.btn_group.querySelector(":scope button:last-of-type");
                 btn.addEventListener("click", (event) => {
-                    this.confirm_callback(this)
+                    this.confirm_callback(this,)
                 });
             }
             {
@@ -11175,21 +11233,13 @@
                         {
                             const temp_parent_element = document.createElement('template');
                             let html = `
-                        <div class="chat-message-bubble">
-                            <div class="chat-message-content-container"></div>
-                        </div>
-                        `;
+<div class="chat-message-content-container">
+</div>
+`;
                             temp_parent_element.insertAdjacentHTML("beforeend", html);
-
-                            this.e_bubble = temp_parent_element.querySelector(":scope .chat-message-bubble");
-                            this.e_container = this.e_bubble.querySelector(":scope .chat-message-content-container");
-
+                            this.e_container = temp_parent_element.querySelector(":scope .chat-message-content-container");
                             temp_parent_element.remove();
-
-                            this.e_bubble.msgobj = this;
                             this.e_container.msgobj = this;
-
-                            this.msgelement.appendChild(this.e_bubble);
 
                             const showMenu = (event) => {
                                 const rect = this.e_container.getBoundingClientRect();
@@ -14764,7 +14814,7 @@
             async handle_response__sync(result) {
                 if (!this.is_active()) return;
 
-                let _have_new_unread = false;
+                let newMessageItem = null;
 
                 const items = this.contact_items();
                 for (const status_attr of result) {
@@ -14775,21 +14825,48 @@
                         item = items.find(i => i.contact_attr.uid === status_attr.uid);
                     }
 
-                    if ((!item.status_attr.unread_count && status_attr.unread_count) || status_attr.unread_count > item.status_attr.unread_count) _have_new_unread = true;
+                    // 关键：判断是否是“新增未读”
+                    if (
+                        item &&
+                        status_attr.unread_count > item.status_attr.unread_count
+                    ) {
+                        newMessageItem = item;
+                    }
 
                     await this._update_contact_item_status(item, status_attr);
                 }
-                this.stop_timer__sync();
-                if (this.is_active()) this.timer__sync = setTimeout(() => {
-                    this.sync()
-                }, this.ws_isopen() ? this.interval__sync__ws : this.interval__sync);
 
-                if (_have_new_unread) {
+                this.stop_timer__sync();
+                if (this.is_active()) {
+                    this.timer__sync = setTimeout(() => {
+                        this.sync()
+                    }, this.ws_isopen() ? this.interval__sync__ws : this.interval__sync);
+                }
+
+                // 🎯 真正显示消息冒泡的地方
+                if (newMessageItem) {
                     playSound();
                     startTitleFlash();
 
+                    const senderName =
+                        newMessageItem.contact_attr.nickname ||
+                        newMessageItem.contact_attr.name ||
+                        "新消息";
+
+                    const preview =
+                        newMessageItem.status_attr.last_message?.content ||
+                        "你收到了一条新消息";
+
+                    showChatToast({
+                        title: senderName,
+                        content: preview,
+                        onClick: () => {
+                            this.open_chat(newMessageItem.contact_attr);
+                        }
+                    });
                 }
             }
+
 
             async update_contact_item_status(status_attr) {
                 if (!this.is_active()) return;
@@ -15589,7 +15666,7 @@ textarea.addEventListener('input', () => {
    class="chatgpt-float">
   🤖 ChatGPT
 </a>
-
+<div id="chat-toast-container"></div>
 </body>
 
 </html>
