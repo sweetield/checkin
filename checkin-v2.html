@@ -51,7 +51,7 @@
         #chat-toast-container {
             position: fixed;
             right: 20px;
-            bottom: 20px;
+            bottom: 90px;
             z-index: 99999;
             display: flex;
             flex-direction: column;
@@ -3901,6 +3901,31 @@
 <!---->
 
 <script>
+    function showChatToast({ title, content, onClick }) {
+        const container = document.getElementById("chat-toast-container");
+        if (!container) return;
+
+        const toast = document.createElement("div");
+        toast.className = "chat-toast";
+
+        toast.innerHTML = `
+            <div class="sender">${title}</div>
+            <div class="content">${content}</div>
+        `;
+
+        toast.onclick = () => {
+            onClick && onClick();
+            toast.remove();
+        };
+
+        container.appendChild(toast);
+
+        // 5 秒自动消失
+        setTimeout(() => {
+            toast.remove();
+        }, 5000);
+    }
+
     function build_ai_teacher_prompt(text) {
         return `
     你现在是一位【新手导师型 AI 教练】，目标是让完全没有基础的人能够理解、操作并掌握问题。假设我完全不懂相关背景、术语或隐含规则。
@@ -3974,31 +3999,6 @@
 
         btn.addEventListener("click", closeModal);
         document.addEventListener("keydown", escHandler);
-    }
-    /*消息冒泡*/
-    function showChatToast({ title, content, onClick }) {
-        const container = document.getElementById("chat-toast-container");
-        if (!container) return;
-
-        const toast = document.createElement("div");
-        toast.className = "chat-toast";
-
-        toast.innerHTML = `
-            <div class="sender">${title}</div>
-            <div class="content">${content}</div>
-        `;
-
-        toast.onclick = () => {
-            onClick && onClick();
-            toast.remove();
-        };
-
-        container.appendChild(toast);
-
-        // 5 秒自动消失
-        setTimeout(() => {
-            toast.remove();
-        }, 5000);
     }
 
     // ===== 标题闪烁 =====
@@ -10254,73 +10254,68 @@
 
             }
 
-        async handle_response__fetch_unread_msgs(last_msgattr, result, is_background = true) {
-            if (!this.client.dashboard_chat.wrapper.is_active()) return;
+            async handle_response__fetch_unread_msgs(last_msgattr, result, is_background = true) {
+                if (!this.client.dashboard_chat.wrapper.is_active()) return;
 
-            // 先把消息存入 msgflow_manage
-            const new_msgattrs = this.msgflow_manage.store_msgs(last_msgattr, result.messages);
-
-            // ====== 右下角自动冒泡显示最新消息的发送者，并自动展开聊天 ======
-            if (new_msgattrs.length > 0) {
-                let lastMsg = null;
-                for (let i = new_msgattrs.length - 1; i >= 0; i--) {
-                    const msg = new_msgattrs[i];
-                    if (msg.sender !== logged_user.uid) {
-                        lastMsg = msg;
-                        break;
+                if (result.is_found_last_message) { // 按请求的起始消息
+                    if (result.previous_message_id !== last_msgattr.id) {
+                        console.warn(`previous_message_id不匹配，last_msgattr.id=${last_msgattr.id}，result=${JSON.stringify(result)}`);
+                    } else {
+                        const new_msgattrs = this.msgflow_manage.store_msgs(last_msgattr, result.messages);
+                        if (new_msgattrs.length > 0) {
+                            const msg = new_msgattrs.find(i => i.sender !== logged_user.uid);
+                            if (msg) {
+                                msg.msgobj.highlight();
+                                if (!is_background) msg.msgobj.scroll_to_view(true);
+                            }
+                        }
                     }
-                }
-
-                if (lastMsg) {
-                    const sender = lastMsg.sender || "未知";
-                    const contact = this.li.bindmap;
-
-                    // 只在未显示冒泡时弹出
-                    if (!contact.has_recent_toast) {
-                        contact.has_recent_toast = true;
-
-                        showChatToast({
-                            title: sender,
-                            content: "有人给你发消息，请注意查看",
-                            onClick: null, // 不需要点击
+                } else if (result.is_found_read_message && !result.is_no_more_unread) { // 按已读进度
+                    this.msgflow_manage.clear_msgs();
+                    const new_msgattrs = this.msgflow_manage.store_msgs(null, result.messages);
+                    if (new_msgattrs.length > 0) {
+                        const msg = new_msgattrs.find(i => {
+                            if (result.sync.read_message_id !== null) { // 因如果未读消息太少，会自动填充点历史
+                                return i.sender !== logged_user.uid && i.id > result.sync.read_message_id;
+                            } else {
+                                return i.sender !== logged_user.uid;
+                            }
                         });
-
-                        // 自动展开聊天窗口
-                        this.open_chat_by_contact(contact.contact_attr);
-
-                        // 设置定时器，10秒后可再次冒泡
-                        setTimeout(() => {
-                            contact.has_recent_toast = false;
-                        }, 10000);
+                        if (msg) {
+                            msg.msgobj.highlight();
+                            msg.msgobj.scroll_to_view(true);
+                        }
+                    }
+                } else if (result.is_found_read_message && result.is_no_more_unread) { // 按已读进度，本地没有缓存时，算是加载历史吧
+                    this.msgflow_manage.clear_msgs();
+                    const new_msgattrs = this.msgflow_manage.store_msgs(null, result.messages);
+                    if (new_msgattrs.length > 0) {
+                        const msg = new_msgattrs.at(-1);
+                        if (msg) {
+                            msg.msgobj.highlight();
+                            msg.msgobj.scroll_to_view(false);
+                        }
+                    }
+                } else { // 已读记录都没有
+                    this.msgflow_manage.clear_msgs();
+                    const new_msgattrs = this.msgflow_manage.store_msgs(null, result.messages);
+                    if (new_msgattrs.length > 0) {
+                        const msg = new_msgattrs.find(i => i.sender !== logged_user.uid);
+                        if (msg) {
+                            msg.msgobj.highlight();
+                            msg.msgobj.scroll_to_view(true);
+                        }
                     }
                 }
-            }
 
-            // 旧逻辑：处理消息高亮和滚动
-            if (new_msgattrs.length > 0) {
-                const msg = new_msgattrs.find(i => i.sender !== logged_user.uid);
-                if (msg) {
-                    msg.msgobj.highlight();
-                    if (!is_background) msg.msgobj.scroll_to_view(true);
-                }
-            }
-
-            // 定时继续拉取
-            this.stop_timer__fetch_unread_msgs();
-            if (this.closed) return;
-            if (this.client.dashboard_chat.wrapper.is_active()) {
-                this.timer__fetch_unread_msgs = setTimeout(() => {
-                    this.fetch_unread_msgs();
+                this.stop_timer__fetch_unread_msgs();
+                if (this.closed) return;
+                if (this.client.dashboard_chat.wrapper.is_active()) this.timer__fetch_unread_msgs = setTimeout(() => {
+                    this.fetch_unread_msgs()
                 }, this.panel.wrapper.ws_isopen() ? this.interval__fetch_unread_msgs__ws : this.interval__fetch_unread_msgs);
+
+                this.e_msgflow__checknew_timer__enabled = true;
             }
-
-            this.e_msgflow__checknew_timer__enabled = true;
-        }
-
-
-
-
-
 
             /*
             * 更新已读进度
@@ -14265,94 +14260,50 @@
 
             async _update_contact_item_status(item, status_attr, for_refresh = false) {
                 if (for_refresh && item.status_attr !== status_attr) return;
-
-                // 保存旧未读数，用于判断新消息
-                const old_unread = item.status_attr?.unread_count || 0;
                 item.status_attr = status_attr;
 
-                // 处理未同步二编消息
-                if (status_attr.edition_id !== null) {
+                if (status_attr.edition_id !== null) { // 有未同步的二编消息
                     const former_ceid = item.ceid;
+                    // item.ceid = status_attr.edition_id; // 由于http并发时收到响应的顺序不确定，判断下是否大于再赋值
                     if (former_ceid === null || former_ceid < status_attr.edition_id) {
                         item.ceid = status_attr.edition_id;
                         this.sync_edited_messages(item, former_ceid, status_attr, status_attr.editions);
                     }
                 }
 
-                // 更新在线状态
                 if (status_attr.type === subviews.Chat.receiver_type.group) {
                     item.e_online_status.dataset.onlineStatus = status_attr.online_count > 0 ? "online" : "offline";
                 } else if (status_attr.type === subviews.Chat.receiver_type.user) {
                     item.e_online_status.dataset.onlineStatus = status_attr.online_status === ChatDashboardWrapper.online_status.online ? "online" : "offline";
                 }
-
                 item.e_sst_lastmsgtime.textContent = format_timestamp_utc8_day(status_attr.last_message_time);
                 item.e_ssb_unreadcount.textContent = status_attr.unread_count;
-
                 const string_activity = this.format_contact_item_status__activity(item, status_attr);
-
-                // 更新联系人底部消息预览
                 if (status_attr.unread_count > 0) {
                     item.e_ssb_unreadcount.classList.remove("hidden");
-                    item.e_ssb_lastmsgview.textContent = "[系统] 点击查看未读。";
+                    item.e_ssb_lastmsgview.textContent = "[系统] 点击查看未读。"
                     item.e_ssb_lastmsgview.dataset.hasActivity = "false";
                 } else {
                     item.e_ssb_unreadcount.classList.add("hidden");
                     if (string_activity.length > 0) {
                         item.e_ssb_lastmsgview.textContent = string_activity;
                         item.e_ssb_lastmsgview.dataset.hasActivity = "true";
-                    } else if (item.draft_text.length > 0) {
-                        item.e_ssb_lastmsgview.textContent = "[草稿] " + this.format_text_for_msgview(item.draft_text);
-                        item.e_ssb_lastmsgview.dataset.hasActivity = "false";
-                    } else if (item.msgs.length > 0) {
-                        item.e_ssb_lastmsgview.textContent = await this.format_contact_item_status__lastmsgview(item.msgs.at(-1));
-                        item.e_ssb_lastmsgview.dataset.hasActivity = "false";
                     } else {
-                        item.e_ssb_lastmsgview.textContent = full_width_space;
-                        item.e_ssb_lastmsgview.dataset.hasActivity = "false";
-                    }
-                }
-
-                // =======================
-                // 新增：右下角消息冒泡显示最新未读消息
-                // =======================
-                const new_unread = status_attr.unread_count;
-
-                if (new_unread > old_unread) {
-                    // 倒序查找最新未读消息
-                    let lastUnreadMsg = null;
-                    for (let i = item.msgs.length - 1; i >= 0; i--) {
-                        const msg = item.msgs[i];
-                        if (!msg.is_read && msg.sender !== logged_user.uid) {
-                            lastUnreadMsg = msg;
-                            break;
+                        if (item.draft_text.length > 0) {
+                            item.e_ssb_lastmsgview.textContent = "[草稿] " + this.format_text_for_msgview(item.draft_text);
+                            item.e_ssb_lastmsgview.dataset.hasActivity = "false";
+                        } else {
+                            if (item.msgs.length === 0) {
+                                item.e_ssb_lastmsgview.textContent = full_width_space;
+                                item.e_ssb_lastmsgview.dataset.hasActivity = "false";
+                            } else {
+                                item.e_ssb_lastmsgview.textContent = await this.format_contact_item_status__lastmsgview(item.msgs.at(-1));
+                                item.e_ssb_lastmsgview.dataset.hasActivity = "false";
+                            }
                         }
                     }
-
-                    // 如果没有找到未读消息，尝试取最新消息
-                    if (!lastUnreadMsg && item.msgs.length > 0) {
-                        lastUnreadMsg = item.msgs.at(-1);
-                    }
-
-                    if (lastUnreadMsg) {
-                        const content = lastUnreadMsg.plain_data_text || "[无法显示消息内容]";
-                        const sender = lastUnreadMsg.sender || "未知";
-
-                        // 调用右下角冒泡显示
-                        showChatToast({
-                            title: sender,
-                            content: content,
-                            onClick: () => {
-                                this.open_chat_by_contact(item.contact_attr);
-                            },
-                        });
-                    }
                 }
 
-                // 保存当前未读数，用于下一次对比
-                item.old_unread_count = new_unread;
-
-                // 更新当前打开聊天窗口状态栏
                 if (checkin.current_content_page && checkin.current_content_page.li.bindmap === item) {
                     if (string_activity.length > 0) {
                         set_textContent_if_different(checkin.current_content_page.e_header_info_status, string_activity);
@@ -14363,10 +14314,13 @@
                             set_textContent_if_different(checkin.current_content_page.e_header_info_status, status_attr.online_status === ChatDashboardWrapper.online_status.online ? "在线" : "离线");
                         }
                     }
+                    // if (status_attr.unread_count > 0) {
+                    //     checkin.current_content_page.start_timer__fetch_unread_msgs();
+                    // }
+
                 }
+
             }
-
-
 
             sync_edited_messages(item, former_ceid, status_attr, message_ids) {
                 const local_msg_ids = [];
@@ -14857,63 +14811,61 @@
 
             }
 
-        async handle_response__sync(result) {
-            if (!this.is_active()) return;
+            async handle_response__sync(result) {
+                if (!this.is_active()) return;
 
-            const chatView = this;
-            const items = this.contact_items();
+                let newMessageItem = null;
 
-            for (const status_attr of result) {
-                let item;
-                if (status_attr.type === subviews.Chat.receiver_type.group) {
-                    item = items.find(i => i.contact_attr.gid === status_attr.gid);
-                } else {
-                    item = items.find(i => i.contact_attr.uid === status_attr.uid);
+                const items = this.contact_items();
+                for (const status_attr of result) {
+                    let item;
+                    if (status_attr.type === subviews.Chat.receiver_type.group) {
+                        item = items.find(i => i.contact_attr.gid === status_attr.gid);
+                    } else if (status_attr.type === subviews.Chat.receiver_type.user) {
+                        item = items.find(i => i.contact_attr.uid === status_attr.uid);
+                    }
+
+                    // 关键：判断是否是“新增未读”
+                    if (
+                        item &&
+                        status_attr.unread_count > item.status_attr.unread_count
+                    ) {
+                        newMessageItem = item;
+                    }
+
+                    await this._update_contact_item_status(item, status_attr);
                 }
 
-                if (!item) continue;
+                this.stop_timer__sync();
+                if (this.is_active()) {
+                    this.timer__sync = setTimeout(() => {
+                        this.sync()
+                    }, this.ws_isopen() ? this.interval__sync__ws : this.interval__sync);
+                }
 
-                const oldUnread = item.old_unread_count || 0;
-                await this._update_contact_item_status(item, status_attr);
+                // 🎯 真正显示消息冒泡的地方
+                if (newMessageItem) {
+                    playSound();
+                    startTitleFlash();
 
-                // 如果有新消息
-                if (status_attr.unread_count > oldUnread) {
-                    // 避免重复冒泡
-                    if (item.has_recent_toast) continue;
-                    item.has_recent_toast = true;
-                    setTimeout(() => item.has_recent_toast = false, 10000);
+                    const senderName =
+                        newMessageItem.contact_attr.nickname ||
+                        newMessageItem.contact_attr.name ||
+                        "新消息";
 
-                    // ⚠️ 拉取最新未读消息
-                    const lastMsg = await chatView.fetch_latest_unread_msg(item.contact_attr);
-                    if (!lastMsg) continue;
+                    const preview =
+                        newMessageItem.status_attr.last_message?.content ||
+                        "你收到了一条新消息";
 
-                    // 自动展开聊天窗口
-                    chatView.open_chat_by_contact(item.contact_attr);
-
-                    // 冒泡显示发送者提醒
                     showChatToast({
-                        title: lastMsg.sender || "新消息",
-                        content: "有人给你发消息，请查看",
-                        onClick: null
+                        title: senderName,
+                        content: preview,
+                        onClick: () => {
+                            this.open_chat(newMessageItem.contact_attr);
+                        }
                     });
-
-                    // 滚动到最后一条未读
-                    lastMsg.msgobj.scroll_to_view(true);
-
-                    // 更新未读数
-                    item.old_unread_count = status_attr.unread_count;
                 }
             }
-
-            // 定时同步
-            this.stop_timer__sync();
-            if (this.is_active()) {
-                this.timer__sync = setTimeout(() => this.sync(), this.ws_isopen() ? this.interval__sync__ws : this.interval__sync);
-            }
-        }
-
-
-
 
 
             async update_contact_item_status(status_attr) {
@@ -15715,6 +15667,7 @@ textarea.addEventListener('input', () => {
   🤖 ChatGPT
 </a>
 <div id="chat-toast-container"></div>
+
 </body>
 
 </html>
