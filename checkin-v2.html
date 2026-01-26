@@ -3975,31 +3975,61 @@
         btn.addEventListener("click", closeModal);
         document.addEventListener("keydown", escHandler);
     }
-    /*消息冒泡*/
-    function showChatToast({ title, content, onClick }) {
-        const container = document.getElementById("chat-toast-container");
-        if (!container) return;
-
+    // ===== 新增函数：显示右下角冒泡 =====
+    function showChatToast({title, content, onClick, duration = 5000}) {
+        // 创建容器
         const toast = document.createElement("div");
-        toast.className = "chat-toast";
-
+        toast.className = "chat-toast-notification";
         toast.innerHTML = `
-            <div class="sender">${title}</div>
-            <div class="content">${content}</div>
+            <strong>${title}</strong>
+            <p>${content}</p>
         `;
+        document.body.appendChild(toast);
 
-        toast.onclick = () => {
-            onClick && onClick();
+        // 点击跳转
+        toast.addEventListener("click", () => {
+            if (onClick) onClick();
             toast.remove();
-        };
+        });
 
-        container.appendChild(toast);
-
-        // 5 秒自动消失
+        // 自动消失
         setTimeout(() => {
             toast.remove();
-        }, 5000);
+        }, duration);
+
+        // 可选：淡入动画
+        toast.style.opacity = 0;
+        toast.style.transition = "opacity 0.3s";
+        requestAnimationFrame(() => toast.style.opacity = 1);
     }
+
+    // ===== 在 _update_contact_item_status 或 handle_response__sync 中调用 =====
+    if (status_attr.unread_count > 0) {
+        // 倒序找最新未读消息
+        let newMsg = null;
+        for (let i = item.msgs.length - 1; i >= 0; i--) {
+            const msg = item.msgs[i];
+            if (!msg.is_read) { // 根据你的消息模型调整属性
+                newMsg = msg;
+                break;
+            }
+        }
+
+        if (newMsg) {
+            const content = newMsg.plain_data_text || "[无法显示消息内容]";
+            const sender = newMsg.sender || "未知";
+
+            showChatToast({
+                title: sender,
+                content: content,
+                onClick: () => {
+                    // 跳转到对应聊天窗口
+                    this.open_chat_by_contact(item.contact_attr);
+                }
+            });
+        }
+    }
+
 
     // ===== 标题闪烁 =====
     let titleTimer = null;
