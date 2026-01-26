@@ -10253,15 +10253,15 @@
                 });
 
             }
+
         async handle_response__fetch_unread_msgs(last_msgattr, result, is_background = true) {
             if (!this.client.dashboard_chat.wrapper.is_active()) return;
 
             // 先把消息存入 msgflow_manage
             const new_msgattrs = this.msgflow_manage.store_msgs(last_msgattr, result.messages);
 
-            // ====== 新增右下角冒泡显示提醒谁发消息 ======
+            // ====== 右下角自动冒泡显示最新消息的发送者，并自动展开聊天 ======
             if (new_msgattrs.length > 0) {
-                // 倒序找最新的非自己发的消息
                 let lastMsg = null;
                 for (let i = new_msgattrs.length - 1; i >= 0; i--) {
                     const msg = new_msgattrs[i];
@@ -10273,20 +10273,30 @@
 
                 if (lastMsg) {
                     const sender = lastMsg.sender || "未知";
+                    const contact = this.li.bindmap;
 
-                    // 调用右下角冒泡显示，只显示谁发的消息，不显示内容
-                    showChatToast({
-                        title: sender,
-                        content: `${sender}你有新消息`, // 固定提示内容
-                        onClick: () => {
-                            this.open_chat_by_contact(this.li.bindmap.contact_attr);
-                        },
-                    });
+                    // 只在未显示冒泡时弹出
+                    if (!contact.has_recent_toast) {
+                        contact.has_recent_toast = true;
+
+                        showChatToast({
+                            title: sender,
+                            content: "有人给你发消息，请注意查看",
+                            onClick: null, // 不需要点击
+                        });
+
+                        // 自动展开聊天窗口
+                        this.open_chat_by_contact(contact.contact_attr);
+
+                        // 设置定时器，10秒后可再次冒泡
+                        setTimeout(() => {
+                            contact.has_recent_toast = false;
+                        }, 10000);
+                    }
                 }
             }
-            // =======================================
 
-            // 旧逻辑：处理消息高亮和滚动（可选保留）
+            // 旧逻辑：处理消息高亮和滚动
             if (new_msgattrs.length > 0) {
                 const msg = new_msgattrs.find(i => i.sender !== logged_user.uid);
                 if (msg) {
@@ -10306,6 +10316,7 @@
 
             this.e_msgflow__checknew_timer__enabled = true;
         }
+
 
 
 
