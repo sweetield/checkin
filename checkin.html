@@ -48,6 +48,78 @@
             100% { box-shadow: 0 8px 20px rgba(59,130,246,0.18), inset 0 1px 0 rgba(255,255,255,0.6); }
         }
 
+         /* ================= 消息冒泡 - 顶部右上角 ================= */
+        #chat-toast-container {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 99999;
+            display: flex;
+            flex-direction: column-reverse; /* 最新消息在上方 */
+            gap: 10px;
+            pointer-events: none;
+        }
+
+        .chat-toast {
+            pointer-events: auto;
+            font-size: 15px;
+            min-width: 260px;
+            max-width: 320px;
+            background: #1f1f1f;
+            color: #fff;
+            border-radius: 10px;
+            padding: 12px 14px;
+            box-shadow: 0 10px 30px rgba(0,0,0,.35);
+            cursor: pointer;
+            animation: toast-in 0.25s ease-out;
+            opacity: 1; /* 默认可见 */
+            transition: opacity 0.5s ease-out; /* 淡出过渡 */
+        }
+
+        /* 发件人名字 */
+        .chat-toast .sender {
+            font-weight: 600;
+            margin-bottom: 4px;
+            font-size: 1.2em;
+        }
+
+        /* 消息内容 */
+        .chat-toast .content {
+            font-size: 1em;
+            opacity: 0.9;
+            line-height: 1.4;
+        }
+
+        /* 顶部向下弹入 */
+        @keyframes toast-in {
+            from {
+                transform: translateY(-20px);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
+        /* 淡出动画，延迟停留 3 秒再开始淡出 */
+        .chat-toast.fade-out {
+            animation: toast-out 0.8s forwards;
+            animation-delay: 3s; /* 先显示 3 秒，再淡出 */
+        }
+
+        @keyframes toast-out {
+            from {
+                opacity: 1;
+                transform: translateY(0);
+            }
+            to {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+        }
+
+
         /* AI提示框 */
         .ai-alert-modal {
             position: fixed;
@@ -3857,6 +3929,31 @@
 <!---->
 
 <script>
+    function showChatToast({ title, content, onClick }) {
+        const container = document.getElementById("chat-toast-container");
+        if (!container) return;
+
+        const toast = document.createElement("div");
+        toast.className = "chat-toast";
+
+        toast.innerHTML = `
+            <div class="sender">${title}</div>
+            <div class="content">${content}</div>
+        `;
+
+        toast.onclick = () => {
+            onClick && onClick();
+            toast.remove();
+        };
+
+        container.appendChild(toast);
+
+        // 5 秒自动消失
+        setTimeout(() => {
+            toast.remove();
+        }, 5000);
+    }
+
     function build_ai_teacher_prompt(text) {
         return `
     你现在是一位【新手导师型 AI 教练】，目标是让完全没有基础的人能够理解、操作并掌握问题。假设我完全不懂相关背景、术语或隐含规则。
@@ -9422,7 +9519,7 @@
                 // 公共短语
                 const commonPhrases = [
                   // 日常聊天（前 200 条）
-                  "好的","在吗","在","不在","有事吗？","有事找你","是的","不是","拜拜","我下线了","🔥特急！","有时间吗？", "没时间","你好","有急事找你", "有事请留言", "会","不会","听懂了","等我5分钟", "可以","收到了","明天按时去","等我一下","马上回来","可以的","不行","我还不没掌握", "收到信了吗","这边出事了","😄","😂","😅","😭","😡",
+                  "好的","在吗","在","不在","有事吗？","有事找你","是的","不是","拜拜","我下线了","🔥特急！","有时间吗？", "没时间","你好","有急事找你", "有事请留言", "会","不会","听懂了","等我5分钟", "可以","收到了","明天按时去","等我一下","马上回来","可以的","不行","我不没掌握", "收到信了吗","这边出事了","😄","😂","😅","😭","😡",
                   "不是","明天再说","辛苦了","谢谢","没事","等一下","吃了吗","忙吗","我懂了","哈哈","在家吗","忙吗","有空吗","你好吗？","30分钟后再见","注意安全",
                   "你什么时候有空？","明天有空吗？", "我们几点见？","安装","抓","被","了","上门","摄像头","跟踪","我", "你", "有人","不知道",
                   "今天下午可以吗？", "可以约个时间吗？", "周末有空吗？", "警察","明晚方便吗？", "你什么时候方便？", "能去吗？", 
@@ -9479,20 +9576,6 @@
                   "收到","已处理","正在处理","请确认","确认完成","需要补充资料","已转发","请查看",
                   "请回复","紧急","尽快处理","稍后回复","更新完成","请跟进","会议开始了","会议结束了","明天开会","稍等",
                   "请安排","已安排","请检查","系统异常","测试通过","上线完成","记得交回报",
-                  // 常用汉字单字
-                  "的","一","是","了","我","不","人","在","他","有",
-				  "这","个","上","们","来","到","时","大","地","为",
-				  "子","中","你","说","生","国","年","着","就","那",
-				  "和","要","她","出","也","得","里","后","自","以",
-				  "会","家","可","下","而","过","天","去","能","对",
-				  "小","多","然","于","心","学","么","之","都","好",
-				  "看","起","发","成","法","当","只","如","想","作",
-				  "日","用","然","于","事","成","都","动","面","与",
-				  "后","无","里","起","所","情","些","两","长","意",
-				  "样","现","本","次","新","两","于","或","然","己",
-				  "知","重","定","进","其","先","所","向","用","所",
-				  "名","问","法","间","从","现","意","利","各","因",
-				  "点","问","等","开","主","题","看","公","理","各",
                 // 表情：情绪类
                 "😄","😂","😅","😭","😡","😆","🤣","😢","😠","😲","😌","😘","😐","😫","😴","🤒","😳","😱","🤯","😤",
                 "😜","😝","🤪","😋","😛","🥰","😍","🤩","🥳","😎","🧐","🤓","😔","😕","🙁","☹️","😣","😖","😞","😓",
@@ -14756,10 +14839,11 @@
 
             }
 
+
             async handle_response__sync(result) {
                 if (!this.is_active()) return;
 
-                let _have_new_unread = false;
+                let newMessageItem = null;
 
                 const items = this.contact_items();
                 for (const status_attr of result) {
@@ -14770,21 +14854,46 @@
                         item = items.find(i => i.contact_attr.uid === status_attr.uid);
                     }
 
-                    if ((!item.status_attr.unread_count && status_attr.unread_count) || status_attr.unread_count > item.status_attr.unread_count) _have_new_unread = true;
+                    // 关键：判断是否是“新增未读”
+                    if (
+                        item &&
+                        status_attr.unread_count > item.status_attr.unread_count
+                    ) {
+                        newMessageItem = item;
+                    }
 
                     await this._update_contact_item_status(item, status_attr);
                 }
-                this.stop_timer__sync();
-                if (this.is_active()) this.timer__sync = setTimeout(() => {
-                    this.sync()
-                }, this.ws_isopen() ? this.interval__sync__ws : this.interval__sync);
 
-                if (_have_new_unread) {
+                this.stop_timer__sync();
+                if (this.is_active()) {
+                    this.timer__sync = setTimeout(() => {
+                        this.sync()
+                    }, this.ws_isopen() ? this.interval__sync__ws : this.interval__sync);
+                }
+
+                // 🎯 真正显示消息冒泡的地方
+                if (newMessageItem) {
                     playSound();
                     startTitleFlash();
 
+                    const senderName =
+                        newMessageItem.contact_attr.nickname ||
+                        newMessageItem.contact_attr.name ||
+                        "新消息";
+
+                    const preview =
+                        newMessageItem.status_attr.last_message?.content ||
+                        "你收到了一条新消息,注意看未读消息";
+
+                    showChatToast({
+                        title: senderName,
+                        content: preview,
+                        onClick: null
+                    });
                 }
             }
+
 
             async update_contact_item_status(status_attr) {
                 if (!this.is_active()) return;
@@ -15584,6 +15693,7 @@ textarea.addEventListener('input', () => {
    class="chatgpt-float">
   🤖 ChatGPT
 </a>
+<div id="chat-toast-container"></div>
 
 </body>
 
