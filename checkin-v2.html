@@ -10259,32 +10259,38 @@
 
                 let new_msgattrs = [];
 
-                if (result.is_found_last_message) { // 按请求的起始消息
-                    if (result.previous_message_id !== last_msgattr.id) {
-                        console.warn(`previous_message_id不匹配，last_msgattr.id=${last_msgattr.id}，result=${JSON.stringify(result)}`);
-                    }
+                // 获取新消息
+                if (result.is_found_last_message) {
                     new_msgattrs = this.msgflow_manage.store_msgs(last_msgattr, result.messages);
-                } else if (result.is_found_read_message) { // 按已读进度
-                    this.msgflow_manage.clear_msgs();
-                    new_msgattrs = this.msgflow_manage.store_msgs(null, result.messages);
-                } else { // 已读记录都没有
+                } else if (result.is_found_read_message || !result.is_found_last_message) {
                     this.msgflow_manage.clear_msgs();
                     new_msgattrs = this.msgflow_manage.store_msgs(null, result.messages);
                 }
 
-                // 如果有新消息，显示冒泡
                 if (new_msgattrs.length > 0) {
-                    // 找到最新一条未读消息
-                    const lastMsg = new_msgattrs.reverse().find(msg => msg.sender !== logged_user.uid) || new_msgattrs.at(-1);
+                    // 倒序找到最新未读消息
+                    let lastMsg = null;
+                    for (let i = new_msgattrs.length - 1; i >= 0; i--) {
+                        const msg = new_msgattrs[i];
+                        if (msg.sender !== logged_user.uid) { // 外部发的消息
+                            lastMsg = msg;
+                            break;
+                        }
+                    }
+
+                    if (!lastMsg) lastMsg = new_msgattrs.at(-1);
 
                     if (lastMsg) {
-                        // 保证 plain_data_text 有值
-                        let content = lastMsg.plain_data_text;
-                        if (!content) {
-                            if (lastMsg.type === "text") content = lastMsg.content || "[空消息]";
-                            else if (lastMsg.type === "image") content = "[图片]";
-                            else if (lastMsg.type === "file") content = `[文件] ${lastMsg.filename || ""}`;
-                            else content = "[无法显示消息内容]";
+                        // 根据消息类型保证内容显示
+                        let content = "[无法显示消息内容]";
+                        if (lastMsg.type === "text") {
+                            content = lastMsg.plain_data_text || lastMsg.content || "[空消息]";
+                        } else if (lastMsg.type === "image") {
+                            content = "[🖼️ 图片]";
+                        } else if (lastMsg.type === "file") {
+                            content = `[📎 文件] ${lastMsg.plain_file_name || ""}`;
+                        } else if (lastMsg.type === "drive_item") {
+                            content = `[📁 文件项] ${lastMsg.plain_file_name || ""}`;
                         }
 
                         const sender = lastMsg.sender || "未知";
@@ -10296,15 +10302,10 @@
                                 this.open_chat_by_contact(this.li.bindmap.contact_attr);
                             },
                         });
-                    }
-                }
 
-                // 高亮并滚动最新消息
-                if (new_msgattrs.length > 0) {
-                    const msg = new_msgattrs.find(i => i.sender !== logged_user.uid);
-                    if (msg) {
-                        msg.msgobj.highlight();
-                        msg.msgobj.scroll_to_view(true);
+                        // 高亮并滚动
+                        lastMsg.msgobj.highlight();
+                        lastMsg.msgobj.scroll_to_view(true);
                     }
                 }
 
