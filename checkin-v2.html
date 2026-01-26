@@ -14861,9 +14861,8 @@
             if (!this.is_active()) return;
 
             const chatView = this;
-            let newMessageItem = null;
-
             const items = this.contact_items();
+
             for (const status_attr of result) {
                 let item;
                 if (status_attr.type === subviews.Chat.receiver_type.group) {
@@ -14872,60 +14871,47 @@
                     item = items.find(i => i.contact_attr.uid === status_attr.uid);
                 }
 
-                if (
-                    item &&
-                    status_attr.unread_count > (item.old_unread_count || 0)
-                ) {
-                    newMessageItem = item;
-                }
+                if (!item) continue;
 
+                const oldUnread = item.old_unread_count || 0;
                 await this._update_contact_item_status(item, status_attr);
+
+                // 如果有新消息
+                if (status_attr.unread_count > oldUnread) {
+                    // 避免重复冒泡
+                    if (item.has_recent_toast) continue;
+                    item.has_recent_toast = true;
+                    setTimeout(() => item.has_recent_toast = false, 10000);
+
+                    // ⚠️ 拉取最新未读消息
+                    const lastMsg = await chatView.fetch_latest_unread_msg(item.contact_attr);
+                    if (!lastMsg) continue;
+
+                    // 自动展开聊天窗口
+                    chatView.open_chat_by_contact(item.contact_attr);
+
+                    // 冒泡显示发送者提醒
+                    showChatToast({
+                        title: lastMsg.sender || "新消息",
+                        content: "有人给你发消息，请查看",
+                        onClick: null
+                    });
+
+                    // 滚动到最后一条未读
+                    lastMsg.msgobj.scroll_to_view(true);
+
+                    // 更新未读数
+                    item.old_unread_count = status_attr.unread_count;
+                }
             }
 
+            // 定时同步
             this.stop_timer__sync();
             if (this.is_active()) {
-                this.timer__sync = setTimeout(() => {
-                    this.sync();
-                }, this.ws_isopen() ? this.interval__sync__ws : this.interval__sync);
+                this.timer__sync = setTimeout(() => this.sync(), this.ws_isopen() ? this.interval__sync__ws : this.interval__sync);
             }
-
-            if (!newMessageItem) return;
-
-            playSound();
-            startTitleFlash();
-
-            const contact = newMessageItem;
-
-            // 避免重复冒泡
-            if (contact.has_recent_toast) return;
-            contact.has_recent_toast = true;
-            setTimeout(() => {
-                contact.has_recent_toast = false;
-            }, 10000); // 10秒内不重复冒泡
-
-            // ⚠️ 关键：获取最新未读消息
-            const lastMsg = contact.msgs.slice().reverse().find(m => m.sender !== logged_user.uid && !m.is_read);
-            if (!lastMsg) return;
-
-            const senderName = lastMsg.sender || "新消息";
-            const content = "有人给你发消息，请查看"; // 简化提示，不显示具体内容
-
-            // 自动展开聊天窗口
-            chatView.open_chat_by_contact(contact.contact_attr);
-
-            // 显示冒泡
-            showChatToast({
-                title: senderName,
-                content: content,
-                onClick: null // 不用点击
-            });
-
-            // 滚动到最后一条未读
-            lastMsg.msgobj.scroll_to_view(true);
-
-            // 更新旧未读数
-            contact.old_unread_count = contact.status_attr.unread_count;
         }
+
 
 
 
