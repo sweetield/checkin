@@ -14260,50 +14260,77 @@
 
             async _update_contact_item_status(item, status_attr, for_refresh = false) {
                 if (for_refresh && item.status_attr !== status_attr) return;
+                
+                // 保存旧状态，用于判断新消息
+                const old_unread = item.status_attr?.unread_count || 0;
                 item.status_attr = status_attr;
 
-                if (status_attr.edition_id !== null) { // 有未同步的二编消息
+                // 处理未同步二编消息
+                if (status_attr.edition_id !== null) {
                     const former_ceid = item.ceid;
-                    // item.ceid = status_attr.edition_id; // 由于http并发时收到响应的顺序不确定，判断下是否大于再赋值
                     if (former_ceid === null || former_ceid < status_attr.edition_id) {
                         item.ceid = status_attr.edition_id;
                         this.sync_edited_messages(item, former_ceid, status_attr, status_attr.editions);
                     }
                 }
 
+                // 更新在线状态
                 if (status_attr.type === subviews.Chat.receiver_type.group) {
                     item.e_online_status.dataset.onlineStatus = status_attr.online_count > 0 ? "online" : "offline";
                 } else if (status_attr.type === subviews.Chat.receiver_type.user) {
                     item.e_online_status.dataset.onlineStatus = status_attr.online_status === ChatDashboardWrapper.online_status.online ? "online" : "offline";
                 }
+
                 item.e_sst_lastmsgtime.textContent = format_timestamp_utc8_day(status_attr.last_message_time);
                 item.e_ssb_unreadcount.textContent = status_attr.unread_count;
+
                 const string_activity = this.format_contact_item_status__activity(item, status_attr);
+
+                // 更新联系人底部消息预览
                 if (status_attr.unread_count > 0) {
                     item.e_ssb_unreadcount.classList.remove("hidden");
-                    item.e_ssb_lastmsgview.textContent = "[系统] 点击查看未读。"
+                    item.e_ssb_lastmsgview.textContent = "[系统] 点击查看未读。";
                     item.e_ssb_lastmsgview.dataset.hasActivity = "false";
                 } else {
                     item.e_ssb_unreadcount.classList.add("hidden");
                     if (string_activity.length > 0) {
                         item.e_ssb_lastmsgview.textContent = string_activity;
                         item.e_ssb_lastmsgview.dataset.hasActivity = "true";
+                    } else if (item.draft_text.length > 0) {
+                        item.e_ssb_lastmsgview.textContent = "[草稿] " + this.format_text_for_msgview(item.draft_text);
+                        item.e_ssb_lastmsgview.dataset.hasActivity = "false";
+                    } else if (item.msgs.length > 0) {
+                        item.e_ssb_lastmsgview.textContent = await this.format_contact_item_status__lastmsgview(item.msgs.at(-1));
+                        item.e_ssb_lastmsgview.dataset.hasActivity = "false";
                     } else {
-                        if (item.draft_text.length > 0) {
-                            item.e_ssb_lastmsgview.textContent = "[草稿] " + this.format_text_for_msgview(item.draft_text);
-                            item.e_ssb_lastmsgview.dataset.hasActivity = "false";
-                        } else {
-                            if (item.msgs.length === 0) {
-                                item.e_ssb_lastmsgview.textContent = full_width_space;
-                                item.e_ssb_lastmsgview.dataset.hasActivity = "false";
-                            } else {
-                                item.e_ssb_lastmsgview.textContent = await this.format_contact_item_status__lastmsgview(item.msgs.at(-1));
-                                item.e_ssb_lastmsgview.dataset.hasActivity = "false";
-                            }
-                        }
+                        item.e_ssb_lastmsgview.textContent = full_width_space;
+                        item.e_ssb_lastmsgview.dataset.hasActivity = "false";
                     }
                 }
 
+                // ========= 新增：右下角消息冒泡 =========
+                const new_unread = status_attr.unread_count;
+                if (new_unread > old_unread) {
+                    // 获取最新一条消息
+                    const lastMsg = item.msgs.at(-1);
+                    if (lastMsg) {
+                        const content = lastMsg.plain_data_text || "[无法显示消息内容]";
+                        const sender = lastMsg.sender || "未知";
+
+                        // 调用冒泡显示函数
+                        showChatToast({
+                            title: sender,
+                            content: content,
+                            onClick: () => {
+                                // 点击跳转到对应聊天窗口
+                                this.open_chat_by_contact(item.contact_attr);
+                            },
+                        });
+                    }
+                }
+                // =====================================
+
+                // 更新当前打开聊天窗口状态栏
                 if (checkin.current_content_page && checkin.current_content_page.li.bindmap === item) {
                     if (string_activity.length > 0) {
                         set_textContent_if_different(checkin.current_content_page.e_header_info_status, string_activity);
@@ -14314,13 +14341,9 @@
                             set_textContent_if_different(checkin.current_content_page.e_header_info_status, status_attr.online_status === ChatDashboardWrapper.online_status.online ? "在线" : "离线");
                         }
                     }
-                    // if (status_attr.unread_count > 0) {
-                    //     checkin.current_content_page.start_timer__fetch_unread_msgs();
-                    // }
-
                 }
-
             }
+
 
             sync_edited_messages(item, former_ceid, status_attr, message_ids) {
                 const local_msg_ids = [];
