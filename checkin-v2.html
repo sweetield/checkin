@@ -14814,18 +14814,19 @@
             async handle_response__sync(result) {
                 if (!this.is_active()) return;
 
+                const chatView = this;
                 let newMessageItem = null;
 
                 const items = this.contact_items();
                 for (const status_attr of result) {
                     let item;
+
                     if (status_attr.type === subviews.Chat.receiver_type.group) {
                         item = items.find(i => i.contact_attr.gid === status_attr.gid);
-                    } else if (status_attr.type === subviews.Chat.receiver_type.user) {
+                    } else {
                         item = items.find(i => i.contact_attr.uid === status_attr.uid);
                     }
 
-                    // 关键：判断是否是“新增未读”
                     if (
                         item &&
                         status_attr.unread_count > item.status_attr.unread_count
@@ -14839,33 +14840,35 @@
                 this.stop_timer__sync();
                 if (this.is_active()) {
                     this.timer__sync = setTimeout(() => {
-                        this.sync()
+                        this.sync();
                     }, this.ws_isopen() ? this.interval__sync__ws : this.interval__sync);
                 }
 
-                // 🎯 真正显示消息冒泡的地方
-                if (newMessageItem) {
-                    playSound();
-                    startTitleFlash();
+                if (!newMessageItem) return;
 
-                    const senderName =
-                        newMessageItem.contact_attr.nickname ||
-                        newMessageItem.contact_attr.name ||
-                        "新消息";
+                playSound();
+                startTitleFlash();
 
-                    const preview =
-                        newMessageItem.status_attr.last_message?.content ||
-                        "你收到了一条新消息";
+                const senderName =
+                    newMessageItem.contact_attr.nickname ||
+                    newMessageItem.contact_attr.name ||
+                    "新消息";
 
-                    showChatToast({
-                        title: senderName,
-                        content: preview,
-                        onClick: () => {
-                            this.open_chat(newMessageItem.contact_attr);
-                        }
-                    });
-                }
+                // ⚠️ 状态接口不保证有内容
+                const preview = "你收到了一条新消息";
+
+                showChatToast({
+                    title: senderName,
+                    content: preview,
+                    onClick: () => {
+                        // 用你项目里“真正打开聊天”的函数
+                        chatView.open_chat_by_contact(
+                            newMessageItem.contact_attr
+                        );
+                    }
+                });
             }
+
 
 
             async update_contact_item_status(status_attr) {
