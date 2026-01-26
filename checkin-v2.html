@@ -10259,20 +10259,23 @@
 
                 let new_msgattrs = [];
 
-                if (result.is_found_last_message) { // 按请求的起始消息
-                    if (result.previous_message_id !== last_msgattr?.id) {
-                        console.warn(`previous_message_id不匹配，last_msgattr.id=${last_msgattr?.id}，result=${JSON.stringify(result)}`);
-                    }
+                // 统一获取所有新消息
+                if (result.is_found_last_message) {
                     new_msgattrs = this.msgflow_manage.store_msgs(last_msgattr, result.messages);
-                } else { // 已读进度或没有缓存
+                } else {
                     this.msgflow_manage.clear_msgs();
                     new_msgattrs = this.msgflow_manage.store_msgs(null, result.messages);
                 }
 
                 if (new_msgattrs.length > 0) {
-                    // 倒序找最新一条对方发的消息
-                    const lastMsg = [...new_msgattrs].reverse().find(msg => msg.sender !== logged_user.uid);
-                    if (lastMsg) {
+                    // 取出最新未读消息
+                    const lastReadId = this.li.bindmap.status_attr?.read_message_id || 0;
+                    const unreadMsgs = new_msgattrs.filter(msg => msg.sender !== logged_user.uid && msg.id > lastReadId);
+
+                    if (unreadMsgs.length > 0) {
+                        // 最新一条未读消息
+                        const lastMsg = unreadMsgs[unreadMsgs.length - 1];
+
                         // 高亮显示
                         lastMsg.msgobj.highlight();
                         lastMsg.msgobj.scroll_to_view(true);
@@ -10288,6 +10291,7 @@
                     }
                 }
 
+                // 设置下一次定时器
                 this.stop_timer__fetch_unread_msgs();
                 if (this.closed) return;
                 if (this.client.dashboard_chat.wrapper.is_active()) {
@@ -10298,6 +10302,7 @@
 
                 this.e_msgflow__checknew_timer__enabled = true;
             }
+
 
 
             /*
