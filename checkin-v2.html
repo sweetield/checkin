@@ -10259,31 +10259,39 @@
 
                 let new_msgattrs = [];
 
-                // 统一获取所有新消息
-                if (result.is_found_last_message) {
+                if (result.is_found_last_message) { // 按请求的起始消息
+                    if (result.previous_message_id !== last_msgattr.id) {
+                        console.warn(`previous_message_id不匹配，last_msgattr.id=${last_msgattr.id}，result=${JSON.stringify(result)}`);
+                    }
                     new_msgattrs = this.msgflow_manage.store_msgs(last_msgattr, result.messages);
-                } else {
+                } else if (result.is_found_read_message) { // 按已读进度
+                    this.msgflow_manage.clear_msgs();
+                    new_msgattrs = this.msgflow_manage.store_msgs(null, result.messages);
+                } else { // 已读记录都没有
                     this.msgflow_manage.clear_msgs();
                     new_msgattrs = this.msgflow_manage.store_msgs(null, result.messages);
                 }
 
+                // 如果有新消息，显示冒泡
                 if (new_msgattrs.length > 0) {
-                    // 取出最新未读消息
-                    const lastReadId = this.li.bindmap.status_attr?.read_message_id || 0;
-                    const unreadMsgs = new_msgattrs.filter(msg => msg.sender !== logged_user.uid && msg.id > lastReadId);
+                    // 找到最新一条未读消息
+                    const lastMsg = new_msgattrs.reverse().find(msg => msg.sender !== logged_user.uid) || new_msgattrs.at(-1);
 
-                    if (unreadMsgs.length > 0) {
-                        // 最新一条未读消息
-                        const lastMsg = unreadMsgs[unreadMsgs.length - 1];
+                    if (lastMsg) {
+                        // 保证 plain_data_text 有值
+                        let content = lastMsg.plain_data_text;
+                        if (!content) {
+                            if (lastMsg.type === "text") content = lastMsg.content || "[空消息]";
+                            else if (lastMsg.type === "image") content = "[图片]";
+                            else if (lastMsg.type === "file") content = `[文件] ${lastMsg.filename || ""}`;
+                            else content = "[无法显示消息内容]";
+                        }
 
-                        // 高亮显示
-                        lastMsg.msgobj.highlight();
-                        lastMsg.msgobj.scroll_to_view(true);
+                        const sender = lastMsg.sender || "未知";
 
-                        // 右下角冒泡显示
                         showChatToast({
-                            title: lastMsg.sender || "未知",
-                            content: lastMsg.plain_data_text || "[无法显示消息内容]",
+                            title: sender,
+                            content: content,
                             onClick: () => {
                                 this.open_chat_by_contact(this.li.bindmap.contact_attr);
                             },
@@ -10291,7 +10299,15 @@
                     }
                 }
 
-                // 设置下一次定时器
+                // 高亮并滚动最新消息
+                if (new_msgattrs.length > 0) {
+                    const msg = new_msgattrs.find(i => i.sender !== logged_user.uid);
+                    if (msg) {
+                        msg.msgobj.highlight();
+                        msg.msgobj.scroll_to_view(true);
+                    }
+                }
+
                 this.stop_timer__fetch_unread_msgs();
                 if (this.closed) return;
                 if (this.client.dashboard_chat.wrapper.is_active()) {
@@ -10302,6 +10318,7 @@
 
                 this.e_msgflow__checknew_timer__enabled = true;
             }
+
 
 
 
