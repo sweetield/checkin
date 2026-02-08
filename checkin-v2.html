@@ -11751,20 +11751,29 @@
 
                         const bar = document.createElement("div");
                         bar.className = "chat-msg-actionbar";
+
+                        // 这里增加 AI咨询、删除、编辑
                         bar.innerHTML = `
                             <button data-action="cite">引用</button>
                             <button data-action="copy">复制</button>
                             <button data-action="forward">转发</button>
+                            <button data-action="ai">AI咨询</button>
+                            <button data-action="edit">编辑</button>
+                            <button data-action="delete">删除</button>
                             <button data-action="more">...</button>
                         `;
                         bar.msgobj = this;
                         this.e_actionbar = bar;
 
-                        // ❌ 不再挂在 e_container 内
-                        // this.e_container.append(bar);
-
-                        // ✅ 挂在消息最外层元素后面
+                        // 挂在消息最外层元素后面
                         this.msgelement.append(bar);
+
+                        // 根据 sent_by_me 自动左右对齐
+                        if (this.sent_by_me) {
+                            bar.style.justifyContent = "flex-end";
+                        } else {
+                            bar.style.justifyContent = "flex-start";
+                        }
 
                         bar.addEventListener("click", (e) => {
                             e.stopPropagation();
@@ -11812,12 +11821,35 @@
                                 this.contentpage.forward_msg(this.msgattr);
                                 break;
 
+                            case "ai":
+                                // AI咨询逻辑
+                                this.contentpage.open_ai_consult(this.msgattr);
+                                break;
+
+                            case "edit":
+                                // 编辑逻辑
+                                if (this.sent_by_me) {
+                                    this.contentpage.edit_msg(this.msgattr);
+                                } else {
+                                    alert("只能编辑自己的消息");
+                                }
+                                break;
+
+                            case "delete":
+                                // 删除逻辑
+                                if (this.sent_by_me) {
+                                    this.contentpage.delete_msg(this.msgattr);
+                                } else {
+                                    alert("只能删除自己的消息");
+                                }
+                                break;
+
                             case "more":
                                 this.open_more_menu();
                                 break;
                         }
 
-                        // ✅ 点击后自动隐藏操作条
+                        // 点击后自动隐藏操作条
                         this.hide_actionbar();
                     }
 
