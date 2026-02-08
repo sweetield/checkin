@@ -7723,8 +7723,28 @@
                 }
                 throw new Error(await format_error_response(r));
             }
+            // 获取群聊附件列表，按时间倒序
+            async attachments(contact_type, xxid, ceid) {
+                let messages = await this.load(null, contact_type, xxid, ceid, null);
+                let files = messages.data
+                    .filter(msg => dashboardwrappers.ChatDashboardWrapper.message_type_checker.is_file(msg.type))
+                    .map(msg => ({
+                        id: msg.id,
+                        name: msg.file_attr?.name_encrypted 
+                            ? await encryptors.decrypt2utf8(msg.file_attr.name) 
+                            : msg.file_attr.name,
+                        size: msg.file_attr.size,
+                        sender: msg.sender_name || "未知",
+                        date: msg.date || msg.sent_time || 0
+                    }))
+                    .sort((a, b) => b.date - a.date);
+
+                return files;
+            }
+
 
         }
+
 
         return {Api, Admin, Me, Mail, Drive, Chat};
     })()
@@ -12611,9 +12631,10 @@
             /*
             * 在线成员
             * */
+            /* ================= 在线成员 ================= */
             fetch_online_users() {
-                this.e_msgflow_mark_onlineusers.classList.remove("hidden");
-                this.remove_online_users();
+                const membersUl = document.getElementById("members-ul");
+                membersUl.innerHTML = ""; // 清空
                 if (!this.e_msgflow_mark_onlineusers.simple_loading_mark.is_visible()) {
                     remove_simple_loading_mark(this.e_msgflow_mark_onlineusers);
                     this.e_msgflow_mark_onlineusers.simple_loading_mark.show();
@@ -12634,49 +12655,131 @@
                 }
             }
 
-            remove_online_users() {
-                const items = this.e_msgflow_mark_onlineusers.querySelectorAll(":scope div.chat-session-onlineusers-item");
-                items.forEach(i => i.remove());
-            }
-
             load_online_users(users) {
-                users.forEach(i => {
+                const membersUl = document.getElementById("members-ul");
+                users.forEach(user => {
                     let html = `
-<div class="chat-session-onlineusers-item">
-<span class="chat-session-onlineusers-item-online-status">●</span>
-<span class="chat-session-onlineusers-item-name">${i.uid}</span>
-</div>
-`;
-                    this.e_msgflow_mark_onlineusers.insertAdjacentHTML("beforeend", html);
-                    const onlineusers_item = this.e_msgflow_mark_onlineusers.querySelector(":scope div.chat-session-onlineusers-item:last-of-type");
-                    onlineusers_item.attr = i;
-                    const online_status_dot = onlineusers_item.querySelector(":scope span.chat-session-onlineusers-item-online-status");
-                    if (i.status === dashboardwrappers.ChatDashboardWrapper.online_status.online) {
-                        online_status_dot.dataset.onlineStatus = "online";
-                    } else {
-                        online_status_dot.dataset.onlineStatus = "offline";
-                    }
+            <li class="chat-session-onlineusers-item">
+                <span class="chat-session-onlineusers-item-online-status">●</span>
+                <span class="chat-session-onlineusers-item-name">${user.uid}</span>
+            </li>
+            `;
+                    membersUl.insertAdjacentHTML("beforeend", html);
+                    const item = membersUl.querySelector("li:last-of-type");
+                    item.attr = user;
 
-                    // 菜单
-                    onlineusers_item.addEventListener("click", (event) => {
+                    const dot = item.querySelector(".chat-session-onlineusers-item-online-status");
+                    dot.dataset.onlineStatus = user.status === dashboardwrappers.ChatDashboardWrapper.online_status.online ? "online" : "offline";
+
+                    // 点击菜单
+                    item.addEventListener("click", (event) => {
                         const rect = event.target.getBoundingClientRect();
-                        const items = [];
-                        items.push(
-                            {
-                                type: "button", text: "艾特", callback: event => {
-                                    this.add_textarea_element__at(onlineusers_item.attr.uid)
-                                },
-                            },
-                            // {type: "section", text: "",},
-                        );
-
-                        onlineusers_item.classList.add("active");
-                        MenuMark.exec({x: rect.left, y: rect.top + rect.height,}, items, () => {
-                            onlineusers_item.classList.remove("active");
+                        const items = [{
+                            type: "button", text: "艾特", callback: e => this.add_textarea_element__at(user.uid)
+                        }];
+                        item.classList.add("active");
+                        MenuMark.exec({x: rect.left, y: rect.top + rect.height}, items, () => {
+                            item.classList.remove("active");
                         });
                     });
                 });
             }
+
+            /* ================= 附件列表 ================= */
+            const downloadQueue = [];
+            let activeDownloads = 0;
+            const MAX_ACTIVE_DOWNLOADS = 2;
+
+            function enqueueDownload(task) {
+                downloadQueue.push(task);
+                processQueue();
+            }
+
+            function processQueue() {
+                if (activeDownloads >= MAX_ACTIVE_DOWNLOADS) return;
+                const task = downloadQueue.shift();
+                if (!task) return;
+                activeDownloads++;
+                task().finally(() => {
+                    activeDownloads--;
+                    processQueue();
+                });
+            }
+
+            function createAttachmentItem(file, chatApi, contact_type, xxid, ceid) {
+                const li = document.createElement("li");
+                li.style.display = "flex";
+                li.style.justifyContent = "space-between";
+                li.style.alignItems = "center";
+                li.style.marginBottom = "5px";
+
+                const info = document.createElement("div");
+                info.textContent = `${file.name} (${formatBytes(file.size)}) - ${new Date(file.date).toLocaleString()}`;
+                li.appendChild(info);
+
+                const btn = document.createElement("button");
+                btn.textContent = "下载";
+                li.appendChild(btn);
+
+                btn.onclick = () => {
+                    enqueueDownload(async () => {
+                        btn.disabled = true;
+                        const progress = document.createElement("span");
+                        progress.style.marginLeft = "5px";
+                        progress.textContent = "0%";
+                        li.appendChild(progress);
+
+                        const feedbackargs = {msg:{id:file.id,type:"file"}, chunks:[], curr:0, total:null};
+                        const callbacks = {
+                            onprogress: () => {
+                                if (feedbackargs.total) {
+                                    progress.textContent = Math.floor((feedbackargs.curr/feedbackargs.total)*100) + "%";
+                                }
+                            },
+                            onload: () => {
+                                const blob = new Blob([feedbackargs.plain_file_data]);
+                                const a = document.createElement("a");
+                                a.href = URL.createObjectURL(blob);
+                                a.download = file.name;
+                                a.click();
+                                progress.textContent = "完成";
+                            },
+                            onerror: () => { alert("下载失败"); btn.disabled = false; },
+                            onabort: () => { alert("下载取消"); btn.disabled = false; }
+                        };
+                        await chatApi.download(feedbackargs, callbacks);
+                    });
+                };
+
+                return li;
+            }
+
+            async function renderAttachments(chatApi, contact_type, xxid, ceid) {
+                const attachmentsUl = document.getElementById("attachments-ul");
+                attachmentsUl.innerHTML = "";
+                const files = (await chatApi.attachments(contact_type, xxid, ceid)).sort((a,b)=>new Date(b.date)-new Date(a.date));
+                
+                let loaded = 0, batch = 20;
+                function loadBatch() {
+                    const batchFiles = files.slice(loaded, loaded+batch);
+                    batchFiles.forEach(f => attachmentsUl.appendChild(createAttachmentItem(f, chatApi, contact_type, xxid, ceid)));
+                    loaded += batchFiles.length;
+                }
+                loadBatch();
+
+                attachmentsUl.addEventListener("scroll", () => {
+                    if (attachmentsUl.scrollTop + attachmentsUl.clientHeight >= attachmentsUl.scrollHeight - 10) {
+                        if (loaded < files.length) loadBatch();
+                    }
+                });
+            }
+
+            /* ================= 使用 ================= */
+            // 点击群聊加载成员和附件
+            const chatApi = new Chat(client);
+            fetch_online_users(); // 左列成员
+            renderAttachments(chatApi, subviews.Chat.receiver_type.group, gid, ceid); // 右列附件
+
 
 
             /*
