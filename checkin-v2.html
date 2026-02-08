@@ -63,6 +63,15 @@
             margin-top: 4px;
         }
 
+        /* 默认：他人消息，操作条靠左 */
+        .chat-message .chat-msg-actionbar {
+            justify-content: flex-start;
+        }
+
+        /* 自己消息，操作条靠右 */
+        .chat-message.sent-by-me .chat-msg-actionbar {
+            justify-content: flex-end;
+        }
 
         /* 操作条按钮 */
         .chat-msg-actionbar button {
