@@ -60,8 +60,11 @@
         .chat-msg-actionbar {
             display: flex;
             gap: 6px;
-            margin-top: 6px;
+            margin: 6px 0 0 0; /* 上方留点间距 */
+            width: 100%;        /* 占满消息容器宽度 */
+            box-sizing: border-box;
         }
+
 
         .chat-msg-actionbar button {
             font-size: 12px;
@@ -11726,13 +11729,12 @@
                     // 显示底部操作条
                     // =========================
                     show_actionbar() {
-                        // 1️⃣ 先移除页面上所有已有的操作条
+                        // 先移除页面上已有操作条
                         document.querySelectorAll(".chat-msg-actionbar").forEach(bar => {
-                            if (bar.msgobj) bar.msgobj.e_actionbar = null; // 清空原消息的引用
+                            if (bar.msgobj) bar.msgobj.e_actionbar = null;
                             bar.remove();
                         });
 
-                        // 2️⃣ 创建新的操作条
                         const bar = document.createElement("div");
                         bar.className = "chat-msg-actionbar";
                         bar.innerHTML = `
@@ -11741,15 +11743,15 @@
                             <button data-action="forward">转发</button>
                             <button data-action="more">...</button>
                         `;
-
-                        // 关联到当前消息对象
                         bar.msgobj = this;
                         this.e_actionbar = bar;
 
-                        // 3️⃣ 挂在消息容器下面
-                        this.e_container.append(bar);
+                        // ❌ 不再挂在 e_container 内
+                        // this.e_container.append(bar);
 
-                        // 4️⃣ 点击操作条按钮
+                        // ✅ 挂在消息最外层元素后面
+                        this.msgelement.append(bar);
+
                         bar.addEventListener("click", (e) => {
                             e.stopPropagation();
                             this.handle_actionbar_click(e);
