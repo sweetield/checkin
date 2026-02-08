@@ -2956,21 +2956,24 @@
         }
 
         .chat-session-onlineusers-item {
-            padding: 6px 6px;
-            margin: 4px 0;
-            border-radius: 2px;
-            cursor: pointer;
-            transition: background-color 0.1s, transform 0.1s;
-            user-select: none;
-
+            padding: 2px 4px;
             display: flex;
-            flex-direction: row;
-            gap: 4px;
-
+            justify-content: space-between;
             align-items: center;
-
+            cursor: pointer;
+            font-size: 13px;
         }
 
+        .online-users-attachments {
+            border-top: 1px solid #eee;
+            padding-top: 4px;
+            font-size: 13px;
+        }
+
+        .cap-item .download-btn {
+            margin-left: 5px;
+            font-size: 12px;
+        }
         .chat-session-onlineusers-item:hover {
             background-color: rgba(0, 123, 255, 0.15);
         }
@@ -12670,58 +12673,52 @@
             // ===== 在线成员 + 附件列表 =====
             load_online_users(users) {
                 // 初始化左右框架
+                // 初始化统一列表容器
                 if (!this.e_online_members_wrapper) {
-                    const html = `
-                <div class="chat-online-wrapper">
-                    <div class="online-users-column">
-                        <div class="online-users-list"></div>
-                    </div>
-                    <div class="online-attachments-column">
-                        <div class="cap-title">📎 附件</div>
-                        <div class="cap-list"></div>
-                    </div>
-                </div>
-                `;
-                    this.e_msgflow_mark_onlineusers.insertAdjacentHTML("afterend", html);
-                    this.e_online_members_wrapper = this.e_msgflow_mark_onlineusers.nextElementSibling;
+                    this.e_online_members_wrapper = this.e_msgflow_mark_onlineusers;
 
-                    this.e_online_users_list = this.e_online_members_wrapper.querySelector(".online-users-list");
-                    this.e_online_attachment_panel = this.e_online_members_wrapper.querySelector(".cap-list");
+                    // 设置容器宽度和滚动
+                    this.e_online_members_wrapper.style.width = "200px"; // 可调窄
+                    this.e_online_members_wrapper.style.maxHeight = "400px"; // 可随聊天框调整
+                    this.e_online_members_wrapper.style.overflowY = "auto";
+                    this.e_online_members_wrapper.style.border = "1px solid #ddd";
+                    this.e_online_members_wrapper.style.padding = "2px";
 
-                    // ⚡ 设置垂直布局
-                    this.e_online_members_wrapper.style.display = "flex";
-                    this.e_online_members_wrapper.style.flexDirection = "column"; // 垂直排列
-                    this.e_online_members_wrapper.style.width = "200px";           // 宽度可调窄
-                    this.e_online_users_list.style.overflowY = "auto";
-                    this.e_online_attachment_panel.style.overflowY = "auto";
+                    // 附件列表容器直接添加到成员列表末尾
+                    const attachContainer = document.createElement("div");
+                    attachContainer.className = "online-users-attachments";
+                    attachContainer.style.marginTop = "4px";
+                    this.e_online_members_wrapper.appendChild(attachContainer);
+
+                    this.e_online_attachment_panel = attachContainer;
                 }
 
-
-                // 清空旧数据
-                this.e_online_users_list.innerHTML = "";
+                // 清空旧成员和附件
+                this.e_online_members_wrapper.querySelectorAll(".chat-session-onlineusers-item").forEach(i => i.remove());
                 this.e_online_attachment_panel.innerHTML = "";
 
                 // 渲染在线成员
                 users.forEach(i => {
                     const html = `
-            <div class="chat-session-onlineusers-item">
-                <span class="chat-session-onlineusers-item-online-status">●</span>
-                <span class="chat-session-onlineusers-item-name">${i.uid}</span>
-            </div>
-            `;
-                    this.e_online_users_list.insertAdjacentHTML("beforeend", html);
-                    const onlineusers_item = this.e_online_users_list.querySelector(":scope div.chat-session-onlineusers-item:last-of-type");
+                <div class="chat-session-onlineusers-item">
+                    <span class="chat-session-onlineusers-item-online-status">●</span>
+                    <span class="chat-session-onlineusers-item-name">${i.uid}</span>
+                </div>
+                `;
+                    this.e_online_members_wrapper.insertAdjacentHTML("beforeend", html);
+                    const onlineusers_item = this.e_online_members_wrapper.querySelector(":scope .chat-session-onlineusers-item:last-of-type");
                     onlineusers_item.attr = i;
 
                     const online_status_dot = onlineusers_item.querySelector(":scope span.chat-session-onlineusers-item-online-status");
                     online_status_dot.dataset.onlineStatus = i.status === dashboardwrappers.ChatDashboardWrapper.online_status.online ? "online" : "offline";
 
-                    onlineusers_item.addEventListener("click", (event) => {
+                    // 点击成员弹菜单
+                    onlineusers_item.addEventListener("click", event => {
                         const rect = event.target.getBoundingClientRect();
                         const items = [{
                             type: "button",
                             text: "艾特",
-                            callback: event => this.add_textarea_element__at(onlineusers_item.attr.uid)
+                            callback: () => this.add_textarea_element__at(onlineusers_item.attr.uid)
                         }];
                         onlineusers_item.classList.add("active");
                         MenuMark.exec({ x: rect.left, y: rect.top + rect.height }, items, () => {
@@ -12730,22 +12727,29 @@
                     });
                 });
 
-                // 渲染附件列表
+                // 渲染附件列表（依附在同一个滚动容器末尾）
                 const attachments = this.panel.attachments || [];
                 attachments.forEach(msgattr => {
                     const div = document.createElement("div");
                     div.className = "cap-item";
+                    div.style.display = "flex";
+                    div.style.justifyContent = "space-between";
+                    div.style.alignItems = "center";
+                    div.style.padding = "2px 0";
+
                     div.innerHTML = `
-                        <span class="name" title="${msgattr.plain_file_name || msgattr.file_attr.name}">${msgattr.plain_file_name || msgattr.file_attr.name}</span>
+                        <span class="name" title="${msgattr.plain_file_name || msgattr.file_attr.name}">
+                            ${msgattr.plain_file_name || msgattr.file_attr.name}
+                        </span>
                         <button class="download-btn">下载</button>
                     `;
-                    const btn = div.querySelector(".download-btn");
-                    btn.addEventListener("click", e => {
+                    div.querySelector(".download-btn").addEventListener("click", e => {
                         e.stopPropagation();
-                        trigger_file_download(msgattr); // ⚡ 调用 FileMsg 内部逻辑，保留进度条
+                        trigger_file_download(msgattr); // ⚡ 保留 FileMsg 下载进度条逻辑
                     });
                     this.e_online_attachment_panel.appendChild(div);
                 });
+
             }
 
 
