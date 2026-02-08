@@ -9299,7 +9299,8 @@
                 // 群附件面板（在线成员旁边）
                 this.e_msgflow_mark_files = document.createElement("div");
                 this.e_msgflow_mark_files.className = "chat-session-files hidden";
-                this.e_msgflow_mark_onlineusers.parentNode.insertBefore(this.e_msgflow_mark_files, this.e_msgflow_mark_onlineusers.nextSibling);
+
+                this.e_msgflow_wrap.appendChild(this.e_msgflow_mark_files);
 
                 // 查看在线成员
                 if (this.is_group()) {
@@ -9315,6 +9316,7 @@
                 }
                 this.e_msgflow.addEventListener("click", (event) => {
                     this.e_msgflow_mark_onlineusers.classList.add("hidden");
+                    this.e_msgflow_mark_files.classList.add("hidden");
                 });
 
                 // header右侧按钮
@@ -12621,6 +12623,8 @@
                 this.remove_online_users();
                 // ✅ 新增：显示附件面板
                 this.e_msgflow_mark_files.classList.remove("hidden");
+                // ✅ 新增：从历史记录加载群附件
+                 this.load_group_files_from_history();
                 if (!this.e_msgflow_mark_onlineusers.simple_loading_mark.is_visible()) {
                     remove_simple_loading_mark(this.e_msgflow_mark_onlineusers);
                     this.e_msgflow_mark_onlineusers.simple_loading_mark.show();
@@ -12638,9 +12642,9 @@
                         remove_simple_loading_mark(this.e_msgflow_mark_onlineusers);
                         MessageMark.report(error);
                     });
-                    // ✅ 新增：从历史记录加载群附件
-                    this.load_group_files_from_history();
+                   
                 }
+                 
             }
 
             get_group_files_from_history() {
