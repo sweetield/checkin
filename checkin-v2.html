@@ -11781,7 +11781,11 @@
                                 this.open_more_menu();
                                 break;
                         }
+
+                        // ✅ 点击后自动隐藏操作条
+                        this.hide_actionbar();
                     }
+
 
                     highlight() {
                         this.e_container.classList.add("highlight");
