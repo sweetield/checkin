@@ -48,48 +48,37 @@
             100% { box-shadow: 0 8px 20px rgba(59,130,246,0.18), inset 0 1px 0 rgba(255,255,255,0.6); }
         }
         /* ================= 附件列表 ================= */
-            /* 整个在线成员 + 附件容器 */
         .chat-online-wrapper {
             display: flex;
-            flex-direction: column; /* 垂直排列 */
-            width: 200px;           /* 可以自己调窄一点 */
-            max-height: 400px;      /* 根据聊天框高度可调 */
             border: 1px solid #ddd;
-            background: #f9f9f9;
-            font-size: 13px;
+            height: 300px; /* 你可以根据实际调整 */
+            overflow: hidden;
         }
 
-        /* 名单列表和附件列表各自占固定高度，可滚动 */
-        .online-users-list,
-        .cap-list {
-            max-height: 200px;      /* 可根据需求调节 */
+        .online-users-column, .online-attachments-column {
+            flex: 1;
             overflow-y: auto;
-            border-top: 1px solid #eee;
             padding: 4px;
+            border-right: 1px solid #eee;
         }
 
-        /* 标题 */
-        .cap-title {
-            font-weight: bold;
-            padding: 4px;
-            border-bottom: 1px solid #eee;
+        .online-attachments-column {
+            border-right: none;
         }
 
-        /* 列表项 */
-        .chat-session-onlineusers-item,
-        .cap-item {
-            padding: 2px 4px;
+        .online-users-column .chat-session-onlineusers-item,
+        .online-attachments-column .cap-item {
             display: flex;
             justify-content: space-between;
             align-items: center;
+            padding: 2px 4px;
             cursor: pointer;
         }
 
-        .cap-item button.download-btn {
-            margin-left: 5px;
-            font-size: 12px;
+        .online-users-column .chat-session-onlineusers-item:hover,
+        .online-attachments-column .cap-item:hover {
+            background: #f0f0f0;
         }
-
 
 
         /* ================= 选择消息出现菜单 ================= */
@@ -2956,20 +2945,25 @@
         }
 
         .chat-session-onlineusers-item {
-            padding: 6px 6px;
-            margin: 4px 0;
-            border-radius: 2px;
-            cursor: pointer;
-            transition: background-color 0.1s, transform 0.1s;
-            user-select: none;
-
+            padding: 2px 4px;
             display: flex;
-            flex-direction: row;
-            gap: 4px;
-
+            justify-content: space-between;
             align-items: center;
-
+            cursor: pointer;
+            font-size: 13px;
         }
+
+        .online-users-attachments {
+            border-top: 1px solid #eee;
+            padding-top: 4px;
+            font-size: 13px;
+        }
+
+        .cap-item .download-btn {
+            margin-left: 5px;
+            font-size: 12px;
+        }
+
 
         .chat-session-onlineusers-item:hover {
             background-color: rgba(0, 123, 255, 0.15);
