@@ -9296,6 +9296,11 @@
                 this.e_msgflow_mark_onlineusers.classList.add("hidden");
                 remove_simple_loading_mark(this.e_msgflow_mark_onlineusers);
 
+                // 群附件面板（在线成员旁边）
+                this.e_msgflow_mark_files = document.createElement("div");
+                this.e_msgflow_mark_files.className = "chat-session-files hidden";
+                this.e_msgflow_mark_onlineusers.parentNode.insertBefore(this.e_msgflow_mark_files, this.e_msgflow_mark_onlineusers.nextSibling);
+
                 // 查看在线成员
                 if (this.is_group()) {
                     this.e_header_info_clickmark.addEventListener("click", (event) => {
@@ -12614,6 +12619,8 @@
             fetch_online_users() {
                 this.e_msgflow_mark_onlineusers.classList.remove("hidden");
                 this.remove_online_users();
+                // ✅ 新增：显示附件面板
+                this.e_msgflow_mark_files.classList.remove("hidden");
                 if (!this.e_msgflow_mark_onlineusers.simple_loading_mark.is_visible()) {
                     remove_simple_loading_mark(this.e_msgflow_mark_onlineusers);
                     this.e_msgflow_mark_onlineusers.simple_loading_mark.show();
@@ -12631,7 +12638,85 @@
                         remove_simple_loading_mark(this.e_msgflow_mark_onlineusers);
                         MessageMark.report(error);
                     });
+                    // ✅ 新增：从历史记录加载群附件
+                    this.load_group_files_from_history();
                 }
+            }
+
+            get_group_files_from_history() {
+                const files = [];
+
+                for (const msg of this.panel.wrapper.messages) {
+                    if (!dashboardwrappers.ChatDashboardWrapper
+                            .message_type_checker.is_file(msg.type)) {
+                        continue;
+                    }
+
+                    if (msg.status & dashboardwrappers.ChatDashboardWrapper.message_status.deleted) {
+                        continue;
+                    }
+
+                    files.push(msg);
+                }
+
+                return files;
+            }
+
+            load_group_files_from_history() {
+                this.e_msgflow_mark_files.innerHTML = "";
+
+                const files = this.get_group_files_from_history();
+
+                files.forEach(msg => {
+                    const name = msg.plain_file_name
+                        || msg.file_attr?.name
+                        || "未知文件";
+
+                    const html = `
+                    <div class="chat-group-file-item">
+                        <span class="file-icon">📎</span>
+                        <div class="file-info">
+                            <div class="file-name">${name}</div>
+                            <div class="file-meta">
+                                ${format_bytes(msg.file_attr.size)}
+                            </div>
+                        </div>
+                    </div>`;
+
+                    this.e_msgflow_mark_files.insertAdjacentHTML("beforeend", html);
+
+                    const item = this.e_msgflow_mark_files
+                        .querySelector(":scope .chat-group-file-item:last-of-type");
+
+                    item.addEventListener("click", () => {
+                        this.download_from_history_msg(msg);
+                    });
+                });
+            }
+
+            download_from_history_msg(msg) {
+                if (msg.download_task &&
+                    msg.download_task.status !== FloatBall.taskstatus.finished) {
+                    floatball.look_download_tasks(msg.download_task);
+                    return;
+                }
+
+                const t = new FloatBall.tasktypes.Download_ChatMessage(
+                    floatball.dialog.tab_content_backtasks,
+                    {
+                        onfinished: () => this.update(),
+                        onprogress: () => this.update(),
+                        onfailed: () => this.update(),
+                    }
+                );
+
+                msg.download_task = t;
+
+                floatball.dialog.addTask(t);
+                t.set_name(msg.plain_file_name || msg.file_attr.name);
+                t.set_args({ msg });
+
+                floatball.dialog.checkToStartTask();
             }
 
             remove_online_users() {
