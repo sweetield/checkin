@@ -11715,13 +11715,15 @@
                     // 显示底部操作条
                     // =========================
                     show_actionbar() {
-                        // ✅ 先隐藏页面上所有操作条
-                        document.querySelectorAll(".chat-msg-actionbar").forEach(bar => bar.remove());
-                        this.e_actionbar = null; // 重置当前消息的操作条引用
+                        // 1️⃣ 先移除页面上所有已有的操作条
+                        document.querySelectorAll(".chat-msg-actionbar").forEach(bar => {
+                            if (bar.msgobj) bar.msgobj.e_actionbar = null; // 清空原消息的引用
+                            bar.remove();
+                        });
 
+                        // 2️⃣ 创建新的操作条
                         const bar = document.createElement("div");
                         bar.className = "chat-msg-actionbar";
-
                         bar.innerHTML = `
                             <button data-action="cite">引用</button>
                             <button data-action="copy">复制</button>
@@ -11729,15 +11731,18 @@
                             <button data-action="more">...</button>
                         `;
 
+                        // 关联到当前消息对象
+                        bar.msgobj = this;
+                        this.e_actionbar = bar;
+
+                        // 3️⃣ 挂在消息容器下面
+                        this.e_container.append(bar);
+
+                        // 4️⃣ 点击操作条按钮
                         bar.addEventListener("click", (e) => {
                             e.stopPropagation();
                             this.handle_actionbar_click(e);
                         });
-
-                        this.e_actionbar = bar;
-
-                        // 挂在消息内容容器下面
-                        this.e_container.append(bar);
                     }
 
 
