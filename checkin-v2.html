@@ -4019,33 +4019,11 @@
 <script>
 
     // 文件消息下载复用函数
+    // ===== 文件下载复用逻辑（保持 FileMsg 功能） =====
     function trigger_file_download(msgattr) {
-        if (!msgattr.is_sent) return;
-
-        if (msgattr.download_task && msgattr.download_task.status !== FloatBall.taskstatus.finished) {
-            floatball.look_download_tasks(msgattr.download_task);
-            return;
-        }
-
-        const t = new FloatBall.tasktypes.Download_ChatMessage(
-            floatball.dialog.tab_content_backtasks,
-            {
-                onfinished: () => { msgattr.download_task = null; },
-                onprogress: () => {},
-                onfailed: () => {}
-            }
-        );
-
-        msgattr.download_task = t;
-        t.set_name(msgattr.plain_file_name);
-        t.set_args({ msg: msgattr });
-
-        floatball.dialog.addTask(t);
-        floatball.dialog.checkToStartTask(); // ⚡ 立即启动
-        floatball.dialog.checkToHide(t);
+        if (!msgattr._fileMsgInstance) return;
+        msgattr._fileMsgInstance.e_mcr_icon.click(); // 复用 FileMsg 内部点击逻辑
     }
-
-
 
 
     function showChatToast({ title, content, onClick }) {
@@ -12449,30 +12427,30 @@
 
                 }
 
+                // ===== FileMsg 类 =====
                 class FileMsg extends _ {
-                    constructor(panel, contentpage, msgattr, msgattrseniors,) {
-                        super(panel, contentpage, msgattr, msgattrseniors,);
+                    constructor(panel, contentpage, msgattr, msgattrseniors) {
+                        super(panel, contentpage, msgattr, msgattrseniors);
                     }
 
                     init() {
                         super.init();
 
                         let html = `
-<div class="chat-message-content-rect chat-mcr-file">
-<span class="chat-mcr-file-icon" draggable="false">🗳️</span>
-<div class="chat-mcr-file-info">
-    <span class="chat-mcr-file-info-name"></span>
-    <div class="chat-mcr-file-info-others">
-        <span class="chat-mcr-file-info-size"></span>
-        <span class="chat-mcr-file-status"></span>
-    </div>
-</div>
-</div>
-`;
+                <div class="chat-message-content-rect chat-mcr-file">
+                    <span class="chat-mcr-file-icon" draggable="false">🗳️</span>
+                    <div class="chat-mcr-file-info">
+                        <span class="chat-mcr-file-info-name"></span>
+                        <div class="chat-mcr-file-info-others">
+                            <span class="chat-mcr-file-info-size"></span>
+                            <span class="chat-mcr-file-status"></span>
+                        </div>
+                    </div>
+                </div>
+                `;
                         this.e_container.insertAdjacentHTML("beforeend", html);
-                        this.e_mcr = this.e_container.querySelector(":scope .chat-message-content-rect");
-                        this.e_mcr.style.background = this.palette.rect_bg;
 
+                        this.e_mcr = this.e_container.querySelector(":scope .chat-mcr-file");
                         this.e_mcr_icon = this.e_mcr.querySelector(":scope .chat-mcr-file-icon");
                         this.e_mcr_info_name = this.e_mcr.querySelector(":scope .chat-mcr-file-info-name");
                         this.e_mcr_info_size = this.e_mcr.querySelector(":scope .chat-mcr-file-info-size");
@@ -12484,14 +12462,12 @@
                         if (!this.panel.attachments) this.panel.attachments = [];
                         if (!this.panel.attachments.includes(this.msgattr)) this.panel.attachments.push(this.msgattr);
 
-                        // ⚡ 确保可下载
-                        this.msgattr.is_sent = true;
-                        this.msgattr.plain_file_name = this.msgattr.file_attr.name;
+                        // ⚡ 保存实例到 msgattr，用于附件列表复用下载
+                        this.msgattr._fileMsgInstance = this;
 
-
-                        this.e_mcr_icon = this.e_mcr.querySelector(":scope span"); // 点击开始下载
+                        // ===== 点击图标下载 =====
                         this.e_mcr_icon.addEventListener("click", (event) => {
-                            if (!this.msgattr.is_sent) return
+                            if (!this.msgattr.is_sent) return;
                             if (this.msgattr.upload_task && this.msgattr.upload_task.status !== FloatBall.taskstatus.finished) return;
                             if (!this.msgattr.plain_file_name) return;
                             if (this.msgattr.download_task && this.msgattr.download_task.status !== FloatBall.taskstatus.finished) {
@@ -12499,59 +12475,33 @@
                                 return;
                             }
 
-                            const t = new FloatBall.tasktypes.Download_ChatMessage(floatball.dialog.tab_content_backtasks, {
-                                onfinished: () => {
-                                    this.update();
-                                },
-                                onwaiting: () => {
-                                    this.update();
-                                },
-                                onprogress: () => {
-                                    this.update();
-                                },
-                                onfailed: () => {
-                                    this.update();
+                            const t = new FloatBall.tasktypes.Download_ChatMessage(
+                                floatball.dialog.tab_content_backtasks,
+                                {
+                                    onfinished: () => { this.update(); },
+                                    onwaiting: () => { this.update(); },
+                                    onprogress: () => { this.update(); },
+                                    onfailed: () => { this.update(); }
                                 }
-                            });
+                            );
 
                             this.msgattr.download_task = t;
-
                             floatball.dialog.addTask(t);
                             t.set_name(this.msgattr.plain_file_name);
-                            t.set_args({
-                                msg: this.msgattr,
-                            });
-
+                            t.set_args({ msg: this.msgattr });
                             floatball.dialog.checkToStartTask();
                             floatball.dialog.checkToHide(t);
-
-                            // floatball.look_download_tasks(t);
                         });
 
-                        this.e_mcr_icon.addEventListener('dragstart', (event) => { // 拖拽保存
-                            if (event.target.tagName !== "SPAN") {
-                                return;
-                            }
+                        // ===== 拖拽保存 =====
+                        this.e_mcr_icon.addEventListener('dragstart', (event) => {
+                            if (event.target.tagName !== "SPAN") return;
                             dragging_item = this;
                             event.dataTransfer.effectAllowed = 'copy';
-
-                            // const content = "这是要生成的文件内容\n可以是文本、JSON等";
-                            // const filename = "example.txt";
-
-                            // const file = new File([content], filename, {type: "text/plain"});
-                            // event.dataTransfer.items.add(file);
-
-                            // const blob = new Blob([content], { type: "text/plain" });
-                            // const url = URL.createObjectURL(blob);
-                            // event.dataTransfer.setData("text/uri-list", url); // URL 作为下载链接
-                            // event.dataTransfer.setData("text/plain", url); // 兼容其他浏览器
-                            // event.dataTransfer.setData("DownloadURL", `text/plain:${filename}:${url}`);
-
                         });
                         this.e_mcr_icon.addEventListener('dragend', (event) => {
                             dragging_item = null;
                         });
-
                     }
 
                     update() {
@@ -12585,18 +12535,12 @@
                                 set_textContent_if_different(this.e_mcr_status, `${this.panel.wrapper.format_text_for_msgview(this.msgattr.download_task.backtask_status_text.textContent)}`);
 
                                 if (this.msgattr.download_task.args.plain_file_data) {
-                                    // this.e_mcr_status.classList.add("hidden");
-
                                     saveFile_from_uint8array(this.msgattr.download_task.args.plain_file_data, this.msgattr.plain_file_name);
                                     this.msgattr.download_task.args.plain_file_data = null;
-
                                 }
                             }
-
                         }
-
                     }
-
                 }
 
                 class SysMsg extends _ {
@@ -12732,6 +12676,10 @@
 
                     this.e_online_users_list = this.e_online_members_wrapper.querySelector(".online-users-list");
                     this.e_online_attachment_panel = this.e_online_members_wrapper.querySelector(".cap-list");
+
+                    this.e_online_members_wrapper.style.display = "flex";
+                    this.e_online_users_list.style.overflowY = "auto";
+                    this.e_online_attachment_panel.style.overflowY = "auto";
                 }
 
                 // 清空旧数据
@@ -12773,18 +12721,17 @@
                     const div = document.createElement("div");
                     div.className = "cap-item";
                     div.innerHTML = `
-                        <span class="name">${msgattr.plain_file_name || msgattr.file_attr.name}</span>
+                        <span class="name" title="${msgattr.plain_file_name || msgattr.file_attr.name}">${msgattr.plain_file_name || msgattr.file_attr.name}</span>
                         <button class="download-btn">下载</button>
                     `;
                     const btn = div.querySelector(".download-btn");
                     btn.addEventListener("click", e => {
                         e.stopPropagation();
-                        trigger_file_download(msgattr); // ⚡ 统一下载逻辑
+                        trigger_file_download(msgattr); // ⚡ 调用 FileMsg 内部逻辑，保留进度条
                     });
                     this.e_online_attachment_panel.appendChild(div);
                 });
             }
-
 
 
 
