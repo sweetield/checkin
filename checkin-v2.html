@@ -2945,24 +2945,34 @@
         }
 
         .chat-session-onlineusers-item {
-            padding: 2px 4px;
+            padding: 4px 8px;
             display: flex;
             justify-content: space-between;
             align-items: center;
             cursor: pointer;
-            font-size: 13px;
+            font-size: 14px; /* 与原成员列表一致 */
+            line-height: 1.6;
+            color: #333;
+            background: #f7f7f7; /* 原成员列表背景 */
+            border-radius: 4px;
+            margin-bottom: 2px;
+        }
+
+        .chat-session-onlineusers-item:hover {
+            background: #e6f0ff; /* 原 hover 效果 */
         }
 
         .online-users-attachments {
-            border-top: 1px solid #eee;
-            padding-top: 4px;
-            font-size: 13px;
+            margin-top: 6px;
+            font-size: 14px;
+            line-height: 1.6;
         }
 
         .cap-item .download-btn {
-            margin-left: 5px;
-            font-size: 12px;
+            margin-left: 6px;
+            font-size: 13px;
         }
+
 
 
         .chat-session-onlineusers-item:hover {
@@ -12664,25 +12674,41 @@
             // ===== 在线成员 + 附件列表 =====
             load_online_users(users) {
                 // 初始化左右框架
-                // 初始化统一列表容器
                 if (!this.e_online_members_wrapper) {
-                    this.e_online_members_wrapper = this.e_msgflow_mark_onlineusers;
+                    // 创建统一 wrapper
+                    const wrapper = document.createElement("div");
+                    wrapper.className = "chat-online-members-wrapper";
+                    wrapper.style.width = "200px"; 
+                    wrapper.style.maxHeight = `${this.e_msgflow_wrap.clientHeight}px`;
+                    wrapper.style.overflowY = "auto";
+                    wrapper.style.background = this.palette.rect_bg;
+                    wrapper.style.fontSize = "14px";
+                    wrapper.style.lineHeight = "1.6";
+                    wrapper.style.color = "#333";
+                    wrapper.style.padding = "4px 2px";
+                    wrapper.style.border = "1px solid #ccc";
+                    wrapper.style.borderRadius = "4px";
 
-                    // 设置容器宽度和滚动
-                    this.e_online_members_wrapper.style.width = "200px"; // 可调窄
-                    this.e_online_members_wrapper.style.maxHeight = "400px"; // 可随聊天框调整
-                    this.e_online_members_wrapper.style.overflowY = "auto";
-                    this.e_online_members_wrapper.style.border = "1px solid #ddd";
-                    this.e_online_members_wrapper.style.padding = "2px";
+                    // 在线成员容器
+                    const usersList = document.createElement("div");
+                    usersList.className = "online-users-list";
+                    wrapper.appendChild(usersList);
 
-                    // 附件列表容器直接添加到成员列表末尾
+                    // 附件容器
                     const attachContainer = document.createElement("div");
                     attachContainer.className = "online-users-attachments";
-                    attachContainer.style.marginTop = "4px";
-                    this.e_online_members_wrapper.appendChild(attachContainer);
+                    attachContainer.style.marginTop = "6px";
+                    wrapper.appendChild(attachContainer);
 
+                    // 插入到在线成员标记后面
+                    this.e_msgflow_mark_onlineusers.insertAdjacentElement("afterend", wrapper);
+
+                    // 保存引用
+                    this.e_online_members_wrapper = wrapper;
+                    this.e_online_users_list = usersList;
                     this.e_online_attachment_panel = attachContainer;
                 }
+
 
                 // 清空旧成员和附件
                 this.e_online_members_wrapper.querySelectorAll(".chat-session-onlineusers-item").forEach(i => i.remove());
@@ -12726,7 +12752,8 @@
                     div.style.display = "flex";
                     div.style.justifyContent = "space-between";
                     div.style.alignItems = "center";
-                    div.style.padding = "2px 0";
+                    div.style.padding = "4px 0";
+                    div.style.cursor = "pointer";
 
                     div.innerHTML = `
                         <span class="name" title="${msgattr.plain_file_name || msgattr.file_attr.name}">
