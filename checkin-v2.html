@@ -60,8 +60,8 @@
         .chat-msg-actionbar {
             display: flex;
             gap: 6px;
-            margin: 6px 0 0 0; /* 上方留点间距 */
-            box-sizing: border-box;
+            margin: 4px 0 0 0;      /* 操作条距离消息内容有间距 */
+            align-self: flex-start;  /* 操作条宽度随内容自适应 */
         }
 
 
@@ -3220,11 +3220,12 @@
 
     <!--聊天页面 消息-->
     <style>
+        /* 消息外层容器 */
         .chat-message {
-            display: block; 
-            flex-direction: row;
-            margin-left: 10px;
-            margin-right: 10px;
+            display: flex;          /* 横向排列消息内容和可能的其他元素（比如头像） */
+            flex-direction: column; /* 内容 + 操作条垂直排列 */
+            align-items: flex-start;/* 消息靠左，短消息不会拉满整行 */
+            margin: 4px 0;
         }
 
         ul .chat-message {
@@ -3246,14 +3247,15 @@
             flex-direction: row;
         }
 
+        /* 消息内容容器 */
         .chat-message-content-container {
-            flex-grow: 1;
-            display: block;        /* 消息内容独占一行 */
-            flex-direction: row;
-            margin: 1px 0;
-            padding-right: 10%;
-            gap: 2px;
-            /*transition: background-color 3s, transform 3s;*/
+            display: inline-block;  /* 根据内容自适应宽度 */
+            max-width: 60%;         /* 可限制最大宽度，防止太长撑满整屏 */
+            padding: 6px 12px;
+            border-radius: 8px;
+            background: #f5f5f5;
+            box-sizing: border-box;
+            word-break: break-word; /* 避免单词超出边框 */
         }
 
         .chat-message-content-container.active {
