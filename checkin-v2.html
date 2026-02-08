@@ -9099,21 +9099,27 @@
 
         class _chat extends _ {
             constructor(client, panel, li) {
-                this.actionbar = null;               // 全局唯一底部工具条
-                this.current_selected_msg = null;    // 当前选中的消息对象
+                // 全局唯一底部工具条
+                this.actionbar = null;               
+                // 当前选中的消息对象
+                this.current_selected_msg = null;
+
+                // 清除之前选中消息的工具条
                 this.clear_all_selected_msgs = () => {
                     if (this.current_selected_msg) {
-                        // 只取消选中状态和工具条
+                        // 取消选中状态
                         this.current_selected_msg.is_selected = false;
                         this.current_selected_msg.e_container.classList.remove("selected");
 
+                        // 移除工具条
                         if (this.actionbar) {
-                            this.actionbar.remove(); // 仅移除工具条
+                            this.actionbar.remove();
                         }
 
                         this.current_selected_msg = null;
                     }
                 };
+
 
                 super(client, panel, li);
                 this.previous_activity_attr = {
@@ -9297,13 +9303,15 @@
                 } else {
                     this.e_header_info_clickmark.classList.add("hidden");
                 }
-                this.e_msgflow.addEventListener("click", (event) => {
-                        // 隐藏在线用户面板
-                        this.e_msgflow_mark_onlineusers.classList.add("hidden");
 
-                        // 🔹 点击空白处取消选中消息，但不影响消息内容
-                        this.clear_all_selected_msgs();
+                this.e_msgflow.addEventListener("click", (event) => {
+                    // 隐藏在线用户面板
+                    this.e_msgflow_mark_onlineusers.classList.add("hidden");
+
+                    // 点击空白处取消选中消息，但不影响消息内容
+                    this.clear_all_selected_msgs();
                 });
+
 
                 // header右侧按钮
                 this.e_header_action_more = this.e_header_actions.querySelector(":scope button.chat-session-header-action-more");
@@ -11735,7 +11743,7 @@
                     // 显示底部操作条
                     // =========================
                     show_actionbar() {
-                        // 取消之前选中的消息工具条
+                        // 先取消之前选中的消息工具条
                         if (this.contentpage) this.contentpage.clear_all_selected_msgs();
 
                         // 标记自己为选中
@@ -11755,7 +11763,7 @@
                                 <button data-action="forward">转发</button>
                                 <button data-action="more">...</button>
                             `;
-                            // 点击 actionbar 内按钮，调用原本处理逻辑
+                            // 点击 actionbar 内按钮处理
                             bar.addEventListener("click", (e) => {
                                 e.stopPropagation();
                                 this.handle_actionbar_click(e);
@@ -11767,18 +11775,20 @@
                         this.e_container.appendChild(bar);
                     }
 
+
                     hide_actionbar() {
                         this.is_selected = false;
                         this.e_container.classList.remove("selected");
 
                         if (this.contentpage && this.contentpage.actionbar) {
-                            this.contentpage.actionbar.remove(); // 仅移除工具条
+                            this.contentpage.actionbar.remove();
                         }
 
                         if (this.contentpage && this.contentpage.current_selected_msg === this) {
                             this.contentpage.current_selected_msg = null;
                         }
                     }
+
 
 
                     // =========================
