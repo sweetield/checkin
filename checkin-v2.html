@@ -4021,8 +4021,7 @@
     function trigger_file_download(msgattr) {
         if (!msgattr.is_sent) return;
 
-        if (msgattr.download_task &&
-            msgattr.download_task.status !== FloatBall.taskstatus.finished) {
+        if (msgattr.download_task && msgattr.download_task.status !== FloatBall.taskstatus.finished) {
             floatball.look_download_tasks(msgattr.download_task);
             return;
         }
@@ -4040,6 +4039,7 @@
 
         floatball.dialog.checkToStartTask();
     }
+
 
 
     function showChatToast({ title, content, onClick }) {
@@ -12474,6 +12474,10 @@
 
                         this.e_mcr_info_size.textContent = format_bytes(this.msgattr.file_attr.size);
 
+                        // ===== 注册到 panel.attachments =====
+                        if (!this.panel.attachments) this.panel.attachments = [];
+                        this.panel.attachments.push(this.msgattr);
+
                         this.e_mcr_icon = this.e_mcr.querySelector(":scope span"); // 点击开始下载
                         this.e_mcr_icon.addEventListener("click", (event) => {
                             if (!this.msgattr.is_sent) return
@@ -12698,7 +12702,7 @@
             }
 
             load_online_users(users) {
-                // ===== 1️⃣ 初始化左右框架（只做一次） =====
+                // ===== 初始化左右框架 =====
                 if (!this.e_online_members_wrapper) {
                     const html = `
             <div class="chat-online-wrapper">
@@ -12718,11 +12722,11 @@
                     this.e_online_attachment_panel = this.e_online_members_wrapper.querySelector(".cap-list");
                 }
 
-                // ===== 2️⃣ 清空旧数据 =====
+                // 清空旧数据
                 this.e_online_users_list.innerHTML = "";
                 this.e_online_attachment_panel.innerHTML = "";
 
-                // ===== 3️⃣ 渲染在线成员 =====
+                // ===== 渲染在线成员 =====
                 users.forEach(i => {
                     const html = `
             <div class="chat-session-onlineusers-item">
@@ -12737,7 +12741,6 @@
                     const online_status_dot = onlineusers_item.querySelector(":scope span.chat-session-onlineusers-item-online-status");
                     online_status_dot.dataset.onlineStatus = i.status === dashboardwrappers.ChatDashboardWrapper.online_status.online ? "online" : "offline";
 
-                    // 点击菜单
                     onlineusers_item.addEventListener("click", (event) => {
                         const rect = event.target.getBoundingClientRect();
                         const items = [{
@@ -12753,7 +12756,7 @@
                     });
                 });
 
-                // ===== 4️⃣ 渲染附件列表 =====
+                // ===== 渲染附件列表 =====
                 const attachments = this.panel.attachments || [];
                 attachments.forEach(msgattr => {
                     const div = document.createElement("div");
@@ -12763,11 +12766,12 @@
                         <button class="download-btn">下载</button>
                     `;
                     div.querySelector(".download-btn").addEventListener("click", () => {
-                        trigger_file_download(msgattr); // 调用 FileMsg 下载逻辑
+                        trigger_file_download(msgattr);
                     });
                     this.e_online_attachment_panel.appendChild(div);
                 });
             }
+
 
 
 
