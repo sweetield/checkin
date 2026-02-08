@@ -11689,18 +11689,19 @@
                     // 选中 / 取消选中
                     // =========================
                     select() {
-                        if (this.is_selected) return;
-
-                        // 取消其它消息的选中
+                        // 1️⃣ 先清除其他消息选中状态
                         if (this.contentpage && this.contentpage.clear_all_selected_msgs) {
                             this.contentpage.clear_all_selected_msgs();
                         }
 
+                        // 2️⃣ 标记自己为选中
                         this.is_selected = true;
                         this.e_container.classList.add("selected");
 
+                        // 3️⃣ 显示操作条（每次都显示，不受 is_selected 限制）
                         this.show_actionbar();
                     }
+
 
                     unselect() {
                         if (!this.is_selected) return;
