@@ -48,6 +48,20 @@
             100% { box-shadow: 0 8px 20px rgba(59,130,246,0.18), inset 0 1px 0 rgba(255,255,255,0.6); }
         }
 
+        /* =================附件面板 ================= */
+        .chat-session-files {
+            position: absolute;
+            top: 48px;
+            right: 0;
+            width: 260px;
+            max-height: 60%;
+            overflow-y: auto;
+            background: var(--panel-bg, #fff);
+            border-left: 1px solid rgba(0,0,0,.08);
+            z-index: 1000;
+        }
+
+
         /* ================= 选择消息出现菜单 ================= */
 
         /* 选中高亮 */
@@ -9300,11 +9314,13 @@
                 this.e_msgflow_mark_files = document.createElement("div");
                 this.e_msgflow_mark_files.className = "chat-session-files hidden";
 
-                this.e_msgflow_wrap.appendChild(this.e_msgflow_mark_files);
+                this.chat_rect.appendChild(this.e_msgflow_mark_files);
+
 
                 // 查看在线成员
                 if (this.is_group()) {
                     this.e_header_info_clickmark.addEventListener("click", (event) => {
+                        event.stopPropagation(); // ⭐⭐⭐ 必须
                         if (this.e_msgflow_mark_onlineusers.classList.contains("hidden")) {
                             this.fetch_online_users();
                         } else {
