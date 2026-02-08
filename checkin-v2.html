@@ -3223,10 +3223,12 @@
         /* 消息外层容器 */
         .chat-message {
             display: flex;
-            flex-direction: column; /* 垂直排列：内容+操作条 */
-            width: 100%;
+            flex-direction: column; /* 内容+操作条垂直排列 */
+            width: auto;            /* 根据内容自适应宽度 */
+            max-width: 60%;         /* 限制最大宽度，避免太长 */
             margin: 4px 0;
         }
+
 
 
         ul .chat-message {
@@ -3280,7 +3282,10 @@
             justify-content: right;
         }
 
-
+        .sent-by-me .chat-message-content-container {
+            padding-right: 0;
+            padding-left: 10%;
+        }
 
         .chat-message-content-container.sys-msg {
             padding-right: 0;
