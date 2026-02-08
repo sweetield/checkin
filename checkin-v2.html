@@ -9321,6 +9321,7 @@
                     this.e_header_info_clickmark.addEventListener("click", (event) => {
                         if (this.e_msgflow_mark_onlineusers.classList.contains("hidden")) {
                             this.fetch_online_users();
+                            this.renderAttachments(chatApi, subviews.Chat.receiver_type.group, gid, ceid); // 右列附件
                         } else {
                             this.e_msgflow_mark_onlineusers.classList.add("hidden");
                         }
@@ -12774,11 +12775,7 @@
                 });
             }
 
-            /* ================= 使用 ================= */
-            // 点击群聊加载成员和附件
-            const chatApi = new Chat(client);
-            fetch_online_users(); // 左列成员
-            renderAttachments(chatApi, subviews.Chat.receiver_type.group, gid, ceid); // 右列附件
+            
 
 
 
