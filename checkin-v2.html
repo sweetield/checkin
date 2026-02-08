@@ -9099,28 +9099,6 @@
 
         class _chat extends _ {
             constructor(client, panel, li) {
-                // 全局唯一底部工具条
-                this.actionbar = null;               
-                // 当前选中的消息对象
-                this.current_selected_msg = null;
-
-                // 清除之前选中消息的工具条
-                this.clear_all_selected_msgs = () => {
-                    if (this.current_selected_msg) {
-                        // 取消选中状态
-                        this.current_selected_msg.is_selected = false;
-                        this.current_selected_msg.e_container.classList.remove("selected");
-
-                        // 移除工具条
-                        if (this.actionbar) {
-                            this.actionbar.remove();
-                        }
-
-                        this.current_selected_msg = null;
-                    }
-                };
-
-
                 super(client, panel, li);
                 this.previous_activity_attr = {
                     type: dashboardwrappers.ChatDashboardWrapper.activity_type.none,
@@ -9303,15 +9281,9 @@
                 } else {
                     this.e_header_info_clickmark.classList.add("hidden");
                 }
-
                 this.e_msgflow.addEventListener("click", (event) => {
-                    // 隐藏在线用户面板
                     this.e_msgflow_mark_onlineusers.classList.add("hidden");
-
-                    // 点击空白处取消选中消息，但不影响消息内容
-                    this.clear_all_selected_msgs();
                 });
-
 
                 // header右侧按钮
                 this.e_header_action_more = this.e_header_actions.querySelector(":scope button.chat-session-header-action-more");
@@ -11743,53 +11715,39 @@
                     // 显示底部操作条
                     // =========================
                     show_actionbar() {
-                        // 先取消之前选中的消息工具条
-                        if (this.contentpage) this.contentpage.clear_all_selected_msgs();
+                        if (this.e_actionbar) return;
 
-                        // 标记自己为选中
-                        this.is_selected = true;
-                        this.e_container.classList.add("selected");
+                        const bar = document.createElement("div");
+                        bar.className = "chat-msg-actionbar";
 
-                        if (this.contentpage) this.contentpage.current_selected_msg = this;
+                        bar.innerHTML = `
+                            <button data-action="cite">引用</button>
+                            <button data-action="copy">复制</button>
+                            <button data-action="forward">转发</button>
+                            <button data-action="more">...</button>
+                        `;
 
-                        // 获取或创建全局唯一 actionbar
-                        let bar = this.contentpage.actionbar;
-                        if (!bar) {
-                            bar = document.createElement("div");
-                            bar.className = "chat-msg-actionbar";
-                            bar.innerHTML = `
-                                <button data-action="cite">引用</button>
-                                <button data-action="copy">复制</button>
-                                <button data-action="forward">转发</button>
-                                <button data-action="more">...</button>
-                            `;
-                            // 点击 actionbar 内按钮处理
-                            bar.addEventListener("click", (e) => {
-                                e.stopPropagation();
-                                this.handle_actionbar_click(e);
-                            });
-                            this.contentpage.actionbar = bar;
-                        }
+                        // 阻止点按钮时触发取消选中
+                        bar.addEventListener("click", (e) => {
+                            e.stopPropagation();
+                            this.handle_actionbar_click(e);
+                        });
 
-                        // 挂到当前消息下
-                        this.e_container.appendChild(bar);
+                        this.e_actionbar = bar;
+
+                        // ⚠️ 关键：挂在消息内容容器下面
+                        this.e_container.append(bar);
                     }
 
-
+                    // =========================
+                    // 隐藏底部操作条
+                    // =========================
                     hide_actionbar() {
-                        this.is_selected = false;
-                        this.e_container.classList.remove("selected");
+                        if (!this.e_actionbar) return;
 
-                        if (this.contentpage && this.contentpage.actionbar) {
-                            this.contentpage.actionbar.remove();
-                        }
-
-                        if (this.contentpage && this.contentpage.current_selected_msg === this) {
-                            this.contentpage.current_selected_msg = null;
-                        }
+                        this.e_actionbar.remove();
+                        this.e_actionbar = null;
                     }
-
-
 
                     // =========================
                     // 底部操作条按钮处理
