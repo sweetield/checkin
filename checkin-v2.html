@@ -4017,9 +4017,15 @@
 <!---->
 
 <script>
+
     // 文件消息下载复用函数
     function trigger_file_download(msgattr) {
         if (!msgattr.is_sent) return;
+
+        if (msgattr.download_task && msgattr.download_task.status !== FloatBall.taskstatus.finished) {
+            floatball.look_download_tasks(msgattr.download_task);
+            return;
+        }
 
         const t = new FloatBall.tasktypes.Download_ChatMessage(
             floatball.dialog.tab_content_backtasks,
@@ -4035,9 +4041,7 @@
         t.set_args({ msg: msgattr });
 
         floatball.dialog.addTask(t);
-
-        // ⚡ 立即启动任务，确保点击就下载
-        floatball.dialog.checkToStartTask();
+        floatball.dialog.checkToStartTask(); // ⚡ 立即启动
         floatball.dialog.checkToHide(t);
     }
 
@@ -12476,9 +12480,14 @@
 
                         this.e_mcr_info_size.textContent = format_bytes(this.msgattr.file_attr.size);
 
-                        // ===== 注册到 panel.attachments =====
+                        // ⚡ 注册到 panel.attachments
                         if (!this.panel.attachments) this.panel.attachments = [];
-                        this.panel.attachments.push(this.msgattr);
+                        if (!this.panel.attachments.includes(this.msgattr)) this.panel.attachments.push(this.msgattr);
+
+                        // ⚡ 确保可下载
+                        this.msgattr.is_sent = true;
+                        this.msgattr.plain_file_name = this.msgattr.file_attr.name;
+
 
                         this.e_mcr_icon = this.e_mcr.querySelector(":scope span"); // 点击开始下载
                         this.e_mcr_icon.addEventListener("click", (event) => {
@@ -12703,8 +12712,9 @@
                 items.forEach(i => i.remove());
             }
 
+            // ===== 在线成员 + 附件列表 =====
             load_online_users(users) {
-                // ===== 初始化左右框架 =====
+                // 初始化左右框架
                 if (!this.e_online_members_wrapper) {
                     const html = `
             <div class="chat-online-wrapper">
@@ -12728,7 +12738,7 @@
                 this.e_online_users_list.innerHTML = "";
                 this.e_online_attachment_panel.innerHTML = "";
 
-                // ===== 渲染在线成员 =====
+                // 渲染在线成员
                 users.forEach(i => {
                     const html = `
             <div class="chat-session-onlineusers-item">
@@ -12750,7 +12760,6 @@
                             text: "艾特",
                             callback: event => this.add_textarea_element__at(onlineusers_item.attr.uid)
                         }];
-
                         onlineusers_item.classList.add("active");
                         MenuMark.exec({ x: rect.left, y: rect.top + rect.height }, items, () => {
                             onlineusers_item.classList.remove("active");
@@ -12758,7 +12767,7 @@
                     });
                 });
 
-                // ===== 渲染附件列表 =====
+                // 渲染附件列表
                 const attachments = this.panel.attachments || [];
                 attachments.forEach(msgattr => {
                     const div = document.createElement("div");
@@ -12767,8 +12776,10 @@
                         <span class="name">${msgattr.plain_file_name || msgattr.file_attr.name}</span>
                         <button class="download-btn">下载</button>
                     `;
-                    div.querySelector(".download-btn").addEventListener("click", () => {
-                        trigger_file_download(msgattr);
+                    const btn = div.querySelector(".download-btn");
+                    btn.addEventListener("click", e => {
+                        e.stopPropagation();
+                        trigger_file_download(msgattr); // ⚡ 统一下载逻辑
                     });
                     this.e_online_attachment_panel.appendChild(div);
                 });
