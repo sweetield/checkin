@@ -47,7 +47,39 @@
             50%  { box-shadow: 0 12px 30px rgba(59,130,246,0.28), inset 0 1px 0 rgba(255,255,255,0.6); }
             100% { box-shadow: 0 8px 20px rgba(59,130,246,0.18), inset 0 1px 0 rgba(255,255,255,0.6); }
         }
- 
+        /* ================= 附件列表 ================= */
+        .chat-online-wrapper {
+            display: flex;
+            border: 1px solid #ddd;
+            height: 300px; /* 你可以根据实际调整 */
+            overflow: hidden;
+        }
+
+        .online-users-column, .online-attachments-column {
+            flex: 1;
+            overflow-y: auto;
+            padding: 4px;
+            border-right: 1px solid #eee;
+        }
+
+        .online-attachments-column {
+            border-right: none;
+        }
+
+        .online-users-column .chat-session-onlineusers-item,
+        .online-attachments-column .cap-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 2px 4px;
+            cursor: pointer;
+        }
+
+        .online-users-column .chat-session-onlineusers-item:hover,
+        .online-attachments-column .cap-item:hover {
+            background: #f0f0f0;
+        }
+
 
         /* ================= 选择消息出现菜单 ================= */
 
@@ -3985,6 +4017,31 @@
 <!---->
 
 <script>
+    // 文件消息下载复用函数
+    function trigger_file_download(msgattr) {
+        if (!msgattr.is_sent) return;
+
+        if (msgattr.download_task &&
+            msgattr.download_task.status !== FloatBall.taskstatus.finished) {
+            floatball.look_download_tasks(msgattr.download_task);
+            return;
+        }
+
+        const t = new FloatBall.tasktypes.Download_ChatMessage(
+            floatball.dialog.tab_content_backtasks,
+            { onfinished(){}, onprogress(){}, onfailed(){} }
+        );
+
+        msgattr.download_task = t;
+
+        floatball.dialog.addTask(t);
+        t.set_name(msgattr.plain_file_name);
+        t.set_args({ msg: msgattr });
+
+        floatball.dialog.checkToStartTask();
+    }
+
+
     function showChatToast({ title, content, onClick }) {
         const container = document.getElementById("chat-toast-container");
         if (!container) return;
@@ -12642,69 +12699,73 @@
 
             load_online_users(users) {
                 users.forEach(i => {
-                    let html = `
+                const html = `
             <div class="chat-session-onlineusers-item">
-            <span class="chat-session-onlineusers-item-online-status">●</span>
-            <span class="chat-session-onlineusers-item-name">${i.uid}</span>
+                <span class="chat-session-onlineusers-item-online-status">●</span>
+                <span class="chat-session-onlineusers-item-name">${i.uid}</span>
             </div>
             `;
-                    this.e_msgflow_mark_onlineusers.insertAdjacentHTML("beforeend", html);
-                    const onlineusers_item = this.e_msgflow_mark_onlineusers.querySelector(":scope div.chat-session-onlineusers-item:last-of-type");
-                    onlineusers_item.attr = i;
-                    const online_status_dot = onlineusers_item.querySelector(":scope span.chat-session-onlineusers-item-online-status");
-                    if (i.status === dashboardwrappers.ChatDashboardWrapper.online_status.online) {
-                        online_status_dot.dataset.onlineStatus = "online";
-                    } else {
-                        online_status_dot.dataset.onlineStatus = "offline";
-                    }
+                this.e_online_users_list.insertAdjacentHTML("beforeend", html);
+                const onlineusers_item = this.e_online_users_list.querySelector(":scope div.chat-session-onlineusers-item:last-of-type");
+                onlineusers_item.attr = i;
+                const online_status_dot = onlineusers_item.querySelector(":scope span.chat-session-onlineusers-item-online-status");
+                online_status_dot.dataset.onlineStatus = i.status === dashboardwrappers.ChatDashboardWrapper.online_status.online ? "online" : "offline";
 
-                    // 菜单逻辑保持原有
-                    onlineusers_item.addEventListener("click", (event) => {
-                        const rect = event.target.getBoundingClientRect();
-                        const items = [];
-                        items.push({
-                            type: "button", text: "艾特", callback: event => {
-                                this.add_textarea_element__at(onlineusers_item.attr.uid)
-                            },
-                        });
+                onlineusers_item.addEventListener("click", (event) => {
+                    const rect = event.target.getBoundingClientRect();
+                    const items = [{
+                        type: "button", text: "艾特", callback: event => {
+                            this.add_textarea_element__at(onlineusers_item.attr.uid)
+                        }
+                    }];
 
-                        onlineusers_item.classList.add("active");
-                        MenuMark.exec({x: rect.left, y: rect.top + rect.height,}, items, () => {
-                            onlineusers_item.classList.remove("active");
-                        });
+                    onlineusers_item.classList.add("active");
+                    MenuMark.exec({x: rect.left, y: rect.top + rect.height}, items, () => {
+                        onlineusers_item.classList.remove("active");
                     });
                 });
+            });
+
 
                 // ===== 在在线人员列表下添加附件面板 =====
-                if (!this.e_online_attachment_panel) {
+                if (!this.e_online_members_wrapper) {
                     const html = `
-            <div class="chat-online-attachments-panel">
-                <div class="cap-title">📎 附件</div>
-                <div class="cap-list"></div>
-            </div>
-            `;
+                <div class="chat-online-wrapper">
+                    <div class="online-users-column">
+                        <div class="online-users-list"></div>
+                    </div>
+                    <div class="online-attachments-column">
+                        <div class="cap-title">📎 附件</div>
+                        <div class="cap-list"></div>
+                    </div>
+                </div>
+                `;
                     this.e_msgflow_mark_onlineusers.insertAdjacentHTML("afterend", html);
-                    this.e_online_attachment_panel = this.e_msgflow_mark_onlineusers.nextElementSibling;
+                    this.e_online_members_wrapper = this.e_msgflow_mark_onlineusers.nextElementSibling;
+
+                    this.e_online_users_list = this.e_online_members_wrapper.querySelector(".online-users-list");
+                    this.e_online_attachment_panel = this.e_online_members_wrapper.querySelector(".cap-list");
                 }
 
+
                 // 渲染附件列表
-                const list = this.e_online_attachment_panel.querySelector(".cap-list");
+                const list = this.e_online_attachment_panel;
                 list.innerHTML = "";
 
-                const attachments = this.panel.attachments || []; // 之前 FileMsg 注册的 attachments
+                const attachments = this.panel.attachments || [];
                 attachments.forEach(msgattr => {
                     const div = document.createElement("div");
                     div.className = "cap-item";
                     div.innerHTML = `
-                        <span>📄</span>
                         <span class="name">${msgattr.plain_file_name || msgattr.file_attr.name}</span>
-                        <span class="size">${format_bytes(msgattr.file_attr.size)}</span>
+                        <button class="download-btn">下载</button>
                     `;
-                    div.addEventListener("click", () => {
-                        trigger_file_download(msgattr); // 调用你现有的下载逻辑
+                    div.querySelector(".download-btn").addEventListener("click", () => {
+                        trigger_file_download(msgattr); // 调用 FileMsg 的下载逻辑
                     });
                     list.appendChild(div);
                 });
+
             }
 
 
