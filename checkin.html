@@ -11544,16 +11544,22 @@
                     // =========================
                     // 点击 ... 打开完整菜单
                     // =========================
-                    open_more_menu() {
-                        const rect = this.e_container.getBoundingClientRect();
+                    open_more_menu(btn) {
+                        if (!btn) return;
+
+                        const rect = btn.getBoundingClientRect();
                         const items = this.build_context_menu_items();
 
-                        MenuMark.exec(
-                            { x: rect.left, y: rect.bottom },
-                            items,
-                            () => {}
-                        );
+                        // 用 requestAnimationFrame 保证 DOM 已渲染完成
+                        requestAnimationFrame(() => {
+                            MenuMark.exec(
+                                { x: rect.left, y: rect.bottom },
+                                items,
+                                () => {} // 菜单关闭回调
+                            );
+                        });
                     }
+
 
                     fill_marks() {
                         let html = `
@@ -11743,17 +11749,19 @@
                     // 显示底部操作条
                     // =========================
                     show_actionbar() {
-                        // 先移除页面上已有操作条
+                        // 1️⃣ 移除已有操作条
                         document.querySelectorAll(".chat-msg-actionbar").forEach(bar => {
                             if (bar.msgobj) bar.msgobj.e_actionbar = null;
                             bar.remove();
                         });
 
+                        // 2️⃣ 创建操作条
                         const bar = document.createElement("div");
                         bar.className = "chat-msg-actionbar";
                         bar.msgobj = this;
                         this.e_actionbar = bar;
 
+                        // 3️⃣ 构建按钮列表
                         const items = [];
 
                         // 引用
@@ -11787,7 +11795,7 @@
                             }
                         });
 
-                        // 删除/撤回和编辑（只自己发送的消息）
+                        // 自己的消息才可编辑/撤回/删除
                         if (this.sent_by_me) {
                             const delText = Date.now() / 1000 - this.msgattr.sent_time > seconds_of_minutes(10) ? "删除" : "撤回";
                             items.push({
@@ -11811,27 +11819,40 @@
                             });
                         }
 
-                        // 更多
+                        // 更多菜单
                         items.push({
                             text: "...",
-                            callback: () => this.open_more_menu()
+                            callback: (btn) => this.open_more_menu(btn)
                         });
 
-                        // 渲染
+                        // 4️⃣ 渲染按钮
                         for (const item of items) {
                             const btn = document.createElement("button");
                             btn.textContent = item.text;
                             if (item.disabled) btn.disabled = true;
-                            btn.addEventListener("click", e => {
-                                e.stopPropagation();
-                                item.callback();
-                                this.hide_actionbar();
-                            });
+
+                            // 对 “...” 按钮特殊处理，传 btn 给 open_more_menu
+                            if (item.text === "...") {
+                                btn.addEventListener("click", e => {
+                                    e.stopPropagation();
+                                    item.callback(btn);  // 传入按钮元素
+                                });
+                            } else {
+                                btn.addEventListener("click", e => {
+                                    e.stopPropagation();
+                                    item.callback();
+                                    // 非 ... 按钮点击后隐藏操作条
+                                    this.hide_actionbar();
+                                });
+                            }
+
                             bar.appendChild(btn);
                         }
 
+                        // 5️⃣ 添加到消息元素
                         this.msgelement.append(bar);
                     }
+
 
 
 
@@ -11899,7 +11920,7 @@
                                 break;
 
                             case "more":
-                                this.open_more_menu();
+                                this.open_more_menu(btn); // 传入按钮元素
                                 break;
                         }
 
