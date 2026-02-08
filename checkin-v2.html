@@ -12681,13 +12681,14 @@
                     wrapper.style.width = "200px"; 
                     wrapper.style.maxHeight = `${this.e_msgflow_wrap.clientHeight}px`;
                     wrapper.style.overflowY = "auto";
-                    wrapper.style.background = this.palette.rect_bg;
+                    wrapper.style.background = this.panel?.palette?.rect_bg || "#f0f0f0"; // ✅ 防止报错
                     wrapper.style.fontSize = "14px";
                     wrapper.style.lineHeight = "1.6";
                     wrapper.style.color = "#333";
                     wrapper.style.padding = "4px 2px";
                     wrapper.style.border = "1px solid #ccc";
                     wrapper.style.borderRadius = "4px";
+
 
                     // 在线成员容器
                     const usersList = document.createElement("div");
