@@ -2956,35 +2956,24 @@
         }
 
         .chat-session-onlineusers-item {
-            padding: 4px 8px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
+            padding: 6px 6px;
+            margin: 4px 0;
+            border-radius: 2px;
             cursor: pointer;
-            font-size: 14px; /* 与原成员列表一致 */
-            line-height: 1.6;
-            color: #333;
-            background: #f7f7f7; /* 原成员列表背景 */
-            border-radius: 4px;
-            margin-bottom: 2px;
+            transition: background-color 0.1s, transform 0.1s;
+            user-select: none;
+
+            display: flex;
+            flex-direction: row;
+            gap: 4px;
+
+            align-items: center;
+
         }
 
         .chat-session-onlineusers-item:hover {
-            background: #e6f0ff; /* 原 hover 效果 */
+            background-color: rgba(0, 123, 255, 0.15);
         }
-
-        .online-users-attachments {
-            margin-top: 6px;
-            font-size: 14px;
-            line-height: 1.6;
-        }
-
-        .cap-item .download-btn {
-            margin-left: 6px;
-            font-size: 13px;
-        }
-
-
 
         /*.chat-session-onlineusers-item:active {*/
         /*    background-color: rgba(0, 123, 255, 0.4);*/
@@ -12685,17 +12674,12 @@
                 if (!this.e_online_members_wrapper) {
                     this.e_online_members_wrapper = this.e_msgflow_mark_onlineusers;
 
-                    // 样式保持原成员列表风格
+                    // 设置容器宽度和滚动
                     this.e_online_members_wrapper.style.width = "200px"; // 可调窄
-                    this.e_online_members_wrapper.style.maxHeight = `${this.e_msgflow_wrap.clientHeight}px`; // 高度延伸到输入框上方
+                    this.e_online_members_wrapper.style.maxHeight = "400px"; // 可随聊天框调整
                     this.e_online_members_wrapper.style.overflowY = "auto";
-                    this.e_online_members_wrapper.style.background = this.palette.rect_bg; // 原消息背景色
-                    this.e_online_members_wrapper.style.fontSize = "14px"; // 与原列表一致
-                    this.e_online_members_wrapper.style.lineHeight = "1.6";
-                    this.e_online_members_wrapper.style.color = "#333"; // 与原成员列表一致
-                    this.e_online_members_wrapper.style.padding = "4px 2px";
-                    this.e_online_members_wrapper.style.border = "1px solid #ccc";
-                    this.e_online_members_wrapper.style.borderRadius = "4px";
+                    this.e_online_members_wrapper.style.border = "1px solid #ddd";
+                    this.e_online_members_wrapper.style.padding = "2px";
 
                     // 附件列表容器直接添加到成员列表末尾
                     const attachContainer = document.createElement("div");
@@ -12748,8 +12732,7 @@
                     div.style.display = "flex";
                     div.style.justifyContent = "space-between";
                     div.style.alignItems = "center";
-                    div.style.padding = "4px 0";
-                    div.style.cursor = "pointer";
+                    div.style.padding = "2px 0";
 
                     div.innerHTML = `
                         <span class="name" title="${msgattr.plain_file_name || msgattr.file_attr.name}">
@@ -12763,7 +12746,6 @@
                     });
                     this.e_online_attachment_panel.appendChild(div);
                 });
-
 
             }
 
