@@ -76,6 +76,22 @@
             background: #e0e0e0;
         }
 
+        .chat-msg-toolbar {
+            position: absolute;
+            left: 0;
+            bottom: -32px;
+            display: flex;
+            gap: 6px;
+            padding: 4px 8px;
+            background: rgba(30,30,30,.85);
+            border-radius: 6px;
+            z-index: 10;
+        }
+
+        .chat-msg-toolbar.hidden {
+            display: none;
+        }
+
          /* ================= 消息冒泡 - 顶部右上角 ================= */
         #chat-toast-container {
             position: fixed;
@@ -3957,6 +3973,14 @@
 <!---->
 
 <script>
+    // 点击空白处，选中的菜单全关（必须有）
+    document.addEventListener("click", () => {
+        if (current_open_toolbar) {
+            current_open_toolbar.classList.add("hidden");
+            current_open_toolbar = null;
+        }
+    });
+
     function showChatToast({ title, content, onClick }) {
         const container = document.getElementById("chat-toast-container");
         if (!container) return;
@@ -11240,7 +11264,9 @@
             }
 
             static msgtypes = (() => {
+                let current_open_toolbar = null;
                 class _ {
+                    
                     constructor(panel, contentpage, msgattr, msgattrseniors,) {
                         this.panel = panel;
                         this.contentpage = contentpage; // 注意可能为null直到点击mainaction填充msgs时，例如在后台创建的msgtype对象
@@ -11379,7 +11405,37 @@
                         } else {
                             this.msgelement.append(this.e_container);
                         }
+                    this._init_toolbar();
+                    this._init_toolbar_event();
+
                     }
+                    _init_toolbar() {
+                        const html = `
+                    <div class="chat-msg-toolbar hidden">
+                        <span class="tool-btn">↩️</span>
+                        <span class="tool-btn">📋</span>
+                        <span class="tool-btn">⋯</span>
+                    </div>
+                    `;
+                        this.e_container.insertAdjacentHTML("beforeend", html);
+                        this.e_toolbar = this.e_container.querySelector(":scope .chat-msg-toolbar");
+                    }
+
+                    _init_toolbar_event() {
+                        this.e_container.addEventListener("click", (e) => {
+                            e.stopPropagation();
+
+                            // 关掉之前的
+                            if (current_open_toolbar && current_open_toolbar !== this.e_toolbar) {
+                                current_open_toolbar.classList.add("hidden");
+                            }
+
+                            // 打开当前的
+                            this.e_toolbar.classList.remove("hidden");
+                            current_open_toolbar = this.e_toolbar;
+                        });
+                    }
+
                     // =========================
                     // 构建右键 / 更多 菜单项
                     // =========================
