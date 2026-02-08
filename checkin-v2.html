@@ -4021,12 +4021,6 @@
     function trigger_file_download(msgattr) {
         if (!msgattr.is_sent) return;
 
-        // 如果已有下载任务且未完成，直接查看任务
-        if (msgattr.download_task && msgattr.download_task.status !== FloatBall.taskstatus.finished) {
-            floatball.look_download_tasks(msgattr.download_task);
-            return;
-        }
-
         const t = new FloatBall.tasktypes.Download_ChatMessage(
             floatball.dialog.tab_content_backtasks,
             {
