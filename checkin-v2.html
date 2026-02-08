@@ -60,11 +60,15 @@
         .chat-msg-actionbar {
             display: flex;
             gap: 6px;
-            margin: 4px 0 0 0;      /* 操作条距离消息内容有间距 */
-            align-self: flex-start;  /* 操作条宽度随内容自适应 */
+            margin: 4px 0 0 0;       /* 操作条距离消息内容上间距 */
+            align-self: flex-start;   /* 默认靠左 */
         }
 
-
+        /* 自己消息操作条靠右 */
+        .sent-by-me .chat-msg-actionbar {
+            align-self: flex-end;
+        }
+        /* 操作条按钮 */
         .chat-msg-actionbar button {
             font-size: 12px;
             padding: 4px 8px;
@@ -3222,9 +3226,9 @@
     <style>
         /* 消息外层容器 */
         .chat-message {
-            display: flex;          /* 横向排列消息内容和可能的其他元素（比如头像） */
-            flex-direction: column; /* 内容 + 操作条垂直排列 */
-            align-items: flex-start;/* 消息靠左，短消息不会拉满整行 */
+            display: flex;
+            flex-direction: column;  /* 消息内容 + 操作条垂直排列 */
+            align-items: flex-start; /* 所有消息左对齐 */
             margin: 4px 0;
         }
 
@@ -3249,13 +3253,13 @@
 
         /* 消息内容容器 */
         .chat-message-content-container {
-            display: inline-block;  /* 根据内容自适应宽度 */
-            max-width: 60%;         /* 可限制最大宽度，防止太长撑满整屏 */
+            display: inline-block;   /* 根据内容自适应宽度 */
+            max-width: 60%;          /* 最大宽度 */
             padding: 6px 12px;
             border-radius: 8px;
             background: #f5f5f5;
             box-sizing: border-box;
-            word-break: break-word; /* 避免单词超出边框 */
+            word-break: break-word;
         }
 
         .chat-message-content-container.active {
@@ -3279,9 +3283,10 @@
             justify-content: right;
         }
 
+        /* 发自己消息靠右 */
         .sent-by-me .chat-message-content-container {
-            padding-right: 0;
-            padding-left: 10%;
+            background: #cce5ff;
+            align-self: flex-end;     /* 自己消息靠右 */
         }
 
         .chat-message-content-container.sys-msg {
