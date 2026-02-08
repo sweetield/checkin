@@ -48,37 +48,48 @@
             100% { box-shadow: 0 8px 20px rgba(59,130,246,0.18), inset 0 1px 0 rgba(255,255,255,0.6); }
         }
         /* ================= 附件列表 ================= */
+            /* 整个在线成员 + 附件容器 */
         .chat-online-wrapper {
             display: flex;
+            flex-direction: column; /* 垂直排列 */
+            width: 200px;           /* 可以自己调窄一点 */
+            max-height: 400px;      /* 根据聊天框高度可调 */
             border: 1px solid #ddd;
-            height: 300px; /* 你可以根据实际调整 */
-            overflow: hidden;
+            background: #f9f9f9;
+            font-size: 13px;
         }
 
-        .online-users-column, .online-attachments-column {
-            flex: 1;
+        /* 名单列表和附件列表各自占固定高度，可滚动 */
+        .online-users-list,
+        .cap-list {
+            max-height: 200px;      /* 可根据需求调节 */
             overflow-y: auto;
+            border-top: 1px solid #eee;
             padding: 4px;
-            border-right: 1px solid #eee;
         }
 
-        .online-attachments-column {
-            border-right: none;
+        /* 标题 */
+        .cap-title {
+            font-weight: bold;
+            padding: 4px;
+            border-bottom: 1px solid #eee;
         }
 
-        .online-users-column .chat-session-onlineusers-item,
-        .online-attachments-column .cap-item {
+        /* 列表项 */
+        .chat-session-onlineusers-item,
+        .cap-item {
+            padding: 2px 4px;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 2px 4px;
             cursor: pointer;
         }
 
-        .online-users-column .chat-session-onlineusers-item:hover,
-        .online-attachments-column .cap-item:hover {
-            background: #f0f0f0;
+        .cap-item button.download-btn {
+            margin-left: 5px;
+            font-size: 12px;
         }
+
 
 
         /* ================= 选择消息出现菜单 ================= */
@@ -12661,26 +12672,30 @@
                 // 初始化左右框架
                 if (!this.e_online_members_wrapper) {
                     const html = `
-            <div class="chat-online-wrapper">
-                <div class="online-users-column">
-                    <div class="online-users-list"></div>
+                <div class="chat-online-wrapper">
+                    <div class="online-users-column">
+                        <div class="online-users-list"></div>
+                    </div>
+                    <div class="online-attachments-column">
+                        <div class="cap-title">📎 附件</div>
+                        <div class="cap-list"></div>
+                    </div>
                 </div>
-                <div class="online-attachments-column">
-                    <div class="cap-title">📎 附件</div>
-                    <div class="cap-list"></div>
-                </div>
-            </div>
-            `;
+                `;
                     this.e_msgflow_mark_onlineusers.insertAdjacentHTML("afterend", html);
                     this.e_online_members_wrapper = this.e_msgflow_mark_onlineusers.nextElementSibling;
 
                     this.e_online_users_list = this.e_online_members_wrapper.querySelector(".online-users-list");
                     this.e_online_attachment_panel = this.e_online_members_wrapper.querySelector(".cap-list");
 
+                    // ⚡ 设置垂直布局
                     this.e_online_members_wrapper.style.display = "flex";
+                    this.e_online_members_wrapper.style.flexDirection = "column"; // 垂直排列
+                    this.e_online_members_wrapper.style.width = "200px";           // 宽度可调窄
                     this.e_online_users_list.style.overflowY = "auto";
                     this.e_online_attachment_panel.style.overflowY = "auto";
                 }
+
 
                 // 清空旧数据
                 this.e_online_users_list.innerHTML = "";
