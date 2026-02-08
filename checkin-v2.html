@@ -11717,6 +11717,14 @@
                     show_actionbar() {
                         if (this.e_actionbar) return;
 
+                        // ✅ 先隐藏页面上其他消息的操作条
+                        if (this.contentpage && this.contentpage.clear_all_actionbars) {
+                            this.contentpage.clear_all_actionbars();
+                        } else {
+                            // 没有全局方法也可以直接隐藏页面上已有的操作条
+                            document.querySelectorAll(".chat-msg-actionbar").forEach(bar => bar.remove());
+                        }
+
                         const bar = document.createElement("div");
                         bar.className = "chat-msg-actionbar";
 
@@ -11727,7 +11735,6 @@
                             <button data-action="more">...</button>
                         `;
 
-                        // 阻止点按钮时触发取消选中
                         bar.addEventListener("click", (e) => {
                             e.stopPropagation();
                             this.handle_actionbar_click(e);
@@ -11735,9 +11742,10 @@
 
                         this.e_actionbar = bar;
 
-                        // ⚠️ 关键：挂在消息内容容器下面
+                        // 挂在消息内容容器下面
                         this.e_container.append(bar);
                     }
+
 
                     // =========================
                     // 隐藏底部操作条
