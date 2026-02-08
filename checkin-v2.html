@@ -48,6 +48,34 @@
             100% { box-shadow: 0 8px 20px rgba(59,130,246,0.18), inset 0 1px 0 rgba(255,255,255,0.6); }
         }
 
+        /* ================= 选择消息出现菜单 ================= */
+
+        /* 选中高亮 */
+        .chat-message-content-container.selected {
+            outline: 2px solid rgba(80, 160, 255, 0.5);
+            border-radius: 8px;
+        }
+
+        /* 底部操作条 */
+        .chat-msg-actionbar {
+            display: flex;
+            gap: 6px;
+            margin-top: 6px;
+        }
+
+        .chat-msg-actionbar button {
+            font-size: 12px;
+            padding: 4px 8px;
+            border-radius: 6px;
+            border: none;
+            background: #f0f0f0;
+            cursor: pointer;
+        }
+
+        .chat-msg-actionbar button:hover {
+            background: #e0e0e0;
+        }
+
          /* ================= 消息冒泡 - 顶部右上角 ================= */
         #chat-toast-container {
             position: fixed;
@@ -11219,6 +11247,11 @@
 
                         this.msgattr = msgattr;
                         this.msgattrseniors = msgattrseniors;
+                        // =========================
+                        // 选中消息相关状态（新增）
+                        // =========================
+                        this.is_selected = false;   // 是否被选中
+                        this.e_actionbar = null;    // 底部操作条 DOM
                         if (this.is_sys_msg()) {
                             this.palette = contentpages._chat.get_message_palette(msgattr.sender, true);
                         } else {
@@ -11269,11 +11302,91 @@
                             temp_parent_element.remove();
                             this.e_container.msgobj = this;
 
+                            // =========================
+                            // 点击消息 → 选中
+                            // =========================
+                            this.e_container.addEventListener("click", (e) => {
+                                e.stopPropagation();   // 防止冒泡被全局 click 取消
+                                this.select();
+                            });
+
                             const showMenu = (event) => {
                                 const rect = this.e_container.getBoundingClientRect();
-                                const items = [];
+                                const items = this.build_context_menu_items();
 
-                                if (this.msgattr.is_sent && (!this.blur_mark || !this.blur_mark.is_visible())) {
+                                
+
+                                this.e_container.classList.add("active");
+                                MenuMark.exec({x: rect.left, y: rect.top + rect.height,}, items, () => {
+                                    this.e_container.classList.remove("active");
+                                });
+                            };
+
+                            // 菜单
+                            this.e_container.addEventListener("contextmenu", (event) => showMenu(event));
+                            if (_isMobileDevice) bindMenuForMobile(this.e_container, showMenu);
+
+                        }
+
+
+                        if (this.is_header()) {
+                            const html = `<div class="chat-message-group"></div>`;
+                            this.msgelement.insertAdjacentHTML("beforeend", html);
+                            this.e_group = this.msgelement.querySelector(":scope .chat-message-group");
+
+                            const tree_headers = [];
+                            this.e_tree_item = new TreeWidget(this.e_group, tree_headers, null, 0, false, false, this.sent_by_me, 6)
+                            const html2 = `
+<div class="chat-message-group-header">
+
+<div class="chat-message-group-header-row1">
+    <p class="chat-message-group-header-date hidden"></p>
+</div>
+
+<div class="chat-message-group-header-row2">
+    <p class="chat-message-group-header-name">${this.msgattr.sender}</p>
+</div>
+
+</div>
+`;
+                            this.e_tree_item.set_raw_header(html2);
+                            this.e_tree_item.show();
+                            this.e_tree_item.summary.style.padding = "0";
+                            this.e_tree_item.summary.style.background = "transparent";
+                            this.msgelement_li = this.e_tree_item.container_tree_items;
+
+
+                            const group_header_name = this.e_tree_item.raw_header.querySelector(":scope p.chat-message-group-header-name");
+                            group_header_name.style.color = "white";
+                            group_header_name.style.background = this.palette.name_bg;
+
+                            if (this.is_different_day && form_field_checker.ffc_int(this.msgattr.sent_time)) {
+                                const group_header_date = this.e_tree_item.raw_header.querySelector(":scope p.chat-message-group-header-date");
+                                group_header_date.textContent = format_timestamp_utc8_day_time(this.msgattr.sent_time)[0];
+                                group_header_date.classList.remove("hidden");
+                            }
+
+                            this.msgelement_li.style.margin = "0";
+                            this.msgelement_li.style.transform = "translateY(-4px)";
+
+                            this.msgelement_li.append(this.e_container);
+
+                            if (this.is_sys_msg()) {
+                                // this.e_tree_item.summary.classList.add("hidden");
+                                const group_header_row2 = this.e_tree_item.raw_header.querySelector(":scope div.chat-message-group-header-row2");
+                                group_header_row2.classList.add("hidden");
+                            }
+                        } else {
+                            this.msgelement.append(this.e_container);
+                        }
+                    }
+                    // =========================
+                    // 构建右键 / 更多 菜单项
+                    // =========================
+                    build_context_menu_items() {
+                        const items = [];
+
+                        if (this.msgattr.is_sent && (!this.blur_mark || !this.blur_mark.is_visible())) {
                                     if (dashboardwrappers.ChatDashboardWrapper.message_type_checker.is_text(this.msgattr.type) ||
                                         dashboardwrappers.ChatDashboardWrapper.message_type_checker.is_drive_item(this.msgattr.type)) {
                                         items.push(
@@ -11398,69 +11511,21 @@
 
                                 }
 
-                                this.e_container.classList.add("active");
-                                MenuMark.exec({x: rect.left, y: rect.top + rect.height,}, items, () => {
-                                    this.e_container.classList.remove("active");
-                                });
-                            };
+                        return items;
+                    }
 
-                            // 菜单
-                            this.e_container.addEventListener("contextmenu", (event) => showMenu(event));
-                            if (_isMobileDevice) bindMenuForMobile(this.e_container, showMenu);
+                    // =========================
+                    // 点击 ... 打开完整菜单
+                    // =========================
+                    open_more_menu() {
+                        const rect = this.e_container.getBoundingClientRect();
+                        const items = this.build_context_menu_items();
 
-                        }
-
-
-                        if (this.is_header()) {
-                            const html = `<div class="chat-message-group"></div>`;
-                            this.msgelement.insertAdjacentHTML("beforeend", html);
-                            this.e_group = this.msgelement.querySelector(":scope .chat-message-group");
-
-                            const tree_headers = [];
-                            this.e_tree_item = new TreeWidget(this.e_group, tree_headers, null, 0, false, false, this.sent_by_me, 6)
-                            const html2 = `
-<div class="chat-message-group-header">
-
-<div class="chat-message-group-header-row1">
-    <p class="chat-message-group-header-date hidden"></p>
-</div>
-
-<div class="chat-message-group-header-row2">
-    <p class="chat-message-group-header-name">${this.msgattr.sender}</p>
-</div>
-
-</div>
-`;
-                            this.e_tree_item.set_raw_header(html2);
-                            this.e_tree_item.show();
-                            this.e_tree_item.summary.style.padding = "0";
-                            this.e_tree_item.summary.style.background = "transparent";
-                            this.msgelement_li = this.e_tree_item.container_tree_items;
-
-
-                            const group_header_name = this.e_tree_item.raw_header.querySelector(":scope p.chat-message-group-header-name");
-                            group_header_name.style.color = "white";
-                            group_header_name.style.background = this.palette.name_bg;
-
-                            if (this.is_different_day && form_field_checker.ffc_int(this.msgattr.sent_time)) {
-                                const group_header_date = this.e_tree_item.raw_header.querySelector(":scope p.chat-message-group-header-date");
-                                group_header_date.textContent = format_timestamp_utc8_day_time(this.msgattr.sent_time)[0];
-                                group_header_date.classList.remove("hidden");
-                            }
-
-                            this.msgelement_li.style.margin = "0";
-                            this.msgelement_li.style.transform = "translateY(-4px)";
-
-                            this.msgelement_li.append(this.e_container);
-
-                            if (this.is_sys_msg()) {
-                                // this.e_tree_item.summary.classList.add("hidden");
-                                const group_header_row2 = this.e_tree_item.raw_header.querySelector(":scope div.chat-message-group-header-row2");
-                                group_header_row2.classList.add("hidden");
-                            }
-                        } else {
-                            this.msgelement.append(this.e_container);
-                        }
+                        MenuMark.exec(
+                            { x: rect.left, y: rect.bottom },
+                            items,
+                            () => {}
+                        );
                     }
 
                     fill_marks() {
@@ -11618,6 +11683,104 @@
                         }
 
 
+                    }
+
+                    // =========================
+                    // 选中 / 取消选中
+                    // =========================
+                    select() {
+                        if (this.is_selected) return;
+
+                        // 取消其它消息的选中
+                        if (this.contentpage && this.contentpage.clear_all_selected_msgs) {
+                            this.contentpage.clear_all_selected_msgs();
+                        }
+
+                        this.is_selected = true;
+                        this.e_container.classList.add("selected");
+
+                        this.show_actionbar();
+                    }
+
+                    unselect() {
+                        if (!this.is_selected) return;
+
+                        this.is_selected = false;
+                        this.e_container.classList.remove("selected");
+
+                        this.hide_actionbar();
+                    }
+
+                    // =========================
+                    // 显示底部操作条
+                    // =========================
+                    show_actionbar() {
+                        if (this.e_actionbar) return;
+
+                        const bar = document.createElement("div");
+                        bar.className = "chat-msg-actionbar";
+
+                        bar.innerHTML = `
+                            <button data-action="cite">引用</button>
+                            <button data-action="copy">复制</button>
+                            <button data-action="forward">转发</button>
+                            <button data-action="more">...</button>
+                        `;
+
+                        // 阻止点按钮时触发取消选中
+                        bar.addEventListener("click", (e) => {
+                            e.stopPropagation();
+                            this.handle_actionbar_click(e);
+                        });
+
+                        this.e_actionbar = bar;
+
+                        // ⚠️ 关键：挂在消息内容容器下面
+                        this.e_container.append(bar);
+                    }
+
+                    // =========================
+                    // 隐藏底部操作条
+                    // =========================
+                    hide_actionbar() {
+                        if (!this.e_actionbar) return;
+
+                        this.e_actionbar.remove();
+                        this.e_actionbar = null;
+                    }
+
+                    // =========================
+                    // 底部操作条按钮处理
+                    // =========================
+                    handle_actionbar_click(e) {
+                        const btn = e.target.closest("button");
+                        if (!btn) return;
+
+                        const action = btn.dataset.action;
+
+                        switch (action) {
+                            case "cite":
+                                this.contentpage.add_textarea_element__cite(
+                                    this.msgattr.id,
+                                    this.msgattr.plain_data_text,
+                                    this.msgattr.sender
+                                );
+                                break;
+
+                            case "copy":
+                                if (this.msgattr.plain_data_text) {
+                                    navigator.clipboard.writeText(this.msgattr.plain_data_text);
+                                }
+                                break;
+
+                            case "forward":
+                                this.contentpage.forward_msg(this.msgattr);
+                                break;
+
+                            case "more":
+                                this.open_more_menu();
+                                break;
+                        }
                     }
 
                     highlight() {
