@@ -11751,35 +11751,119 @@
 
                         const bar = document.createElement("div");
                         bar.className = "chat-msg-actionbar";
-
-                        // 这里增加 AI咨询、删除、编辑
-                        bar.innerHTML = `
-                            <button data-action="cite">引用</button>
-                            <button data-action="copy">复制</button>
-                            <button data-action="forward">转发</button>
-                            <button data-action="ai">AI咨询</button>
-                            <button data-action="edit">编辑</button>
-                            <button data-action="delete">删除</button>
-                            <button data-action="more">...</button>
-                        `;
-                        bar.msgobj = this;
+                        bar.msgobj = this; // 方便回调引用
                         this.e_actionbar = bar;
+
+                        const items = [];
+
+                        // ------------------
+                        // 引用
+                        items.push({
+                            type: "button",
+                            text: "引用",
+                            callback: () => {
+                                this.contentpage.add_textarea_element__cite(
+                                    this.msgattr.id,
+                                    this.msgattr.plain_data_text,
+                                    this.msgattr.sender
+                                );
+                            }
+                        });
+
+                        // ------------------
+                        // 复制
+                        items.push({
+                            type: "button",
+                            text: "复制",
+                            callback: () => {
+                                if (this.msgattr.plain_data_text) {
+                                    navigator.clipboard.writeText(this.msgattr.plain_data_text);
+                                }
+                            }
+                        });
+
+                        // ------------------
+                        // 转发
+                        items.push({
+                            type: "button",
+                            text: "转发",
+                            callback: () => {
+                                this.contentpage.forward_msg(this.msgattr);
+                            }
+                        });
+
+                        // ------------------
+                        // 🤖 AI 咨询
+                        const aiBtn = {
+                            type: "button",
+                            text: "🤖 AI 咨询",
+                            callback: () => {
+                                if (!this.msgattr.plain_data_text) return;
+                                const prompt = build_ai_teacher_prompt(this.msgattr.plain_data_text);
+                                // 如果你有实际 AI 查询接口，这里替换 URL
+                                window.open(`https://chatgpt.com/?q=${encodeURIComponent(prompt)}`, "_blank");
+                            },
+                            disabled: !this.msgattr.plain_data_text
+                        };
+                        items.push(aiBtn);
+
+                        // ------------------
+                        // 删除 / 撤回（只对自己消息有效）
+                        if (this.sent_by_me) {
+                            const delBtn = {
+                                type: "button",
+                                text: "撤回",
+                                callback: () => {
+                                    MessageMark.confirm(`确定撤回消息？`, null, null, () => {
+                                        if (this.contentpage && typeof this.contentpage.revoke_msg === "function") {
+                                            this.contentpage.revoke_msg(this.msgattr);
+                                        } else {
+                                            console.warn("revoke_msg 方法未实现");
+                                        }
+                                    });
+                                }
+                            };
+
+                            // 超过 10 分钟改成删除
+                            if (Date.now() / 1000 - this.msgattr.sent_time > seconds_of_minutes(10)) {
+                                delBtn.text = "删除";
+                            }
+
+                            items.push(delBtn);
+
+                            // ------------------
+                            // 编辑
+                            items.push({
+                                type: "button",
+                                text: "编辑",
+                                callback: () => {
+                                    if (this.contentpage && typeof this.contentpage.edit_msg === "function") {
+                                        this.contentpage.edit_msg(this.msgattr);
+                                    } else {
+                                        console.warn("edit_msg 方法未实现");
+                                    }
+                                }
+                            });
+                        }
+
+                        // ------------------
+                        // 渲染按钮
+                        for (const item of items) {
+                            const btn = document.createElement("button");
+                            btn.textContent = item.text;
+                            if (item.disabled) btn.disabled = true;
+                            btn.addEventListener("click", e => {
+                                e.stopPropagation();
+                                item.callback();
+                                this.hide_actionbar(); // 点击后自动隐藏操作条
+                            });
+                            bar.appendChild(btn);
+                        }
 
                         // 挂在消息最外层元素后面
                         this.msgelement.append(bar);
-
-                        // 根据 sent_by_me 自动左右对齐
-                        if (this.sent_by_me) {
-                            bar.style.justifyContent = "flex-end";
-                        } else {
-                            bar.style.justifyContent = "flex-start";
-                        }
-
-                        bar.addEventListener("click", (e) => {
-                            e.stopPropagation();
-                            this.handle_actionbar_click(e);
-                        });
                     }
+
 
 
 
