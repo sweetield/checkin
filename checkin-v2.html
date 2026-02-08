@@ -9099,15 +9099,22 @@
 
         class _chat extends _ {
             constructor(client, panel, li) {
-                // ✅ 这里放全局唯一操作条和当前选中消息的引用
-                this.actionbar = null;               // 全局唯一的底部工具条
+                this.actionbar = null;               // 全局唯一底部工具条
                 this.current_selected_msg = null;    // 当前选中的消息对象
                 this.clear_all_selected_msgs = () => {
                     if (this.current_selected_msg) {
-                        this.current_selected_msg.unselect();
+                        // 只取消选中状态和工具条
+                        this.current_selected_msg.is_selected = false;
+                        this.current_selected_msg.e_container.classList.remove("selected");
+
+                        if (this.actionbar) {
+                            this.actionbar.remove(); // 仅移除工具条
+                        }
+
                         this.current_selected_msg = null;
                     }
                 };
+
                 super(client, panel, li);
                 this.previous_activity_attr = {
                     type: dashboardwrappers.ChatDashboardWrapper.activity_type.none,
@@ -9294,7 +9301,7 @@
                         // 隐藏在线用户面板
                         this.e_msgflow_mark_onlineusers.classList.add("hidden");
 
-                        // 🔹 点击空白处取消选中消息
+                        // 🔹 点击空白处取消选中消息，但不影响消息内容
                         this.clear_all_selected_msgs();
                 });
 
@@ -11728,18 +11735,16 @@
                     // 显示底部操作条
                     // =========================
                     show_actionbar() {
-                        // 1️⃣ 如果已经有其他消息被选中，先取消它
-                        if (this.contentpage && this.contentpage.current_selected_msg && this.contentpage.current_selected_msg !== this) {
-                            this.contentpage.current_selected_msg.unselect();
-                        }
+                        // 取消之前选中的消息工具条
+                        if (this.contentpage) this.contentpage.clear_all_selected_msgs();
 
-                        // 2️⃣ 标记自己为选中
+                        // 标记自己为选中
                         this.is_selected = true;
                         this.e_container.classList.add("selected");
 
                         if (this.contentpage) this.contentpage.current_selected_msg = this;
 
-                        // 3️⃣ 获取或创建全局唯一 actionbar
+                        // 获取或创建全局唯一 actionbar
                         let bar = this.contentpage.actionbar;
                         if (!bar) {
                             bar = document.createElement("div");
@@ -11758,22 +11763,18 @@
                             this.contentpage.actionbar = bar;
                         }
 
-                        // 4️⃣ 将 actionbar 挂到当前消息下
+                        // 挂到当前消息下
                         this.e_container.appendChild(bar);
                     }
 
-                    // =========================
-                    // 隐藏底部操作条
-                    // =========================
                     hide_actionbar() {
                         this.is_selected = false;
                         this.e_container.classList.remove("selected");
 
                         if (this.contentpage && this.contentpage.actionbar) {
-                            this.contentpage.actionbar.remove();
+                            this.contentpage.actionbar.remove(); // 仅移除工具条
                         }
 
-                        // 如果是当前选中消息，清空引用
                         if (this.contentpage && this.contentpage.current_selected_msg === this) {
                             this.contentpage.current_selected_msg = null;
                         }
