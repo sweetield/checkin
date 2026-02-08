@@ -9323,8 +9323,10 @@
                 } else {
                     this.e_header_info_clickmark.classList.add("hidden");
                 }
-                this.e_msgflow.addEventListener("click", (event) => {
-                    // 点在面板内部，不关
+
+                //this.e_msgflow.addEventListener("click", (event) => {
+
+                document.addEventListener("click", (event) => {
                     if (
                         event.target.closest(".chat-session-onlineusers") ||
                         event.target.closest(".chat-session-files") ||
@@ -9333,9 +9335,10 @@
                         return;
                     }
 
-                    this.e_msgflow_mark_onlineusers.classList.add("hidden");
-                    this.e_msgflow_mark_files.classList.add("hidden");
+                    this.e_msgflow_mark_onlineusers?.classList.add("hidden");
+                    this.e_msgflow_mark_files?.classList.add("hidden");
                 });
+
 
 
                 // header右侧按钮
