@@ -11544,16 +11544,18 @@
                     // =========================
                     // 点击 ... 打开完整菜单
                     // =========================
-                    open_more_menu() {
-                        const rect = this.e_container.getBoundingClientRect();
+                    open_more_menu(btn) {  // btn: 当前点击的 ... 按钮
+                        const rect = btn.getBoundingClientRect(); // 用按钮位置，而不是整个消息容器
                         const items = this.build_context_menu_items();
 
+                        // MenuMark 执行菜单
                         MenuMark.exec(
-                            { x: rect.left, y: rect.bottom },
+                            { x: rect.left, y: rect.bottom }, // 定位到按钮下方
                             items,
-                            () => {}
+                            () => {} // 菜单关闭回调
                         );
                     }
+
 
                     fill_marks() {
                         let html = `
