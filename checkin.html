@@ -48,6 +48,55 @@
             100% { box-shadow: 0 8px 20px rgba(59,130,246,0.18), inset 0 1px 0 rgba(255,255,255,0.6); }
         }
 
+        /* ================= 选择消息出现菜单 ================= */
+
+        /* 选中高亮 */
+        .chat-message-content-container.selected {
+            outline: none;
+            border-radius: 0; /* 可选，看你是否需要圆角 */
+        }
+
+        /* 底部操作条 */
+        .chat-msg-actionbar {
+            display: flex;
+            gap: 6px;
+            margin-top: 4px;
+        }
+
+        /* 默认：他人消息，操作条靠左 */
+        .chat-message .chat-msg-actionbar {
+            justify-content: flex-start;
+        }
+
+        /* 自己消息，操作条靠右 */
+        .chat-message.sent-by-me .chat-msg-actionbar {
+            justify-content: flex-end;
+        }
+
+        /* 操作条按钮 */
+        .chat-msg-actionbar button {
+            font-size: 12px;
+            padding: 4px 8px;
+            border-radius: 6px;
+            border: none;
+            background: #f0f0f0;
+            cursor: pointer;
+        }
+
+        .chat-msg-actionbar button:hover {
+            background: #e0e0e0;
+        }
+
+        /* 移除按钮点击时的蓝色边框 */
+        .chat-msg-actionbar button:focus {
+            outline: none;
+        }
+
+        /* 可选：如果操作条容器也被点击显示焦点 */
+        .chat-message-content-container:focus {
+            outline: none;
+        }
+
          /* ================= 消息冒泡 - 顶部右上角 ================= */
         #chat-toast-container {
             position: fixed;
@@ -3180,12 +3229,16 @@
 
     <!--聊天页面 消息-->
     <style>
+        /* 消息外层容器 */
         .chat-message {
             display: flex;
-            flex-direction: row;
-            margin-left: 10px;
-            margin-right: 10px;
+            flex-direction: column;
+            width: 100%;  /* <-- 这里是关键问题 */
+            margin: 4px 0;
         }
+
+
+
 
         ul .chat-message {
             margin-left: 0;
@@ -3206,6 +3259,7 @@
             flex-direction: row;
         }
 
+        /* 消息内容容器 */
         .chat-message-content-container {
             flex-grow: 1;
             display: flex;
@@ -3215,6 +3269,7 @@
             gap: 2px;
             /*transition: background-color 3s, transform 3s;*/
         }
+
 
         .chat-message-content-container.active {
             transition: none !important;
@@ -11219,6 +11274,11 @@
 
                         this.msgattr = msgattr;
                         this.msgattrseniors = msgattrseniors;
+                        // =========================
+                        // 选中消息相关状态（新增）
+                        // =========================
+                        this.is_selected = false;   // 是否被选中
+                        this.e_actionbar = null;    // 底部操作条 DOM
                         if (this.is_sys_msg()) {
                             this.palette = contentpages._chat.get_message_palette(msgattr.sender, true);
                         } else {
@@ -11269,11 +11329,91 @@
                             temp_parent_element.remove();
                             this.e_container.msgobj = this;
 
+                            // =========================
+                            // 点击消息 → 选中
+                            // =========================
+                            this.e_container.addEventListener("click", (e) => {
+                                e.stopPropagation();   // 防止冒泡被全局 click 取消
+                                this.select();
+                            });
+
                             const showMenu = (event) => {
                                 const rect = this.e_container.getBoundingClientRect();
-                                const items = [];
+                                const items = this.build_context_menu_items();
 
-                                if (this.msgattr.is_sent && (!this.blur_mark || !this.blur_mark.is_visible())) {
+                                
+
+                                this.e_container.classList.add("active");
+                                MenuMark.exec({x: rect.left, y: rect.top + rect.height,}, items, () => {
+                                    this.e_container.classList.remove("active");
+                                });
+                            };
+
+                            // 菜单
+                            this.e_container.addEventListener("contextmenu", (event) => showMenu(event));
+                            if (_isMobileDevice) bindMenuForMobile(this.e_container, showMenu);
+
+                        }
+
+
+                        if (this.is_header()) {
+                            const html = `<div class="chat-message-group"></div>`;
+                            this.msgelement.insertAdjacentHTML("beforeend", html);
+                            this.e_group = this.msgelement.querySelector(":scope .chat-message-group");
+
+                            const tree_headers = [];
+                            this.e_tree_item = new TreeWidget(this.e_group, tree_headers, null, 0, false, false, this.sent_by_me, 6)
+                            const html2 = `
+<div class="chat-message-group-header">
+
+<div class="chat-message-group-header-row1">
+    <p class="chat-message-group-header-date hidden"></p>
+</div>
+
+<div class="chat-message-group-header-row2">
+    <p class="chat-message-group-header-name">${this.msgattr.sender}</p>
+</div>
+
+</div>
+`;
+                            this.e_tree_item.set_raw_header(html2);
+                            this.e_tree_item.show();
+                            this.e_tree_item.summary.style.padding = "0";
+                            this.e_tree_item.summary.style.background = "transparent";
+                            this.msgelement_li = this.e_tree_item.container_tree_items;
+
+
+                            const group_header_name = this.e_tree_item.raw_header.querySelector(":scope p.chat-message-group-header-name");
+                            group_header_name.style.color = "white";
+                            group_header_name.style.background = this.palette.name_bg;
+
+                            if (this.is_different_day && form_field_checker.ffc_int(this.msgattr.sent_time)) {
+                                const group_header_date = this.e_tree_item.raw_header.querySelector(":scope p.chat-message-group-header-date");
+                                group_header_date.textContent = format_timestamp_utc8_day_time(this.msgattr.sent_time)[0];
+                                group_header_date.classList.remove("hidden");
+                            }
+
+                            this.msgelement_li.style.margin = "0";
+                            this.msgelement_li.style.transform = "translateY(-4px)";
+
+                            this.msgelement_li.append(this.e_container);
+
+                            if (this.is_sys_msg()) {
+                                // this.e_tree_item.summary.classList.add("hidden");
+                                const group_header_row2 = this.e_tree_item.raw_header.querySelector(":scope div.chat-message-group-header-row2");
+                                group_header_row2.classList.add("hidden");
+                            }
+                        } else {
+                            this.msgelement.append(this.e_container);
+                        }
+                    }
+                    // =========================
+                    // 构建右键 / 更多 菜单项
+                    // =========================
+                    build_context_menu_items() {
+                        const items = [];
+
+                        if (this.msgattr.is_sent && (!this.blur_mark || !this.blur_mark.is_visible())) {
                                     if (dashboardwrappers.ChatDashboardWrapper.message_type_checker.is_text(this.msgattr.type) ||
                                         dashboardwrappers.ChatDashboardWrapper.message_type_checker.is_drive_item(this.msgattr.type)) {
                                         items.push(
@@ -11398,69 +11538,21 @@
 
                                 }
 
-                                this.e_container.classList.add("active");
-                                MenuMark.exec({x: rect.left, y: rect.top + rect.height,}, items, () => {
-                                    this.e_container.classList.remove("active");
-                                });
-                            };
+                        return items;
+                    }
 
-                            // 菜单
-                            this.e_container.addEventListener("contextmenu", (event) => showMenu(event));
-                            if (_isMobileDevice) bindMenuForMobile(this.e_container, showMenu);
+                    // =========================
+                    // 点击 ... 打开完整菜单
+                    // =========================
+                    open_more_menu() {
+                        const rect = this.e_container.getBoundingClientRect();
+                        const items = this.build_context_menu_items();
 
-                        }
-
-
-                        if (this.is_header()) {
-                            const html = `<div class="chat-message-group"></div>`;
-                            this.msgelement.insertAdjacentHTML("beforeend", html);
-                            this.e_group = this.msgelement.querySelector(":scope .chat-message-group");
-
-                            const tree_headers = [];
-                            this.e_tree_item = new TreeWidget(this.e_group, tree_headers, null, 0, false, false, this.sent_by_me, 6)
-                            const html2 = `
-<div class="chat-message-group-header">
-
-<div class="chat-message-group-header-row1">
-    <p class="chat-message-group-header-date hidden"></p>
-</div>
-
-<div class="chat-message-group-header-row2">
-    <p class="chat-message-group-header-name">${this.msgattr.sender}</p>
-</div>
-
-</div>
-`;
-                            this.e_tree_item.set_raw_header(html2);
-                            this.e_tree_item.show();
-                            this.e_tree_item.summary.style.padding = "0";
-                            this.e_tree_item.summary.style.background = "transparent";
-                            this.msgelement_li = this.e_tree_item.container_tree_items;
-
-
-                            const group_header_name = this.e_tree_item.raw_header.querySelector(":scope p.chat-message-group-header-name");
-                            group_header_name.style.color = "white";
-                            group_header_name.style.background = this.palette.name_bg;
-
-                            if (this.is_different_day && form_field_checker.ffc_int(this.msgattr.sent_time)) {
-                                const group_header_date = this.e_tree_item.raw_header.querySelector(":scope p.chat-message-group-header-date");
-                                group_header_date.textContent = format_timestamp_utc8_day_time(this.msgattr.sent_time)[0];
-                                group_header_date.classList.remove("hidden");
-                            }
-
-                            this.msgelement_li.style.margin = "0";
-                            this.msgelement_li.style.transform = "translateY(-4px)";
-
-                            this.msgelement_li.append(this.e_container);
-
-                            if (this.is_sys_msg()) {
-                                // this.e_tree_item.summary.classList.add("hidden");
-                                const group_header_row2 = this.e_tree_item.raw_header.querySelector(":scope div.chat-message-group-header-row2");
-                                group_header_row2.classList.add("hidden");
-                            }
-                        } else {
-                            this.msgelement.append(this.e_container);
-                        }
+                        MenuMark.exec(
+                            { x: rect.left, y: rect.bottom },
+                            items,
+                            () => {}
+                        );
                     }
 
                     fill_marks() {
@@ -11619,6 +11711,202 @@
 
 
                     }
+
+                    // =========================
+                    // 选中 / 取消选中
+                    // =========================
+                    select() {
+                        // 1️⃣ 先清除其他消息选中状态
+                        if (this.contentpage && this.contentpage.clear_all_selected_msgs) {
+                            this.contentpage.clear_all_selected_msgs();
+                        }
+
+                        // 2️⃣ 标记自己为选中
+                        this.is_selected = true;
+                        this.e_container.classList.add("selected");
+
+                        // 3️⃣ 显示操作条（每次都显示，不受 is_selected 限制）
+                        this.show_actionbar();
+                    }
+
+
+                    unselect() {
+                        if (!this.is_selected) return;
+
+                        this.is_selected = false;
+                        this.e_container.classList.remove("selected");
+
+                        this.hide_actionbar();
+                    }
+
+                    // =========================
+                    // 显示底部操作条
+                    // =========================
+                    show_actionbar() {
+                        // 先移除页面上已有操作条
+                        document.querySelectorAll(".chat-msg-actionbar").forEach(bar => {
+                            if (bar.msgobj) bar.msgobj.e_actionbar = null;
+                            bar.remove();
+                        });
+
+                        const bar = document.createElement("div");
+                        bar.className = "chat-msg-actionbar";
+                        bar.msgobj = this;
+                        this.e_actionbar = bar;
+
+                        const items = [];
+
+                        // 引用
+                        items.push({
+                            text: "引用",
+                            callback: () => this.contentpage.add_textarea_element__cite(this.msgattr.id, this.msgattr.plain_data_text, this.msgattr.sender)
+                        });
+
+                        // 复制
+                        items.push({
+                            text: "复制",
+                            callback: () => {
+                                if (this.msgattr.plain_data_text) navigator.clipboard.writeText(this.msgattr.plain_data_text);
+                            }
+                        });
+
+                        // 转发
+                        items.push({
+                            text: "转发",
+                            callback: () => this.contentpage.forward_msg(this.msgattr)
+                        });
+
+                        // AI 咨询
+                        items.push({
+                            text: "🤖 AI 咨询",
+                            disabled: !this.msgattr.plain_data_text,
+                            callback: () => {
+                                if (!this.msgattr.plain_data_text) return;
+                                const prompt = build_ai_teacher_prompt(this.msgattr.plain_data_text);
+                                window.open(`https://chatgpt.com/?q=${encodeURIComponent(prompt)}`, "_blank");
+                            }
+                        });
+
+                        // 删除/撤回和编辑（只自己发送的消息）
+                        if (this.sent_by_me) {
+                            const delText = Date.now() / 1000 - this.msgattr.sent_time > seconds_of_minutes(10) ? "删除" : "撤回";
+                            items.push({
+                                text: delText,
+                                callback: () => {
+                                    MessageMark.confirm(`确定${delText}消息？`, null, null, () => {
+                                        if (this.contentpage && typeof this.contentpage.revoke_msg === "function") {
+                                            this.contentpage.revoke_msg(this.msgattr);
+                                        }
+                                    });
+                                }
+                            });
+
+                            items.push({
+                                text: "编辑",
+                                callback: () => {
+                                    if (this.contentpage && typeof this.contentpage.edit_msg === "function") {
+                                        this.contentpage.edit_msg(this.msgattr);
+                                    }
+                                }
+                            });
+                        }
+
+                        // 更多
+                        items.push({
+                            text: "...",
+                            callback: () => this.open_more_menu()
+                        });
+
+                        // 渲染
+                        for (const item of items) {
+                            const btn = document.createElement("button");
+                            btn.textContent = item.text;
+                            if (item.disabled) btn.disabled = true;
+                            btn.addEventListener("click", e => {
+                                e.stopPropagation();
+                                item.callback();
+                                this.hide_actionbar();
+                            });
+                            bar.appendChild(btn);
+                        }
+
+                        this.msgelement.append(bar);
+                    }
+
+
+
+
+
+                    // =========================
+                    // 隐藏底部操作条
+                    // =========================
+                    hide_actionbar() {
+                        if (!this.e_actionbar) return;
+
+                        this.e_actionbar.remove();
+                        this.e_actionbar = null;
+                    }
+
+                    // =========================
+                    // 底部操作条按钮处理
+                    // =========================
+                    handle_actionbar_click(e) {
+                        const btn = e.target.closest("button");
+                        if (!btn) return;
+
+                        const action = btn.dataset.action;
+
+                        switch (action) {
+                            case "cite":
+                                this.contentpage.add_textarea_element__cite(
+                                    this.msgattr.id,
+                                    this.msgattr.plain_data_text,
+                                    this.msgattr.sender
+                                );
+                                break;
+
+                            case "copy":
+                                if (this.msgattr.plain_data_text) {
+                                    navigator.clipboard.writeText(this.msgattr.plain_data_text);
+                                }
+                                break;
+
+                            case "forward":
+                                this.contentpage.forward_msg(this.msgattr);
+                                break;
+
+                            case "ai":
+                                // AI咨询逻辑
+                                this.contentpage.open_ai_consult(this.msgattr);
+                                break;
+
+                            case "edit":
+                                // 编辑逻辑
+                                if (this.sent_by_me) {
+                                    this.contentpage.edit_msg(this.msgattr);
+                                } else {
+                                    alert("只能编辑自己的消息");
+                                }
+                                break;
+
+                            case "delete":
+                                // 删除逻辑
+                                if (this.sent_by_me) {
+                                    this.contentpage.delete_msg(this.msgattr);
+                                } else {
+                                    alert("只能删除自己的消息");
+                                }
+                                break;
+
+                            case "more":
+                                this.open_more_menu();
+                                break;
+                        }
+
+                        // 点击后自动隐藏操作条
+                        this.hide_actionbar();
+                    }
+
 
                     highlight() {
                         this.e_container.classList.add("highlight");
@@ -15698,4 +15986,3 @@ textarea.addEventListener('input', () => {
 </body>
 
 </html>
-
