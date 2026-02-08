@@ -4021,6 +4021,7 @@
     function trigger_file_download(msgattr) {
         if (!msgattr.is_sent) return;
 
+        // 如果已有下载任务且未完成，直接显示任务
         if (msgattr.download_task && msgattr.download_task.status !== FloatBall.taskstatus.finished) {
             floatball.look_download_tasks(msgattr.download_task);
             return;
@@ -4028,16 +4029,21 @@
 
         const t = new FloatBall.tasktypes.Download_ChatMessage(
             floatball.dialog.tab_content_backtasks,
-            { onfinished(){}, onprogress(){}, onfailed(){} }
+            {
+                onfinished: () => { msgattr.download_task = null; },
+                onprogress: () => {},
+                onfailed: () => {}
+            }
         );
 
         msgattr.download_task = t;
-
-        floatball.dialog.addTask(t);
         t.set_name(msgattr.plain_file_name);
         t.set_args({ msg: msgattr });
 
+        // 加入队列后立即尝试启动
+        floatball.dialog.addTask(t);
         floatball.dialog.checkToStartTask();
+        floatball.dialog.checkToHide(t); // 保持原有显示逻辑
     }
 
 
