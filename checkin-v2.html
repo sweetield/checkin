@@ -11751,103 +11751,73 @@
 
                         const bar = document.createElement("div");
                         bar.className = "chat-msg-actionbar";
-                        bar.msgobj = this; // 方便回调引用
+                        bar.msgobj = this;
                         this.e_actionbar = bar;
 
                         const items = [];
 
-                        // ------------------
                         // 引用
                         items.push({
-                            type: "button",
                             text: "引用",
-                            callback: () => {
-                                this.contentpage.add_textarea_element__cite(
-                                    this.msgattr.id,
-                                    this.msgattr.plain_data_text,
-                                    this.msgattr.sender
-                                );
-                            }
+                            callback: () => this.contentpage.add_textarea_element__cite(this.msgattr.id, this.msgattr.plain_data_text, this.msgattr.sender)
                         });
 
-                        // ------------------
                         // 复制
                         items.push({
-                            type: "button",
                             text: "复制",
                             callback: () => {
-                                if (this.msgattr.plain_data_text) {
-                                    navigator.clipboard.writeText(this.msgattr.plain_data_text);
-                                }
+                                if (this.msgattr.plain_data_text) navigator.clipboard.writeText(this.msgattr.plain_data_text);
                             }
                         });
 
-                        // ------------------
                         // 转发
                         items.push({
-                            type: "button",
                             text: "转发",
-                            callback: () => {
-                                this.contentpage.forward_msg(this.msgattr);
-                            }
+                            callback: () => this.contentpage.forward_msg(this.msgattr)
                         });
 
-                        // ------------------
-                        // 🤖 AI 咨询
-                        const aiBtn = {
-                            type: "button",
+                        // AI 咨询
+                        items.push({
                             text: "🤖 AI 咨询",
+                            disabled: !this.msgattr.plain_data_text,
                             callback: () => {
                                 if (!this.msgattr.plain_data_text) return;
                                 const prompt = build_ai_teacher_prompt(this.msgattr.plain_data_text);
-                                // 如果你有实际 AI 查询接口，这里替换 URL
                                 window.open(`https://chatgpt.com/?q=${encodeURIComponent(prompt)}`, "_blank");
-                            },
-                            disabled: !this.msgattr.plain_data_text
-                        };
-                        items.push(aiBtn);
+                            }
+                        });
 
-                        // ------------------
-                        // 删除 / 撤回（只对自己消息有效）
+                        // 删除/撤回和编辑（只自己发送的消息）
                         if (this.sent_by_me) {
-                            const delBtn = {
-                                type: "button",
-                                text: "撤回",
+                            const delText = Date.now() / 1000 - this.msgattr.sent_time > seconds_of_minutes(10) ? "删除" : "撤回";
+                            items.push({
+                                text: delText,
                                 callback: () => {
-                                    MessageMark.confirm(`确定撤回消息？`, null, null, () => {
+                                    MessageMark.confirm(`确定${delText}消息？`, null, null, () => {
                                         if (this.contentpage && typeof this.contentpage.revoke_msg === "function") {
                                             this.contentpage.revoke_msg(this.msgattr);
-                                        } else {
-                                            console.warn("revoke_msg 方法未实现");
                                         }
                                     });
                                 }
-                            };
+                            });
 
-                            // 超过 10 分钟改成删除
-                            if (Date.now() / 1000 - this.msgattr.sent_time > seconds_of_minutes(10)) {
-                                delBtn.text = "删除";
-                            }
-
-                            items.push(delBtn);
-
-                            // ------------------
-                            // 编辑
                             items.push({
-                                type: "button",
                                 text: "编辑",
                                 callback: () => {
                                     if (this.contentpage && typeof this.contentpage.edit_msg === "function") {
                                         this.contentpage.edit_msg(this.msgattr);
-                                    } else {
-                                        console.warn("edit_msg 方法未实现");
                                     }
                                 }
                             });
                         }
 
-                        // ------------------
-                        // 渲染按钮
+                        // 更多
+                        items.push({
+                            text: "...",
+                            callback: () => this.open_more_menu()
+                        });
+
+                        // 渲染
                         for (const item of items) {
                             const btn = document.createElement("button");
                             btn.textContent = item.text;
@@ -11855,14 +11825,14 @@
                             btn.addEventListener("click", e => {
                                 e.stopPropagation();
                                 item.callback();
-                                this.hide_actionbar(); // 点击后自动隐藏操作条
+                                this.hide_actionbar();
                             });
                             bar.appendChild(btn);
                         }
 
-                        // 挂在消息最外层元素后面
                         this.msgelement.append(bar);
                     }
+
 
 
 
