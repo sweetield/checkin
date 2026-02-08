@@ -50,16 +50,9 @@
 
         /* =================附件面板 ================= */
         .chat-session-files {
-            position: absolute;
-            top: 48px;
-            right: 0;
-            width: 260px;
-            max-height: 60%;
-            overflow-y: auto;
-            background: var(--panel-bg, #fff);
-            border-left: 1px solid rgba(0,0,0,.08);
-            z-index: 1000;
+            pointer-events: auto;
         }
+
 
 
         /* ================= 选择消息出现菜单 ================= */
@@ -9331,9 +9324,19 @@
                     this.e_header_info_clickmark.classList.add("hidden");
                 }
                 this.e_msgflow.addEventListener("click", (event) => {
+                    // 点在面板内部，不关
+                    if (
+                        event.target.closest(".chat-session-onlineusers") ||
+                        event.target.closest(".chat-session-files") ||
+                        event.target.closest(".chat-header-info-clickmark")
+                    ) {
+                        return;
+                    }
+
                     this.e_msgflow_mark_onlineusers.classList.add("hidden");
                     this.e_msgflow_mark_files.classList.add("hidden");
                 });
+
 
                 // header右侧按钮
                 this.e_header_action_more = this.e_header_actions.querySelector(":scope button.chat-session-header-action-more");
@@ -12635,6 +12638,9 @@
             * 在线成员
             * */
             fetch_online_users() {
+                if (!this.e_msgflow_mark_onlineusers.classList.contains("hidden")) {
+                    return;
+                }
                 this.e_msgflow_mark_onlineusers.classList.remove("hidden");
                 this.remove_online_users();
                 // ✅ 新增：显示附件面板
