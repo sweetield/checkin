@@ -79,10 +79,12 @@
         /* ===== 附件列表行 ===== */
         .cap-item {
             display: flex;
-            align-items: center;
-            gap: 6px;
-            font-size: 13px;
+            align-items: flex-start;
+            padding: 4px 2px;
+            border-bottom: 1px solid #eee;
+            word-break: break-all; /* 文件名太长自动换行 */
         }
+
 
         /* 附件前缀：📎 附件 */
         .cap-prefix {
@@ -92,6 +94,31 @@
             color: #3b6fdc;          /* 浅蓝主题友好 */
             font-size: 12px;
             white-space: nowrap;
+        }
+
+        .cap-main {
+            flex: 1;
+        }
+
+        .cap-main .name {
+            font-weight: 500;
+            line-height: 1.2;
+            margin-bottom: 2px;
+        }
+
+        .cap-main .cap-info {
+            display: flex;
+            flex-wrap: wrap;   /* 换行显示状态和按钮 */
+            align-items: center;
+            gap: 6px;
+            font-size: 0.85rem;
+            color: #555;
+        }
+
+        .cap-main .cap-info .download-btn {
+            padding: 2px 6px;
+            font-size: 0.85rem;
+            cursor: pointer;
         }
 
         .cap-icon {
@@ -4058,24 +4085,34 @@
         nameEl.title = fileName;
 
         // 文件大小
-        const sizeEl = div.querySelector(".size");
-        sizeEl.textContent = format_bytes(msgattr.file_attr.size);
+        div.querySelector(".size").textContent = format_bytes(msgattr.file_attr.size);
 
-        // 下载/上传状态
+        // 下载/上传状态文字
         const statusEl = div.querySelector(".status");
+        let progress = 0;
+
         if (!msgattr.is_sent) {
             statusEl.textContent = msgattr.upload_task ? msgattr.upload_task.backtask_status_text.textContent : "正在上传...";
+            if (msgattr.upload_task) progress = msgattr.upload_task.progress_percent || 0;
         } else if (msgattr.download_task) {
             const task = msgattr.download_task;
             if (task.status === FloatBall.taskstatus.finished) {
-                statusEl.textContent = "✅"; // ✅ 文件名不被覆盖
+                statusEl.textContent = "✅";
+                progress = 100;
             } else {
-                statusEl.textContent = task.backtask_status_text.textContent; // 下载中显示进度
+                statusEl.textContent = task.backtask_status_text.textContent;
+                progress = task.progress_percent || 0;
             }
         } else {
             statusEl.textContent = "";
+            progress = 0;
         }
+
+        // 更新进度条
+        const progressBar = div.querySelector(".progress-bar");
+        progressBar.style.width = `${progress}%`;
     }
+
 
 
     // 文件消息下载复用函数
@@ -12817,41 +12854,47 @@
                 // 渲染附件列表（依附在同一个滚动容器末尾）
                 const attachments = this.panel.attachments || [];
                 attachments.reverse().forEach(msgattr => {
-                    const div = document.createElement("div");
-                    div.className = "cap-item";
-                    div.style.display = "flex";
-                    div.style.justifyContent = "space-between";
-                    div.style.alignItems = "center";
-                    div.style.padding = "2px 0";
+                const div = document.createElement("div");
+                div.className = "cap-item";
+                div.style.padding = "4px 2px";
+                div.style.borderBottom = "1px solid #eee";
+                div.style.wordBreak = "break-all"; // 文件名太长自动换行
 
-                    div.innerHTML = `
-                        <span class="cap-prefix">
-                            <span class="cap-icon">📎</span>
-                        </span>
+                div.innerHTML = `
+                    <span class="cap-prefix">
+                        <span class="cap-icon">📎</span>
+                    </span>
 
-                        <span class="name" title="${msgattr.plain_file_name || msgattr.file_attr.name}">
+                    <div class="cap-main">
+                        <div class="name" title="${msgattr.plain_file_name || msgattr.file_attr.name}">
                             ${msgattr.plain_file_name || msgattr.file_attr.name}
-                        </span>
+                        </div>
+                        <div class="cap-info">
+                            <span class="size">${format_bytes(msgattr.file_attr.size)}</span>
+                            <span class="status"></span>
+                            <button class="download-btn">下载</button>
+                        </div>
+                        <div class="progress-bar-wrapper">
+                            <div class="progress-bar"></div>
+                        </div>
+                    </div>
+                `;
 
-                        <span class="size">${format_bytes(msgattr.file_attr.size)}</span>
-                        <span class="status"></span>
+                this.e_online_attachment_panel.appendChild(div);
 
-                        <button class="download-btn">下载</button>
-                    `;
+                // 保存引用方便同步
+                msgattr._attachment_list_item = div;
 
-                    this.e_online_attachment_panel.appendChild(div);
-
-                    // 保存引用方便同步
-                    msgattr._attachment_list_item = div;
-
-                    div.querySelector(".download-btn").addEventListener("click", e => {
-                        e.stopPropagation();
-                        trigger_file_download(msgattr);
-                    });
-
-                    // ⚡ 初始化状态
-                    update_attachment_list_item(msgattr);
+                // 下载按钮
+                div.querySelector(".download-btn").addEventListener("click", e => {
+                    e.stopPropagation();
+                    trigger_file_download(msgattr);
                 });
+
+                // 初始化状态
+                update_attachment_list_item(msgattr);
+            });
+
 
 
             }
