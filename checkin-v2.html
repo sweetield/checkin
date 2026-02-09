@@ -73,6 +73,39 @@
         }
 
 
+        /* ===== 附件列表行 ===== */
+        .cap-item {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 13px;
+        }
+
+        /* 附件前缀：📎 附件 */
+        .cap-prefix {
+            display: inline-flex;
+            align-items: center;
+            gap: 2px;
+            color: #3b6fdc;          /* 浅蓝主题友好 */
+            font-size: 12px;
+            white-space: nowrap;
+        }
+
+        .cap-icon {
+            font-size: 13px;
+        }
+
+        .cap-text {
+            font-size: 12px;
+        }
+
+        /* 文件名不要被挤爆 */
+        .cap-item .name {
+            flex: 1;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
 
         /* ================= 选择消息出现菜单 ================= */
 
@@ -12746,7 +12779,7 @@
 
                 // 渲染附件列表（依附在同一个滚动容器末尾）
                 const attachments = this.panel.attachments || [];
-                attachments.forEach(msgattr => {
+                attachments.reverse().forEach(msgattr => {
                     const div = document.createElement("div");
                     div.className = "cap-item";
                     div.style.display = "flex";
@@ -12755,9 +12788,15 @@
                     div.style.padding = "2px 0";
 
                     div.innerHTML = `
+                        <span class="cap-prefix">
+                            <span class="cap-icon">📎</span>
+                            <span class="cap-text">附件</span>
+                        </span>
+
                         <span class="name" title="${msgattr.plain_file_name || msgattr.file_attr.name}">
                             ${msgattr.plain_file_name || msgattr.file_attr.name}
                         </span>
+
                         <button class="download-btn">下载</button>
                     `;
                     div.querySelector(".download-btn").addEventListener("click", e => {
