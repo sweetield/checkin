@@ -12579,9 +12579,6 @@
 
                         this.e_mcr_info_size.textContent = format_bytes(this.msgattr.file_attr.size);
 
-                        // ⚡ 注册到 panel.attachments
-                        if (!this.panel.attachments) this.panel.attachments = [];
-                        if (!this.panel.attachments.includes(this.msgattr)) this.panel.attachments.push(this.msgattr);
 
                         // ⚡ 保存实例到 msgattr，用于附件列表复用下载
                         this.msgattr._fileMsgInstance = this;
