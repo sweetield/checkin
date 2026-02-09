@@ -9459,7 +9459,9 @@
                 remove_simple_loading_mark(this.e_msgflow_mark_onlineusers);
 
                 // ====== 聊天面板全局变量 ======
-                this.chatAttachmentsMap = this.chatAttachmentsMap || {}; // 保存每个聊天的附件数组
+                // 保存每个聊天附件
+                this.chatAttachmentsMap = this.chatAttachmentsMap || {};
+                this.pendingAttachments = this.pendingAttachments || {}; // 临时队列
                 // 查看在线成员
                 if (this.is_group()) {
                     this.e_header_info_clickmark.addEventListener("click", (event) => {
@@ -12552,19 +12554,22 @@
                 // ===== FileMsg 类 =====
                   class FileMsg extends _ {
                        constructor(panel, contentpage, msgattr, msgattrseniors) {
-                        super(panel, contentpage, msgattr, msgattrseniors);
-                        this.init();
+                            super(panel, contentpage, msgattr, msgattrseniors);
+                            this.init();
 
-                        // ⚡ 获取当前聊天唯一ID，确保已经存在
-                        const chatId = panel.current_contact_xxid ? panel.current_contact_xxid().xxid : "default";
+                            // 获取当前聊天ID
+                            let chatId = (panel.current_contact_xxid && panel.current_contact_xxid().xxid) || null;
 
-                        // 初始化聊天附件数组
-                        panel.wrapper.chatAttachmentsMap = panel.wrapper.chatAttachmentsMap || {};
-                        panel.wrapper.chatAttachmentsMap[chatId] = panel.wrapper.chatAttachmentsMap[chatId] || [];
-
-                        // ⚡ 只添加到当前聊天数组
-                        panel.wrapper.chatAttachmentsMap[chatId].push(msgattr);
-                    }
+                            if (chatId) {
+                                panel.wrapper.chatAttachmentsMap = panel.wrapper.chatAttachmentsMap || {};
+                                panel.wrapper.chatAttachmentsMap[chatId] = panel.wrapper.chatAttachmentsMap[chatId] || [];
+                                panel.wrapper.chatAttachmentsMap[chatId].push(msgattr);
+                            } else {
+                                // 当前聊天 ID 还没初始化，放到 pending
+                                this.pendingAttachments = this.pendingAttachments || [];
+                                this.pendingAttachments.push(msgattr);
+                            }
+                        }
                     init() {
                         super.init();
 
@@ -12880,9 +12885,16 @@
                 this.e_member_list_container = null;
                 this.e_member_title = null;
 
-                // 2️⃣ 获取当前聊天附件数组（独立，不叠加）
+                // 确保附件数组存在
                 this.chatAttachmentsMap[chatId] = this.chatAttachmentsMap[chatId] || [];
-                const attachments = this.chatAttachmentsMap[chatId].slice().reverse();
+
+                // 将 pending 附件加入当前聊天
+                if (this.pendingAttachments && this.pendingAttachments.length > 0) {
+                    this.chatAttachmentsMap[chatId].push(...this.pendingAttachments);
+                    this.pendingAttachments = [];
+                }
+
+                const attachments = this.chatAttachmentsMap[chatId].slice().reverse(); // 倒序
 
                 // 3️⃣ 渲染附件 DOM
                 if (attachments.length > 0) {
