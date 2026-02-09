@@ -12819,8 +12819,9 @@
 
             // ===== 在线成员 + 附件列表 =====
             // ===== 在线成员 + 附件列表 =====
+            // ===== 切换聊天时刷新附件和成员列表 =====
             load_online_users(users) {
-                // 初始化容器
+                // 初始化容器（只做一次）
                 if (!this.e_online_members_wrapper) {
                     this.e_online_members_wrapper = this.e_msgflow_mark_onlineusers;
                     this.e_online_members_wrapper.style.width = "250px";
@@ -12828,6 +12829,7 @@
                     this.e_online_members_wrapper.style.border = "1px solid #ddd";
                     this.e_online_members_wrapper.style.padding = "2px";
 
+                    // 全局搜索框
                     const globalSearch = document.createElement("input");
                     globalSearch.type = "text";
                     globalSearch.placeholder = "搜索成员或附件...";
@@ -12858,7 +12860,7 @@
                     });
                 }
 
-                // 清空旧附件和成员列表
+                // === 清空旧附件和成员列表 DOM ===
                 this.e_online_attachment_panel?.remove();
                 this.e_online_attachment_title?.remove();
                 this.e_member_list_container?.remove();
@@ -12868,13 +12870,13 @@
                 this.e_member_list_container = null;
                 this.e_member_title = null;
 
-                // 重建当前聊天附件数组
-                this.panel.attachments = [];
-                const currentAttachments = this.panel.attachments_source || [];
-                currentAttachments.forEach(msgattr => this.panel.attachments.push(msgattr));
+                // === 重新生成当前聊天附件数组 ===
+                // ⚡ 每个聊天独立数组
+                this.panel.currentAttachments = (this.panel.currentAttachments || []).slice().reverse(); // 倒序
+                const attachments = this.panel.currentAttachments;
 
-                // 渲染附件
-                if (this.panel.attachments.length > 0) {
+                // === 渲染附件 DOM ===
+                if (attachments.length > 0) {
                     const attachTitle = document.createElement("div");
                     attachTitle.innerText = "附件";
                     attachTitle.style.fontWeight = "700";
@@ -12893,9 +12895,12 @@
                     this.e_online_members_wrapper.appendChild(attachContainer);
                     this.e_online_attachment_panel = attachContainer;
 
-                    this.panel.attachments.forEach(msgattr => {
+                    attachments.reverse().forEach(msgattr => {
                         const div = document.createElement("div");
                         div.className = "cap-item";
+                        div.style.padding = "4px 2px";
+                        div.style.borderBottom = "1px solid #eee";
+                        div.style.wordBreak = "break-all";
                         div.innerHTML = `
                             <span class="cap-prefix"><span class="cap-icon">📎</span></span>
                             <div class="cap-main">
@@ -12910,7 +12915,9 @@
                         `;
                         attachContainer.appendChild(div);
 
+                        // 保存实例，用于下载和更新
                         msgattr._fileMsgInstance = this;
+
                         div.querySelector(".download-btn").addEventListener("click", e => {
                             e.stopPropagation();
                             trigger_file_download(msgattr);
@@ -12920,7 +12927,7 @@
                     });
                 }
 
-                // 渲染成员列表
+                // === 渲染成员列表 ===
                 if (users.length > 0) {
                     const memberTitle = document.createElement("div");
                     memberTitle.innerText = "成员";
@@ -12964,6 +12971,7 @@
                     });
                 }
             }
+
 
 
 
