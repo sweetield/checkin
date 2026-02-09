@@ -85,6 +85,21 @@
             word-break: break-all; /* 文件名太长自动换行 */
         }
 
+        /* =====附件下载进度条 ===== */
+        .progress-bar-wrapper {
+            width: 100%;
+            height: 6px; /* 不要太小 */
+            background-color: #eee;
+            border-radius: 3px;
+            overflow: hidden;
+        }
+
+        .progress-bar {
+            width: 0%; /* 初始宽度0 */
+            height: 100%;
+            background-color: #4caf50;
+            transition: width 0.2s ease;
+        }
 
         /* 附件前缀：📎 附件 */
         .cap-prefix {
@@ -102,9 +117,17 @@
 
         .cap-main .name {
             font-weight: 500;
-            line-height: 1.2;
+            line-height: 1.3;
             margin-bottom: 2px;
+
+            display: -webkit-box;
+            -webkit-line-clamp: 2;      /* 最多显示 2 行 */
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+
+            word-break: break-all;      /* 超长无分隔符也能断 */
         }
+
 
         .cap-main .cap-info {
             display: flex;
@@ -4097,7 +4120,7 @@
         } else if (msgattr.download_task) {
             const task = msgattr.download_task;
             if (task.status === FloatBall.taskstatus.finished) {
-                statusEl.textContent = "✅";
+                statusEl.textContent = "已完成";
                 progress = 100;
             } else {
                 statusEl.textContent = task.backtask_status_text.textContent;
