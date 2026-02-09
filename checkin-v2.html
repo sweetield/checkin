@@ -12789,6 +12789,7 @@
 
             // ===== 在线成员 + 附件列表 =====
             load_online_users(users) {
+                // 初始化统一容器
                 if (!this.e_online_members_wrapper) {
                     this.e_online_members_wrapper = this.e_msgflow_mark_onlineusers;
                     this.e_online_members_wrapper.style.width = "250px";
@@ -12796,7 +12797,7 @@
                     this.e_online_members_wrapper.style.border = "1px solid #ddd";
                     this.e_online_members_wrapper.style.padding = "2px";
 
-                    // 搜索框
+                    // 全局搜索框
                     const globalSearch = document.createElement("input");
                     globalSearch.type = "text";
                     globalSearch.placeholder = "搜索成员或附件...";
@@ -12808,20 +12809,23 @@
                     this.e_online_members_wrapper.appendChild(globalSearch);
                     this.globalSearchInput = globalSearch;
 
-                    // 初始化附件和成员容器
+                    // 初始化容器
                     this.e_online_attachment_title = null;
                     this.e_online_attachment_panel = null;
                     this.e_member_list_container = null;
                     this.e_member_title = null;
 
+                    // 搜索逻辑
                     globalSearch.addEventListener("input", e => {
                         const keyword = e.target.value.trim().toLowerCase();
+                        // 成员过滤
                         if (this.e_member_list_container) {
                             this.e_member_list_container.querySelectorAll(".chat-session-onlineusers-item").forEach(item => {
                                 const name = item.attr.uid.toLowerCase();
                                 item.style.display = name.includes(keyword) ? "" : "none";
                             });
                         }
+                        // 附件过滤
                         if (this.e_online_attachment_panel) {
                             this.e_online_attachment_panel.querySelectorAll(".cap-item").forEach(item => {
                                 const name = item.querySelector(".name").innerText.toLowerCase();
@@ -12831,7 +12835,7 @@
                     });
                 }
 
-                // 清空旧附件和成员
+                // 清空旧列表
                 if (this.e_online_attachment_panel) this.e_online_attachment_panel.remove();
                 if (this.e_online_attachment_title) this.e_online_attachment_title.remove();
                 if (this.e_member_list_container) this.e_member_list_container.remove();
@@ -12844,11 +12848,11 @@
                 const groupId = this.current_contact_xxid()?.xxid;
                 if (!groupId) return;
 
-                if (!this.panel.attachments_by_group) this.panel.attachments_by_group = {};
-                if (!this.panel.attachments_by_group[groupId]) this.panel.attachments_by_group[groupId] = [];
-                const attachments = this.panel.attachments_by_group[groupId];
+                // 从 panel.msgs 中筛选附件
+                const attachments = (this.panel.msgs || [])
+                    .filter(m => m.file_attr && m.is_sent && m.group_id === groupId);
 
-                // 渲染附件
+                // === 渲染附件 ===
                 if (attachments.length > 0) {
                     const attachTitle = document.createElement("div");
                     attachTitle.innerText = "附件";
@@ -12892,17 +12896,17 @@
                         attachContainer.appendChild(div);
                         msgattr._attachment_list_item = div;
 
+                        // 下载
                         div.querySelector(".download-btn").addEventListener("click", e => {
                             e.stopPropagation();
                             trigger_file_download(msgattr);
                         });
 
+                        // 删除
                         div.querySelector(".remove-btn").addEventListener("click", e => {
                             e.stopPropagation();
-                            const arr = this.panel.attachments_by_group[groupId];
-                            const idx = arr.indexOf(msgattr);
-                            if (idx > -1) arr.splice(idx, 1);
-                            div.remove();
+                            msgattr._removed = true; // 标记删除
+                            if (msgattr._attachment_list_item) msgattr._attachment_list_item.remove();
                             msgattr._attachment_list_item = null;
                         });
 
@@ -12910,7 +12914,7 @@
                     });
                 }
 
-                // 渲染成员
+                // === 渲染成员 ===
                 if (users.length > 0) {
                     const memberTitle = document.createElement("div");
                     memberTitle.innerText = "成员";
