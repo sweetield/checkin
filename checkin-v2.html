@@ -49,7 +49,21 @@
         }
         /* ================= 附件列表 ================= */
         /* ===== 在线成员 & 附件列表字体增强 ===== */
+        /* ===== 在线成员 + 附件：整体浅蓝底 ===== */
+        .e_msgflow_mark_onlineusers {
+            background-color: rgba(0, 123, 255, 0.06);  /* 浅蓝主题底色 */
+        }
 
+        /* 附件行 hover，和成员一致 */
+        .cap-item:hover {
+            background-color: rgba(0, 123, 255, 0.10);
+        }
+
+        .online-users-attachments {
+            border-top: 1px solid rgba(0, 123, 255, 0.15);
+            margin-top: 6px;
+            padding-top: 4px;
+        }
 
 
         /* 下载按钮别显得像蚂蚁 */
@@ -2940,16 +2954,18 @@
         }
 
         .chat-session-onlineusers-item:hover {
-            background-color: rgba(0, 123, 255, 0.15);
+            background-color: rgba(0, 123, 255, 0.12);
         }
+
 
         /*.chat-session-onlineusers-item:active {*/
         /*    background-color: rgba(0, 123, 255, 0.4);*/
         /*}*/
 
         .chat-session-onlineusers-item.active {
-            background-color: rgba(255, 255, 0, 0.35);
+            background-color: rgba(255, 255, 0, 0.25);
         }
+
 
         .chat-session-onlineusers-item-name {
             display: inline-block;
