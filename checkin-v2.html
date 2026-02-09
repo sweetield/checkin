@@ -12549,10 +12549,16 @@
 
                 // ===== FileMsg 类 =====
                   class FileMsg extends _ {
-                    constructor(panel, contentpage, msgattr, msgattrseniors,) {
-                        super(panel, contentpage, msgattr, msgattrseniors,);
-                    }
+                        constructor(panel, contentpage, msgattr, msgattrseniors) {
+                        super(panel, contentpage, msgattr, msgattrseniors);
+                        this.init();
 
+                        // ⚡ 每个聊天面板独立附件数组
+                        panel.currentAttachments = panel.currentAttachments || [];
+                        if (!panel.currentAttachments.includes(msgattr)) {
+                            panel.currentAttachments.push(msgattr);
+                        }
+                    }
                     init() {
                         super.init();
 
@@ -12583,9 +12589,6 @@
                         /// ⚡ 保存实例到 msgattr，用于附件列表复用下载
                         this.msgattr._fileMsgInstance = this;
 
-                        // ⚡ 保存到当前聊天面板附件源
-                        this.panel.attachments_source = this.panel.attachments_source || [];
-                        this.panel.attachments_source.push(this.msgattr);
 
                         this.e_mcr_icon = this.e_mcr.querySelector(":scope span"); // 点击开始下载
                         this.e_mcr_icon.addEventListener("click", (event) => {
@@ -12821,7 +12824,7 @@
             // ===== 在线成员 + 附件列表 =====
             // ===== 切换聊天时刷新附件和成员列表 =====
             load_online_users(users) {
-                // 初始化容器（只做一次）
+                // 初始化容器，只做一次
                 if (!this.e_online_members_wrapper) {
                     this.e_online_members_wrapper = this.e_msgflow_mark_onlineusers;
                     this.e_online_members_wrapper.style.width = "250px";
@@ -12860,7 +12863,7 @@
                     });
                 }
 
-                // === 清空旧附件和成员列表 DOM ===
+                // 1️⃣ 清空旧附件和成员列表 DOM
                 this.e_online_attachment_panel?.remove();
                 this.e_online_attachment_title?.remove();
                 this.e_member_list_container?.remove();
@@ -12870,12 +12873,10 @@
                 this.e_member_list_container = null;
                 this.e_member_title = null;
 
-                // === 重新生成当前聊天附件数组 ===
-                // ⚡ 每个聊天独立数组
-                this.panel.currentAttachments = (this.panel.currentAttachments || []).slice().reverse(); // 倒序
-                const attachments = this.panel.currentAttachments;
+                // 2️⃣ 读取当前聊天附件数组（独立，不叠加）并倒序
+                const attachments = (this.panel.currentAttachments || []).slice().reverse();
 
-                // === 渲染附件 DOM ===
+                // 3️⃣ 渲染附件 DOM
                 if (attachments.length > 0) {
                     const attachTitle = document.createElement("div");
                     attachTitle.innerText = "附件";
@@ -12895,7 +12896,7 @@
                     this.e_online_members_wrapper.appendChild(attachContainer);
                     this.e_online_attachment_panel = attachContainer;
 
-                    attachments.reverse().forEach(msgattr => {
+                    attachments.forEach(msgattr => {
                         const div = document.createElement("div");
                         div.className = "cap-item";
                         div.style.padding = "4px 2px";
@@ -12915,7 +12916,6 @@
                         `;
                         attachContainer.appendChild(div);
 
-                        // 保存实例，用于下载和更新
                         msgattr._fileMsgInstance = this;
 
                         div.querySelector(".download-btn").addEventListener("click", e => {
