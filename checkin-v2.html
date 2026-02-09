@@ -12555,10 +12555,14 @@
                         super(panel, contentpage, msgattr, msgattrseniors);
                         this.init();
 
-                        // ⚡ 只添加到当前聊天对应数组
-                        const chatId = panel.wrapper.current_contact_xxid().xxid;
+                        // ⚡ 获取当前聊天唯一ID，确保已经存在
+                        const chatId = panel.current_contact_xxid ? panel.current_contact_xxid().xxid : "default";
+
+                        // 初始化聊天附件数组
                         panel.wrapper.chatAttachmentsMap = panel.wrapper.chatAttachmentsMap || {};
                         panel.wrapper.chatAttachmentsMap[chatId] = panel.wrapper.chatAttachmentsMap[chatId] || [];
+
+                        // ⚡ 只添加到当前聊天数组
                         panel.wrapper.chatAttachmentsMap[chatId].push(msgattr);
                     }
                     init() {
@@ -12825,8 +12829,9 @@
             // ===== 在线成员 + 附件列表 =====
             // ===== 在线成员 + 附件列表 =====
             // ===== 切换聊天时刷新附件和成员列表 =====
+            // ====== 切换聊天刷新附件列表和成员 ======
             load_online_users(users) {
-                const chatId = this.current_contact_xxid().xxid; // 当前聊天唯一ID
+                const chatId = this.current_contact_xxid().xxid || "default";
 
                 // 初始化容器（只做一次）
                 if (!this.e_online_members_wrapper) {
@@ -12850,14 +12855,12 @@
 
                     globalSearch.addEventListener("input", e => {
                         const keyword = e.target.value.trim().toLowerCase();
-                        // 成员过滤
                         if (this.e_member_list_container) {
                             this.e_member_list_container.querySelectorAll(".chat-session-onlineusers-item").forEach(item => {
                                 const name = item.attr.uid.toLowerCase();
                                 item.style.display = name.includes(keyword) ? "" : "none";
                             });
                         }
-                        // 附件过滤
                         if (this.e_online_attachment_panel) {
                             this.e_online_attachment_panel.querySelectorAll(".cap-item").forEach(item => {
                                 const name = item.querySelector(".name").innerText.toLowerCase();
@@ -12867,7 +12870,7 @@
                     });
                 }
 
-                // 1️⃣ 清空旧附件和成员列表 DOM
+                // 1️⃣ 清空旧 DOM
                 this.e_online_attachment_panel?.remove();
                 this.e_online_attachment_title?.remove();
                 this.e_member_list_container?.remove();
@@ -12877,9 +12880,9 @@
                 this.e_member_list_container = null;
                 this.e_member_title = null;
 
-                // 2️⃣ 获取当前聊天附件数组（独立，不叠加）并倒序
+                // 2️⃣ 获取当前聊天附件数组（独立，不叠加）
                 this.chatAttachmentsMap[chatId] = this.chatAttachmentsMap[chatId] || [];
-                const attachments = this.chatAttachmentsMap[chatId].slice().reverse(); // 倒序显示
+                const attachments = this.chatAttachmentsMap[chatId].slice().reverse();
 
                 // 3️⃣ 渲染附件 DOM
                 if (attachments.length > 0) {
@@ -12921,13 +12924,12 @@
                         `;
                         attachContainer.appendChild(div);
 
-                        msgattr._fileMsgInstance = this;
-
                         div.querySelector(".download-btn").addEventListener("click", e => {
                             e.stopPropagation();
                             trigger_file_download(msgattr);
                         });
 
+                        msgattr._fileMsgInstance = this;
                         update_attachment_list_item(msgattr);
                     });
                 }
