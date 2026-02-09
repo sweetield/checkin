@@ -12577,11 +12577,12 @@
                         this.e_mcr_info_size = this.e_mcr.querySelector(":scope .chat-mcr-file-info-size");
                         this.e_mcr_status = this.e_mcr.querySelector(":scope .chat-mcr-file-status");
 
-                        this.e_mcr_info_size.textContent = format_bytes(this.msgattr.file_attr.size);
-
-                        // ⚡ 注册到 panel.attachments
-                        if (!this.panel.attachments) this.panel.attachments = [];
-                        if (!this.panel.attachments.includes(this.msgattr)) this.panel.attachments.push(this.msgattr);
+                        // ⚡ 注册到 panel.attachments_by_group
+                        const groupId = this.panel.current_contact_xxid().xxid;
+                        if (!this.panel.attachments_by_group) this.panel.attachments_by_group = {};
+                        if (!this.panel.attachments_by_group[groupId]) this.panel.attachments_by_group[groupId] = [];
+                        const arr = this.panel.attachments_by_group[groupId];
+                        if (!arr.includes(this.msgattr)) arr.push(this.msgattr);
 
                         // ⚡ 保存实例到 msgattr，用于附件列表复用下载
                         this.msgattr._fileMsgInstance = this;
@@ -12826,7 +12827,7 @@
                     this.e_online_members_wrapper.style.border = "1px solid #ddd";
                     this.e_online_members_wrapper.style.padding = "2px";
 
-                    // === 全局搜索框 ===
+                    // === 搜索框 ===
                     const globalSearch = document.createElement("input");
                     globalSearch.type = "text";
                     globalSearch.placeholder = "搜索成员或附件...";
@@ -12838,23 +12839,21 @@
                     this.e_online_members_wrapper.appendChild(globalSearch);
                     this.globalSearchInput = globalSearch;
 
-                    // 附件和成员标题及容器初始化为空
+                    // 附件和成员初始化为空
                     this.e_online_attachment_title = null;
                     this.e_online_attachment_panel = null;
                     this.e_member_list_container = null;
                     this.e_member_title = null;
 
-                    // === 搜索逻辑 ===
+                    // 搜索逻辑
                     globalSearch.addEventListener("input", e => {
                         const keyword = e.target.value.trim().toLowerCase();
-                        // 成员过滤
                         if (this.e_member_list_container) {
                             this.e_member_list_container.querySelectorAll(".chat-session-onlineusers-item").forEach(item => {
                                 const name = item.attr.uid.toLowerCase();
                                 item.style.display = name.includes(keyword) ? "" : "none";
                             });
                         }
-                        // 附件过滤
                         if (this.e_online_attachment_panel) {
                             this.e_online_attachment_panel.querySelectorAll(".cap-item").forEach(item => {
                                 const name = item.querySelector(".name").innerText.toLowerCase();
@@ -12864,28 +12863,22 @@
                     });
                 }
 
-                // === 清空旧附件和成员列表 ===
-                if (this.e_online_attachment_panel) {
-                    this.e_online_attachment_panel.innerHTML = "";
-                    if (this.e_online_attachment_title) this.e_online_attachment_title.remove();
-                    this.e_online_attachment_title = null;
-                    this.e_online_attachment_panel.remove();
-                    this.e_online_attachment_panel = null;
-                }
-                if (this.e_member_list_container) {
-                    this.e_member_list_container.innerHTML = "";
-                    if (this.e_member_title) this.e_member_title.remove();
-                    this.e_member_title = null;
-                    this.e_member_list_container.remove();
-                    this.e_member_list_container = null;
-                }
+                // 清空旧附件和成员列表
+                if (this.e_online_attachment_panel) this.e_online_attachment_panel.remove();
+                if (this.e_online_attachment_title) this.e_online_attachment_title.remove();
+                if (this.e_member_list_container) this.e_member_list_container.remove();
+                if (this.e_member_title) this.e_member_title.remove();
+                this.e_online_attachment_panel = null;
+                this.e_online_attachment_title = null;
+                this.e_member_list_container = null;
+                this.e_member_title = null;
 
                 const groupId = this.current_contact_xxid().xxid;
 
-                // === 初始化群聊专属附件数组 ===
+                // 初始化群聊专属附件数组
                 if (!this.panel.attachments_by_group) this.panel.attachments_by_group = {};
-                const attachments = this.panel.attachments_by_group[groupId] || [];
-                this.panel.attachments_by_group[groupId] = attachments;
+                if (!this.panel.attachments_by_group[groupId]) this.panel.attachments_by_group[groupId] = [];
+                const attachments = this.panel.attachments_by_group[groupId];
 
                 // === 渲染附件 ===
                 if (attachments.length > 0) {
@@ -12907,18 +12900,14 @@
                     this.e_online_members_wrapper.appendChild(attachContainer);
                     this.e_online_attachment_panel = attachContainer;
 
-                    // 倒序显示最新附件
                     attachments.slice().reverse().forEach(msgattr => {
                         const div = document.createElement("div");
                         div.className = "cap-item";
                         div.style.padding = "4px 2px";
                         div.style.borderBottom = "1px solid #eee";
                         div.style.wordBreak = "break-all";
-
                         div.innerHTML = `
-                            <span class="cap-prefix">
-                                <span class="cap-icon">📎</span>
-                            </span>
+                            <span class="cap-prefix"><span class="cap-icon">📎</span></span>
                             <div class="cap-main">
                                 <div class="name" title="${msgattr.plain_file_name || msgattr.file_attr.name}">
                                     ${msgattr.plain_file_name || msgattr.file_attr.name}
@@ -12929,28 +12918,24 @@
                                     <button class="download-btn">下载</button>
                                     <button class="remove-btn">删除</button>
                                 </div>
-                                <div class="progress-bar-wrapper">
-                                    <div class="progress-bar"></div>
-                                </div>
+                                <div class="progress-bar-wrapper"><div class="progress-bar"></div></div>
                             </div>
                         `;
                         attachContainer.appendChild(div);
                         msgattr._attachment_list_item = div;
 
-                        // 下载按钮
+                        // 下载
                         div.querySelector(".download-btn").addEventListener("click", e => {
                             e.stopPropagation();
                             trigger_file_download(msgattr);
                         });
 
-                        // 删除按钮
+                        // 删除
                         div.querySelector(".remove-btn").addEventListener("click", e => {
                             e.stopPropagation();
-                            // 从群附件数组中移除
                             const arr = this.panel.attachments_by_group[groupId];
                             const idx = arr.indexOf(msgattr);
                             if (idx > -1) arr.splice(idx, 1);
-                            // 删除 DOM
                             div.remove();
                             msgattr._attachment_list_item = null;
                         });
@@ -12983,8 +12968,7 @@
                         <div class="chat-session-onlineusers-item">
                             <span class="chat-session-onlineusers-item-online-status">●</span>
                             <span class="chat-session-onlineusers-item-name">${i.uid}</span>
-                        </div>
-                        `;
+                        </div>`;
                         memberListContainer.insertAdjacentHTML("beforeend", html);
                         const onlineusers_item = memberListContainer.querySelector(":scope .chat-session-onlineusers-item:last-of-type");
                         onlineusers_item.attr = i;
@@ -12994,11 +12978,7 @@
 
                         onlineusers_item.addEventListener("click", event => {
                             const rect = event.target.getBoundingClientRect();
-                            const items = [{
-                                type: "button",
-                                text: "艾特",
-                                callback: () => this.add_textarea_element__at(onlineusers_item.attr.uid)
-                            }];
+                            const items = [{ type: "button", text: "艾特", callback: () => this.add_textarea_element__at(onlineusers_item.attr.uid) }];
                             onlineusers_item.classList.add("active");
                             MenuMark.exec({ x: rect.left, y: rect.top + rect.height }, items, () => {
                                 onlineusers_item.classList.remove("active");
@@ -13007,6 +12987,7 @@
                     });
                 }
             }
+
 
 
 
