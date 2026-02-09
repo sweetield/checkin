@@ -12823,8 +12823,6 @@
                     this.e_online_members_wrapper = this.e_msgflow_mark_onlineusers;
                     this.e_online_members_wrapper.style.width = "250px";
                     this.e_online_members_wrapper.style.minWidth = "250px";
-                    this.e_online_members_wrapper.style.maxWidth = "150px";
-
                     this.e_online_members_wrapper.style.border = "1px solid #ddd";
                     this.e_online_members_wrapper.style.padding = "2px";
 
@@ -12840,18 +12838,15 @@
                     this.e_online_members_wrapper.appendChild(globalSearch);
                     this.globalSearchInput = globalSearch;
 
-                    // 附件标题和容器初始化为空，稍后根据附件数量创建
+                    // 附件和成员标题及容器初始化为空
                     this.e_online_attachment_title = null;
                     this.e_online_attachment_panel = null;
-
-                    // 成员标题和列表容器初始化
                     this.e_member_list_container = null;
                     this.e_member_title = null;
 
                     // === 搜索逻辑 ===
                     globalSearch.addEventListener("input", e => {
                         const keyword = e.target.value.trim().toLowerCase();
-
                         // 成员过滤
                         if (this.e_member_list_container) {
                             this.e_member_list_container.querySelectorAll(".chat-session-onlineusers-item").forEach(item => {
@@ -12859,7 +12854,6 @@
                                 item.style.display = name.includes(keyword) ? "" : "none";
                             });
                         }
-
                         // 附件过滤
                         if (this.e_online_attachment_panel) {
                             this.e_online_attachment_panel.querySelectorAll(".cap-item").forEach(item => {
@@ -12870,26 +12864,31 @@
                     });
                 }
 
-                // === 清空旧列表 ===
+                // === 清空旧附件和成员列表 ===
                 if (this.e_online_attachment_panel) {
                     this.e_online_attachment_panel.innerHTML = "";
-                    this.e_online_attachment_title.remove();
-                    this.e_online_attachment_panel.remove();
+                    if (this.e_online_attachment_title) this.e_online_attachment_title.remove();
                     this.e_online_attachment_title = null;
+                    this.e_online_attachment_panel.remove();
                     this.e_online_attachment_panel = null;
                 }
                 if (this.e_member_list_container) {
                     this.e_member_list_container.innerHTML = "";
                     if (this.e_member_title) this.e_member_title.remove();
+                    this.e_member_title = null;
                     this.e_member_list_container.remove();
                     this.e_member_list_container = null;
-                    this.e_member_title = null;
                 }
 
-                // === 渲染附件（有附件才显示标题和列表） ===
-                const attachments = this.panel.attachments || [];
+                const groupId = this.current_contact_xxid().xxid;
+
+                // === 初始化群聊专属附件数组 ===
+                if (!this.panel.attachments_by_group) this.panel.attachments_by_group = {};
+                const attachments = this.panel.attachments_by_group[groupId] || [];
+                this.panel.attachments_by_group[groupId] = attachments;
+
+                // === 渲染附件 ===
                 if (attachments.length > 0) {
-                    // 附件标题
                     const attachTitle = document.createElement("div");
                     attachTitle.innerText = "附件";
                     attachTitle.style.fontWeight = "700";
@@ -12902,14 +12901,14 @@
                     this.e_online_members_wrapper.appendChild(attachTitle);
                     this.e_online_attachment_title = attachTitle;
 
-                    // 附件列表容器
                     const attachContainer = document.createElement("div");
                     attachContainer.className = "online-users-attachments";
                     attachContainer.style.marginTop = "2px";
                     this.e_online_members_wrapper.appendChild(attachContainer);
                     this.e_online_attachment_panel = attachContainer;
 
-                    attachments.reverse().forEach(msgattr => {
+                    // 倒序显示最新附件
+                    attachments.slice().reverse().forEach(msgattr => {
                         const div = document.createElement("div");
                         div.className = "cap-item";
                         div.style.padding = "4px 2px";
@@ -12928,6 +12927,7 @@
                                     <span class="size">${format_bytes(msgattr.file_attr.size)}</span>
                                     <span class="status"></span>
                                     <button class="download-btn">下载</button>
+                                    <button class="remove-btn">删除</button>
                                 </div>
                                 <div class="progress-bar-wrapper">
                                     <div class="progress-bar"></div>
@@ -12937,9 +12937,22 @@
                         attachContainer.appendChild(div);
                         msgattr._attachment_list_item = div;
 
+                        // 下载按钮
                         div.querySelector(".download-btn").addEventListener("click", e => {
                             e.stopPropagation();
                             trigger_file_download(msgattr);
+                        });
+
+                        // 删除按钮
+                        div.querySelector(".remove-btn").addEventListener("click", e => {
+                            e.stopPropagation();
+                            // 从群附件数组中移除
+                            const arr = this.panel.attachments_by_group[groupId];
+                            const idx = arr.indexOf(msgattr);
+                            if (idx > -1) arr.splice(idx, 1);
+                            // 删除 DOM
+                            div.remove();
+                            msgattr._attachment_list_item = null;
                         });
 
                         update_attachment_list_item(msgattr);
@@ -12994,6 +13007,7 @@
                     });
                 }
             }
+
 
 
 
