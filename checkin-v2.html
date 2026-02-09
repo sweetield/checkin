@@ -48,37 +48,32 @@
             100% { box-shadow: 0 8px 20px rgba(59,130,246,0.18), inset 0 1px 0 rgba(255,255,255,0.6); }
         }
         /* ================= 附件列表 ================= */
-        .chat-online-wrapper {
-            display: flex;
-            border: 1px solid #ddd;
-            height: 300px; /* 你可以根据实际调整 */
-            overflow: hidden;
+        /* ===== 在线成员 & 附件列表字体增强 ===== */
+       .chat-session-onlineusers-item,
+        .cap-item {
+            font-size: 13px;
+            line-height: 1.5;
         }
 
-        .online-users-column, .online-attachments-column {
-            flex: 1;
-            overflow-y: auto;
-            padding: 4px;
-            border-right: 1px solid #eee;
+
+        .chat-session-onlineusers-item-name,
+        .cap-item .name {
+            font-weight: 500;
         }
 
-        .online-attachments-column {
-            border-right: none;
+
+        /* 在线状态点别太抢戏 */
+        .chat-session-onlineusers-item-online-status {
+            font-size: 10px;
+            margin-right: 4px;
         }
 
-        .online-users-column .chat-session-onlineusers-item,
-        .online-attachments-column .cap-item {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 2px 4px;
-            cursor: pointer;
+        /* 下载按钮别显得像蚂蚁 */
+        .cap-item .download-btn {
+            font-size: 12px;
+            padding: 2px 6px;
         }
 
-        .online-users-column .chat-session-onlineusers-item:hover,
-        .online-attachments-column .cap-item:hover {
-            background: #f0f0f0;
-        }
 
 
         /* ================= 选择消息出现菜单 ================= */
@@ -2945,34 +2940,24 @@
         }
 
         .chat-session-onlineusers-item {
-            padding: 4px 8px;
+            padding: 2px 4px;
             display: flex;
             justify-content: space-between;
             align-items: center;
             cursor: pointer;
-            font-size: 14px; /* 与原成员列表一致 */
-            line-height: 1.6;
-            color: #333;
-            background: #f7f7f7; /* 原成员列表背景 */
-            border-radius: 4px;
-            margin-bottom: 2px;
-        }
-
-        .chat-session-onlineusers-item:hover {
-            background: #e6f0ff; /* 原 hover 效果 */
-        }
-
-        .online-users-attachments {
-            margin-top: 6px;
-            font-size: 14px;
-            line-height: 1.6;
-        }
-
-        .cap-item .download-btn {
-            margin-left: 6px;
             font-size: 13px;
         }
 
+        .online-users-attachments {
+            border-top: 1px solid #eee;
+            padding-top: 4px;
+            font-size: 13px;
+        }
+
+        .cap-item .download-btn {
+            margin-left: 5px;
+            font-size: 12px;
+        }
 
 
         .chat-session-onlineusers-item:hover {
@@ -12674,32 +12659,25 @@
             // ===== 在线成员 + 附件列表 =====
             load_online_users(users) {
                 // 初始化左右框架
+                // 初始化统一列表容器
                 if (!this.e_online_members_wrapper) {
-                    // 创建统一 wrapper
-                    const wrapper = document.createElement("div");
-                    wrapper.className = "chat-online-members-wrapper";
+                    this.e_online_members_wrapper = this.e_msgflow_mark_onlineusers;
 
+                    // 设置容器宽度和滚动
+                    this.e_online_members_wrapper.style.width = "200px"; // 可调窄
+                    this.e_online_members_wrapper.style.maxHeight = "400px"; // 可随聊天框调整
+                    this.e_online_members_wrapper.style.overflowY = "auto";
+                    this.e_online_members_wrapper.style.border = "1px solid #ddd";
+                    this.e_online_members_wrapper.style.padding = "2px";
 
-                    // 在线成员容器
-                    const usersList = document.createElement("div");
-                    usersList.className = "online-users-list";
-                    wrapper.appendChild(usersList);
-
-                    // 附件容器
+                    // 附件列表容器直接添加到成员列表末尾
                     const attachContainer = document.createElement("div");
                     attachContainer.className = "online-users-attachments";
-                    attachContainer.style.marginTop = "6px";
-                    wrapper.appendChild(attachContainer);
+                    attachContainer.style.marginTop = "4px";
+                    this.e_online_members_wrapper.appendChild(attachContainer);
 
-                    // 插入到在线成员标记后面
-                    this.e_msgflow_mark_onlineusers.insertAdjacentElement("afterend", wrapper);
-
-                    // 保存引用
-                    this.e_online_members_wrapper = wrapper;
-                    this.e_online_users_list = usersList;
                     this.e_online_attachment_panel = attachContainer;
                 }
-
 
                 // 清空旧成员和附件
                 this.e_online_members_wrapper.querySelectorAll(".chat-session-onlineusers-item").forEach(i => i.remove());
@@ -12743,8 +12721,7 @@
                     div.style.display = "flex";
                     div.style.justifyContent = "space-between";
                     div.style.alignItems = "center";
-                    div.style.padding = "4px 0";
-                    div.style.cursor = "pointer";
+                    div.style.padding = "2px 0";
 
                     div.innerHTML = `
                         <span class="name" title="${msgattr.plain_file_name || msgattr.file_attr.name}">
