@@ -3028,7 +3028,7 @@
             transition: background-color 0.1s, transform 0.1s;
             user-select: none;
 
-            display: flex;
+            flex: 0 0 450px; /* 不收缩，固定宽度450px */
             flex-direction: row;
             gap: 4px;
 
@@ -12821,7 +12821,7 @@
                 // 初始化统一容器
                 if (!this.e_online_members_wrapper) {
                     this.e_online_members_wrapper = this.e_msgflow_mark_onlineusers;
-                    this.e_online_members_wrapper.style.width = "20vw"; // 宽度为浏览器视口的20%
+                    this.e_online_members_wrapper.style.width = "450px";
                     this.e_online_members_wrapper.style.border = "1px solid #ddd";
                     this.e_online_members_wrapper.style.padding = "2px";
 
