@@ -48,86 +48,8 @@
             100% { box-shadow: 0 8px 20px rgba(59,130,246,0.18), inset 0 1px 0 rgba(255,255,255,0.6); }
         }
 
-        /* ================= 右侧通用面板 ================= */
-        .chat-session-sidepanel {
-            position: absolute;
-            top: 48px;
-            right: 0;
-            bottom: 0;               /* 关键：拉到底 */
-            width: 280px;
 
-            display: flex;
-            flex-direction: column;
 
-            background-color: #eaf4ff; /* 浅蓝底，不透明 */
-            border-left: 1px solid rgba(0, 0, 0, 0.08);
-            z-index: 100;
-        }
-
-        /* 面板标题 */
-        .chat-session-sidepanel-title {
-            padding: 8px 10px;
-            font-weight: 600;
-            font-size: 14px;
-            color: #205a9e;
-            border-bottom: 1px solid rgba(0, 0, 0, 0.08);
-            background-color: #d9ecff;
-        }
-
-        /* 列表区域，自动撑满 */
-        .chat-session-sidepanel-list {
-            flex: 1;
-            overflow-y: auto;
-            padding: 6px;
-        }
-
-        /* ================= 附件列表 ================= */
-        .chat-session-attachment-item {
-            display: flex;
-            align-items: center;
-            gap: 6px;
-
-            padding: 6px 8px;
-            margin-bottom: 4px;
-
-            border-radius: 4px;
-            background-color: #f3f9ff;
-        }
-
-        .chat-session-attachment-item:hover {
-            background-color: #dbeeff;
-        }
-
-        .chat-session-attachment-icon {
-            font-size: 16px;
-        }
-
-        .chat-session-attachment-name {
-            flex: 1;
-            font-size: 13px;
-            color: #1f3f66;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            white-space: nowrap;
-        }
-
-        .chat-session-attachment-size {
-            font-size: 12px;
-            color: #5c7fa3;
-            white-space: nowrap;
-        }
-
-        .chat-session-attachment-status {
-            font-size: 12px;
-            color: #007bff;
-            white-space: nowrap;
-        }
-
-        .chat-session-attachment-download {
-            font-size: 12px;
-            padding: 2px 6px;
-            cursor: pointer;
-        }
         /* ================= 附件列表 ================= */
         /* ===== 在线成员 & 附件列表字体增强 ===== */
         /* ===== 在线成员 + 附件：整体浅蓝底 ===== */
@@ -4125,16 +4047,29 @@
 
 <script>
 
-    function format_bytes(bytes) {
-        if (!bytes) return "0 B";
-        const k = 1024;
-        const sizes = ["B", "KB", "MB", "GB"];
-        const i = Math.floor(Math.log(bytes) / Math.log(k));
-        return (bytes / Math.pow(k, i)).toFixed(1) + " " + sizes[i];
+    function update_attachment_list_item(msgattr) {
+        const div = msgattr._attachment_list_item;
+        if (!div) return;
+
+        // 文件名
+        const nameEl = div.querySelector(".name");
+        nameEl.textContent = msgattr.plain_file_name || msgattr.file_attr.name;
+        nameEl.title = nameEl.textContent;
+
+        // 文件大小
+        const sizeEl = div.querySelector(".size");
+        sizeEl.textContent = format_bytes(msgattr.file_attr.size);
+
+        // 下载/上传状态
+        const statusEl = div.querySelector(".status");
+        if (!msgattr.is_sent) {
+            statusEl.textContent = msgattr.upload_task ? msgattr.upload_task.backtask_status_text.textContent : "正在上传...";
+        } else if (msgattr.download_task) {
+            statusEl.textContent = msgattr.download_task.backtask_status_text.textContent;
+        } else {
+            statusEl.textContent = "";
+        }
     }
-
-
- 
 
     // 文件消息下载复用函数
     // ===== 文件下载复用逻辑（保持 FileMsg 功能） =====
@@ -12584,8 +12519,6 @@
                         // ⚡ 保存实例到 msgattr，用于附件列表复用下载
                         this.msgattr._fileMsgInstance = this;
 
-
-
                         this.e_mcr_icon = this.e_mcr.querySelector(":scope span"); // 点击开始下载
                         this.e_mcr_icon.addEventListener("click", (event) => {
                             if (!this.msgattr.is_sent) return
@@ -12688,6 +12621,12 @@
                                     this.msgattr.download_task.args.plain_file_data = null;
 
                                 }
+
+                                // 2. 同步到附件列表
+                                if (this.msgattr._attachment_list_item) {
+                                    update_attachment_list_item(this.msgattr);
+                                }
+
                             }
 
                         }
@@ -12870,43 +12809,44 @@
 
                 // 渲染附件列表（依附在同一个滚动容器末尾）
                 const attachments = this.panel.attachments || [];
-                attachments.reverse().reverse().forEach(msgattr => {
-                    if (!msgattr.file_attr) return;
-
+                attachments.reverse().forEach(msgattr => {
                     const div = document.createElement("div");
-                    div.className = "chat-session-attachment-item";
+                    div.className = "cap-item";
+                    div.style.display = "flex";
+                    div.style.justifyContent = "space-between";
+                    div.style.alignItems = "center";
+                    div.style.padding = "2px 0";
 
                     div.innerHTML = `
-                        <span class="chat-session-attachment-icon">📎</span>
+                        <span class="cap-prefix">
+                            <span class="cap-icon">📎</span>
+                        </span>
 
-                        <span class="chat-session-attachment-name"
-                              title="${msgattr.plain_file_name || msgattr.file_attr.name}">
+                        <span class="name" title="${msgattr.plain_file_name || msgattr.file_attr.name}">
                             ${msgattr.plain_file_name || msgattr.file_attr.name}
                         </span>
 
-                        <span class="chat-session-attachment-size">
-                            ${format_bytes(msgattr.file_attr.size)}
-                        </span>
+                        <span class="size">${format_bytes(msgattr.file_attr.size)}</span>
+                        <span class="status"></span>
 
-                        <span class="chat-session-attachment-status"></span>
-
-                        <button class="chat-session-attachment-download">
-                            下载
-                        </button>
+                        <button class="download-btn">下载</button>
                     `;
 
-                    const eStatus = div.querySelector(".chat-session-attachment-status");
-                    const eBtn = div.querySelector(".chat-session-attachment-download");
+                    this.e_online_attachment_panel.appendChild(div);
 
-                    eBtn.addEventListener("click", e => {
+                    // 保存引用方便同步
+                    msgattr._attachment_list_item = div;
+
+                    div.querySelector(".download-btn").addEventListener("click", e => {
                         e.stopPropagation();
-
                         trigger_file_download(msgattr);
-                        bind_attachment_download_status(msgattr, eStatus);
                     });
 
-                    container.appendChild(div);
+                    // ⚡ 初始化状态
+                    update_attachment_list_item(msgattr);
                 });
+
+
             }
 
 
