@@ -9460,8 +9460,8 @@
 
                 // ====== 聊天面板全局变量 ======
                 // 保存每个聊天附件
-                this.chatAttachmentsMap = this.chatAttachmentsMap || {};
-                this.pendingAttachments = this.pendingAttachments || {}; // 临时队列
+                // ====== 全局聊天附件 map ======
+                this.chatAttachmentsMap = {}; // key = chatId, value = 当前聊天附件数组
                 // 查看在线成员
                 if (this.is_group()) {
                     this.e_header_info_clickmark.addEventListener("click", (event) => {
@@ -12836,9 +12836,9 @@
             // ===== 切换聊天时刷新附件和成员列表 =====
             // ====== 切换聊天刷新附件列表和成员 ======
             load_online_users(users) {
-                const chatId = this.current_contact_xxid().xxid || "default";
+                const chatId = this.current_contact_xxid().xxid;
 
-                // 初始化容器（只做一次）
+                // 1️⃣ 初始化容器（只做一次）
                 if (!this.e_online_members_wrapper) {
                     this.e_online_members_wrapper = this.e_msgflow_mark_onlineusers;
                     this.e_online_members_wrapper.style.width = "250px";
@@ -12875,7 +12875,7 @@
                     });
                 }
 
-                // 1️⃣ 清空旧 DOM
+                // 2️⃣ 清空旧 DOM
                 this.e_online_attachment_panel?.remove();
                 this.e_online_attachment_title?.remove();
                 this.e_member_list_container?.remove();
@@ -12885,18 +12885,11 @@
                 this.e_member_list_container = null;
                 this.e_member_title = null;
 
-                // 确保附件数组存在
-                this.chatAttachmentsMap[chatId] = this.chatAttachmentsMap[chatId] || [];
+                // 3️⃣ 获取当前聊天附件
+                const attachments = (this.panel.attachments || []).slice().reverse(); // 倒序显示
+                this.chatAttachmentsMap[chatId] = attachments;
 
-                // 将 pending 附件加入当前聊天
-                if (this.pendingAttachments && this.pendingAttachments.length > 0) {
-                    this.chatAttachmentsMap[chatId].push(...this.pendingAttachments);
-                    this.pendingAttachments = [];
-                }
-
-                const attachments = this.chatAttachmentsMap[chatId].slice().reverse(); // 倒序
-
-                // 3️⃣ 渲染附件 DOM
+                // 4️⃣ 渲染附件 DOM
                 if (attachments.length > 0) {
                     const attachTitle = document.createElement("div");
                     attachTitle.innerText = "附件";
