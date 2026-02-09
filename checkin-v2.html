@@ -9458,10 +9458,6 @@
                 this.e_msgflow_mark_onlineusers.classList.add("hidden");
                 remove_simple_loading_mark(this.e_msgflow_mark_onlineusers);
 
-                // ====== 聊天面板全局变量 ======
-                // 保存每个聊天附件
-                // ====== 全局聊天附件 map ======
-                this.chatAttachmentsMap = {}; // key = chatId, value = 当前聊天附件数组
                 // 查看在线成员
                 if (this.is_group()) {
                     this.e_header_info_clickmark.addEventListener("click", (event) => {
@@ -12553,23 +12549,10 @@
 
                 // ===== FileMsg 类 =====
                   class FileMsg extends _ {
-                       constructor(panel, contentpage, msgattr, msgattrseniors) {
-                            super(panel, contentpage, msgattr, msgattrseniors);
-                            this.init();
+                    constructor(panel, contentpage, msgattr, msgattrseniors,) {
+                        super(panel, contentpage, msgattr, msgattrseniors,);
+                    }
 
-                            // 获取当前聊天ID
-                            let chatId = (panel.current_contact_xxid && panel.current_contact_xxid().xxid) || null;
-
-                            if (chatId) {
-                                panel.wrapper.chatAttachmentsMap = panel.wrapper.chatAttachmentsMap || {};
-                                panel.wrapper.chatAttachmentsMap[chatId] = panel.wrapper.chatAttachmentsMap[chatId] || [];
-                                panel.wrapper.chatAttachmentsMap[chatId].push(msgattr);
-                            } else {
-                                // 当前聊天 ID 还没初始化，放到 pending
-                                this.pendingAttachments = this.pendingAttachments || [];
-                                this.pendingAttachments.push(msgattr);
-                            }
-                        }
                     init() {
                         super.init();
 
@@ -12596,10 +12579,12 @@
 
                         this.e_mcr_info_size.textContent = format_bytes(this.msgattr.file_attr.size);
 
+                        // ⚡ 注册到 panel.attachments
+                        if (!this.panel.attachments) this.panel.attachments = [];
+                        if (!this.panel.attachments.includes(this.msgattr)) this.panel.attachments.push(this.msgattr);
 
-                        /// ⚡ 保存实例到 msgattr，用于附件列表复用下载
+                        // ⚡ 保存实例到 msgattr，用于附件列表复用下载
                         this.msgattr._fileMsgInstance = this;
-
 
                         this.e_mcr_icon = this.e_mcr.querySelector(":scope span"); // 点击开始下载
                         this.e_mcr_icon.addEventListener("click", (event) => {
@@ -12832,21 +12817,18 @@
             }
 
             // ===== 在线成员 + 附件列表 =====
-            // ===== 在线成员 + 附件列表 =====
-            // ===== 切换聊天时刷新附件和成员列表 =====
-            // ====== 切换聊天刷新附件列表和成员 ======
             load_online_users(users) {
-                const chatId = this.current_contact_xxid().xxid;
-
-                // 1️⃣ 初始化容器（只做一次）
+                // 初始化统一容器
                 if (!this.e_online_members_wrapper) {
                     this.e_online_members_wrapper = this.e_msgflow_mark_onlineusers;
                     this.e_online_members_wrapper.style.width = "250px";
                     this.e_online_members_wrapper.style.minWidth = "250px";
+                    this.e_online_members_wrapper.style.maxWidth = "150px";
+
                     this.e_online_members_wrapper.style.border = "1px solid #ddd";
                     this.e_online_members_wrapper.style.padding = "2px";
 
-                    // 全局搜索框
+                    // === 全局搜索框 ===
                     const globalSearch = document.createElement("input");
                     globalSearch.type = "text";
                     globalSearch.placeholder = "搜索成员或附件...";
@@ -12858,14 +12840,27 @@
                     this.e_online_members_wrapper.appendChild(globalSearch);
                     this.globalSearchInput = globalSearch;
 
+                    // 附件标题和容器初始化为空，稍后根据附件数量创建
+                    this.e_online_attachment_title = null;
+                    this.e_online_attachment_panel = null;
+
+                    // 成员标题和列表容器初始化
+                    this.e_member_list_container = null;
+                    this.e_member_title = null;
+
+                    // === 搜索逻辑 ===
                     globalSearch.addEventListener("input", e => {
                         const keyword = e.target.value.trim().toLowerCase();
+
+                        // 成员过滤
                         if (this.e_member_list_container) {
                             this.e_member_list_container.querySelectorAll(".chat-session-onlineusers-item").forEach(item => {
                                 const name = item.attr.uid.toLowerCase();
                                 item.style.display = name.includes(keyword) ? "" : "none";
                             });
                         }
+
+                        // 附件过滤
                         if (this.e_online_attachment_panel) {
                             this.e_online_attachment_panel.querySelectorAll(".cap-item").forEach(item => {
                                 const name = item.querySelector(".name").innerText.toLowerCase();
@@ -12875,22 +12870,26 @@
                     });
                 }
 
-                // 2️⃣ 清空旧 DOM
-                this.e_online_attachment_panel?.remove();
-                this.e_online_attachment_title?.remove();
-                this.e_member_list_container?.remove();
-                this.e_member_title?.remove();
-                this.e_online_attachment_panel = null;
-                this.e_online_attachment_title = null;
-                this.e_member_list_container = null;
-                this.e_member_title = null;
+                // === 清空旧列表 ===
+                if (this.e_online_attachment_panel) {
+                    this.e_online_attachment_panel.innerHTML = "";
+                    this.e_online_attachment_title.remove();
+                    this.e_online_attachment_panel.remove();
+                    this.e_online_attachment_title = null;
+                    this.e_online_attachment_panel = null;
+                }
+                if (this.e_member_list_container) {
+                    this.e_member_list_container.innerHTML = "";
+                    if (this.e_member_title) this.e_member_title.remove();
+                    this.e_member_list_container.remove();
+                    this.e_member_list_container = null;
+                    this.e_member_title = null;
+                }
 
-                // 3️⃣ 获取当前聊天附件
-                const attachments = (this.panel.attachments || []).slice().reverse(); // 倒序显示
-                this.chatAttachmentsMap[chatId] = attachments;
-
-                // 4️⃣ 渲染附件 DOM
+                // === 渲染附件（有附件才显示标题和列表） ===
+                const attachments = this.panel.attachments || [];
                 if (attachments.length > 0) {
+                    // 附件标题
                     const attachTitle = document.createElement("div");
                     attachTitle.innerText = "附件";
                     attachTitle.style.fontWeight = "700";
@@ -12903,43 +12902,51 @@
                     this.e_online_members_wrapper.appendChild(attachTitle);
                     this.e_online_attachment_title = attachTitle;
 
+                    // 附件列表容器
                     const attachContainer = document.createElement("div");
                     attachContainer.className = "online-users-attachments";
                     attachContainer.style.marginTop = "2px";
                     this.e_online_members_wrapper.appendChild(attachContainer);
                     this.e_online_attachment_panel = attachContainer;
 
-                    attachments.forEach(msgattr => {
+                    attachments.reverse().forEach(msgattr => {
                         const div = document.createElement("div");
                         div.className = "cap-item";
                         div.style.padding = "4px 2px";
                         div.style.borderBottom = "1px solid #eee";
                         div.style.wordBreak = "break-all";
+
                         div.innerHTML = `
-                            <span class="cap-prefix"><span class="cap-icon">📎</span></span>
+                            <span class="cap-prefix">
+                                <span class="cap-icon">📎</span>
+                            </span>
                             <div class="cap-main">
                                 <div class="name" title="${msgattr.plain_file_name || msgattr.file_attr.name}">
                                     ${msgattr.plain_file_name || msgattr.file_attr.name}
                                 </div>
                                 <div class="cap-info">
                                     <span class="size">${format_bytes(msgattr.file_attr.size)}</span>
+                                    <span class="status"></span>
                                     <button class="download-btn">下载</button>
+                                </div>
+                                <div class="progress-bar-wrapper">
+                                    <div class="progress-bar"></div>
                                 </div>
                             </div>
                         `;
                         attachContainer.appendChild(div);
+                        msgattr._attachment_list_item = div;
 
                         div.querySelector(".download-btn").addEventListener("click", e => {
                             e.stopPropagation();
                             trigger_file_download(msgattr);
                         });
 
-                        msgattr._fileMsgInstance = this;
                         update_attachment_list_item(msgattr);
                     });
                 }
 
-                // 4️⃣ 渲染成员列表
+                // === 渲染成员 ===
                 if (users.length > 0) {
                     const memberTitle = document.createElement("div");
                     memberTitle.innerText = "成员";
@@ -12960,20 +12967,25 @@
 
                     users.forEach(i => {
                         const html = `
-                            <div class="chat-session-onlineusers-item">
-                                <span class="chat-session-onlineusers-item-online-status">●</span>
-                                <span class="chat-session-onlineusers-item-name">${i.uid}</span>
-                            </div>
+                        <div class="chat-session-onlineusers-item">
+                            <span class="chat-session-onlineusers-item-online-status">●</span>
+                            <span class="chat-session-onlineusers-item-name">${i.uid}</span>
+                        </div>
                         `;
                         memberListContainer.insertAdjacentHTML("beforeend", html);
                         const onlineusers_item = memberListContainer.querySelector(":scope .chat-session-onlineusers-item:last-of-type");
                         onlineusers_item.attr = i;
+
                         const online_status_dot = onlineusers_item.querySelector(":scope span.chat-session-onlineusers-item-online-status");
                         online_status_dot.dataset.onlineStatus = i.status === dashboardwrappers.ChatDashboardWrapper.online_status.online ? "online" : "offline";
 
                         onlineusers_item.addEventListener("click", event => {
                             const rect = event.target.getBoundingClientRect();
-                            const items = [{ type: "button", text: "艾特", callback: () => this.add_textarea_element__at(onlineusers_item.attr.uid) }];
+                            const items = [{
+                                type: "button",
+                                text: "艾特",
+                                callback: () => this.add_textarea_element__at(onlineusers_item.attr.uid)
+                            }];
                             onlineusers_item.classList.add("active");
                             MenuMark.exec({ x: rect.left, y: rect.top + rect.height }, items, () => {
                                 onlineusers_item.classList.remove("active");
@@ -12982,6 +12994,8 @@
                     });
                 }
             }
+
+
 
 
 
