@@ -12557,17 +12557,17 @@
                         super.init();
 
                         let html = `
-                    <div class="chat-message-content-rect chat-mcr-file">
-                    <span class="chat-mcr-file-icon" draggable="false">🗳️</span>
-                    <div class="chat-mcr-file-info">
-                        <span class="chat-mcr-file-info-name"></span>
-                        <div class="chat-mcr-file-info-others">
-                            <span class="chat-mcr-file-info-size"></span>
-                            <span class="chat-mcr-file-status"></span>
-                        </div>
-                    </div>
-                    </div>
-                    `;
+<div class="chat-message-content-rect chat-mcr-file">
+<span class="chat-mcr-file-icon" draggable="false">🗳️</span>
+<div class="chat-mcr-file-info">
+    <span class="chat-mcr-file-info-name"></span>
+    <div class="chat-mcr-file-info-others">
+        <span class="chat-mcr-file-info-size"></span>
+        <span class="chat-mcr-file-status"></span>
+    </div>
+</div>
+</div>
+`;
                         this.e_container.insertAdjacentHTML("beforeend", html);
                         this.e_mcr = this.e_container.querySelector(":scope .chat-message-content-rect");
                         this.e_mcr.style.background = this.palette.rect_bg;
@@ -12579,24 +12579,16 @@
 
                         this.e_mcr_info_size.textContent = format_bytes(this.msgattr.file_attr.size);
 
+                        // ⚡ 注册到 panel.attachments
+                        if (!this.panel.attachments) this.panel.attachments = [];
+                        if (!this.panel.attachments.includes(this.msgattr)) this.panel.attachments.push(this.msgattr);
+
                         // ⚡ 保存实例到 msgattr，用于附件列表复用下载
                         this.msgattr._fileMsgInstance = this;
 
-                        // ⚡ 延迟注册到群附件数组
-                        const registerAttachment = () => {
-                            const groupId = this.panel.current_contact_xxid()?.xxid;
-                            if (!groupId) return;
-                            if (!this.panel.attachments_by_group) this.panel.attachments_by_group = {};
-                            if (!this.panel.attachments_by_group[groupId]) this.panel.attachments_by_group[groupId] = [];
-                            const arr = this.panel.attachments_by_group[groupId];
-                            if (!arr.includes(this.msgattr)) arr.push(this.msgattr);
-                        };
-                        setTimeout(registerAttachment, 0);
-
-                        // 下载逻辑
                         this.e_mcr_icon = this.e_mcr.querySelector(":scope span"); // 点击开始下载
-                        this.e_mcr_icon.addEventListener("click", event => {
-                            if (!this.msgattr.is_sent) return;
+                        this.e_mcr_icon.addEventListener("click", (event) => {
+                            if (!this.msgattr.is_sent) return
                             if (this.msgattr.upload_task && this.msgattr.upload_task.status !== FloatBall.taskstatus.finished) return;
                             if (!this.msgattr.plain_file_name) return;
                             if (this.msgattr.download_task && this.msgattr.download_task.status !== FloatBall.taskstatus.finished) {
@@ -12605,21 +12597,58 @@
                             }
 
                             const t = new FloatBall.tasktypes.Download_ChatMessage(floatball.dialog.tab_content_backtasks, {
-                                onfinished: () => this.update(),
-                                onwaiting: () => this.update(),
-                                onprogress: () => this.update(),
-                                onfailed: () => this.update()
+                                onfinished: () => {
+                                    this.update();
+                                },
+                                onwaiting: () => {
+                                    this.update();
+                                },
+                                onprogress: () => {
+                                    this.update();
+                                },
+                                onfailed: () => {
+                                    this.update();
+                                }
                             });
+
                             this.msgattr.download_task = t;
+
                             floatball.dialog.addTask(t);
                             t.set_name(this.msgattr.plain_file_name);
-                            t.set_args({ msg: this.msgattr });
+                            t.set_args({
+                                msg: this.msgattr,
+                            });
+
                             floatball.dialog.checkToStartTask();
                             floatball.dialog.checkToHide(t);
+
+                            // floatball.look_download_tasks(t);
                         });
 
-                        this.e_mcr_icon.addEventListener('dragstart', event => { dragging_item = this; event.dataTransfer.effectAllowed = 'copy'; });
-                        this.e_mcr_icon.addEventListener('dragend', event => { dragging_item = null; });
+                        this.e_mcr_icon.addEventListener('dragstart', (event) => { // 拖拽保存
+                            if (event.target.tagName !== "SPAN") {
+                                return;
+                            }
+                            dragging_item = this;
+                            event.dataTransfer.effectAllowed = 'copy';
+
+                            // const content = "这是要生成的文件内容\n可以是文本、JSON等";
+                            // const filename = "example.txt";
+
+                            // const file = new File([content], filename, {type: "text/plain"});
+                            // event.dataTransfer.items.add(file);
+
+                            // const blob = new Blob([content], { type: "text/plain" });
+                            // const url = URL.createObjectURL(blob);
+                            // event.dataTransfer.setData("text/uri-list", url); // URL 作为下载链接
+                            // event.dataTransfer.setData("text/plain", url); // 兼容其他浏览器
+                            // event.dataTransfer.setData("DownloadURL", `text/plain:${filename}:${url}`);
+
+                        });
+                        this.e_mcr_icon.addEventListener('dragend', (event) => {
+                            dragging_item = null;
+                        });
+
                     }
 
                     update() {
@@ -12789,6 +12818,22 @@
 
             // ===== 在线成员 + 附件列表 =====
             load_online_users(users) {
+                // === 清空旧附件和成员列表 ===
+                if (this.e_online_attachment_panel) {
+                    this.e_online_attachment_panel.innerHTML = "";
+                    this.e_online_attachment_title?.remove();
+                    this.e_online_attachment_panel.remove();
+                    this.e_online_attachment_panel = null;
+                    this.e_online_attachment_title = null;
+                }
+                if (this.e_member_list_container) {
+                    this.e_member_list_container.innerHTML = "";
+                    this.e_member_title?.remove();
+                    this.e_member_list_container.remove();
+                    this.e_member_list_container = null;
+                    this.e_member_title = null;
+                }
+
                 // 初始化统一容器
                 if (!this.e_online_members_wrapper) {
                     this.e_online_members_wrapper = this.e_msgflow_mark_onlineusers;
@@ -12808,12 +12853,6 @@
                     globalSearch.style.borderRadius = "3px";
                     this.e_online_members_wrapper.appendChild(globalSearch);
                     this.globalSearchInput = globalSearch;
-
-                    // 初始化容器
-                    this.e_online_attachment_title = null;
-                    this.e_online_attachment_panel = null;
-                    this.e_member_list_container = null;
-                    this.e_member_title = null;
 
                     // 搜索逻辑
                     globalSearch.addEventListener("input", e => {
@@ -12835,25 +12874,13 @@
                     });
                 }
 
-                // 清空旧列表
-                if (this.e_online_attachment_panel) this.e_online_attachment_panel.remove();
-                if (this.e_online_attachment_title) this.e_online_attachment_title.remove();
-                if (this.e_member_list_container) this.e_member_list_container.remove();
-                if (this.e_member_title) this.e_member_title.remove();
-                this.e_online_attachment_panel = null;
+                // === 渲染附件（当前面板独立数组） ===
+                const attachments = this.panel.attachments || [];
                 this.e_online_attachment_title = null;
-                this.e_member_list_container = null;
-                this.e_member_title = null;
+                this.e_online_attachment_panel = null;
 
-                const groupId = this.current_contact_xxid()?.xxid;
-                if (!groupId) return;
-
-                // 从 panel.msgs 中筛选附件
-                const attachments = (this.panel.msgs || [])
-                    .filter(m => m.file_attr && m.is_sent && m.group_id === groupId);
-
-                // === 渲染附件 ===
                 if (attachments.length > 0) {
+                    // 附件标题
                     const attachTitle = document.createElement("div");
                     attachTitle.innerText = "附件";
                     attachTitle.style.fontWeight = "700";
@@ -12866,20 +12893,23 @@
                     this.e_online_members_wrapper.appendChild(attachTitle);
                     this.e_online_attachment_title = attachTitle;
 
+                    // 附件列表容器
                     const attachContainer = document.createElement("div");
                     attachContainer.className = "online-users-attachments";
                     attachContainer.style.marginTop = "2px";
                     this.e_online_members_wrapper.appendChild(attachContainer);
                     this.e_online_attachment_panel = attachContainer;
 
-                    attachments.slice().reverse().forEach(msgattr => {
+                    attachments.reverse().forEach(msgattr => {
                         const div = document.createElement("div");
                         div.className = "cap-item";
                         div.style.padding = "4px 2px";
                         div.style.borderBottom = "1px solid #eee";
                         div.style.wordBreak = "break-all";
                         div.innerHTML = `
-                            <span class="cap-prefix"><span class="cap-icon">📎</span></span>
+                            <span class="cap-prefix">
+                                <span class="cap-icon">📎</span>
+                            </span>
                             <div class="cap-main">
                                 <div class="name" title="${msgattr.plain_file_name || msgattr.file_attr.name}">
                                     ${msgattr.plain_file_name || msgattr.file_attr.name}
@@ -12888,26 +12918,21 @@
                                     <span class="size">${format_bytes(msgattr.file_attr.size)}</span>
                                     <span class="status"></span>
                                     <button class="download-btn">下载</button>
-                                    <button class="remove-btn">删除</button>
                                 </div>
-                                <div class="progress-bar-wrapper"><div class="progress-bar"></div></div>
+                                <div class="progress-bar-wrapper">
+                                    <div class="progress-bar"></div>
+                                </div>
                             </div>
                         `;
                         attachContainer.appendChild(div);
-                        msgattr._attachment_list_item = div;
 
-                        // 下载
+                        // 保存实例用于附件列表复用下载
+                        msgattr._fileMsgInstance = this;
+
+                        // 下载按钮
                         div.querySelector(".download-btn").addEventListener("click", e => {
                             e.stopPropagation();
                             trigger_file_download(msgattr);
-                        });
-
-                        // 删除
-                        div.querySelector(".remove-btn").addEventListener("click", e => {
-                            e.stopPropagation();
-                            msgattr._removed = true; // 标记删除
-                            if (msgattr._attachment_list_item) msgattr._attachment_list_item.remove();
-                            msgattr._attachment_list_item = null;
                         });
 
                         update_attachment_list_item(msgattr);
@@ -12935,10 +12960,11 @@
 
                     users.forEach(i => {
                         const html = `
-                        <div class="chat-session-onlineusers-item">
-                            <span class="chat-session-onlineusers-item-online-status">●</span>
-                            <span class="chat-session-onlineusers-item-name">${i.uid}</span>
-                        </div>`;
+                            <div class="chat-session-onlineusers-item">
+                                <span class="chat-session-onlineusers-item-online-status">●</span>
+                                <span class="chat-session-onlineusers-item-name">${i.uid}</span>
+                            </div>
+                        `;
                         memberListContainer.insertAdjacentHTML("beforeend", html);
                         const onlineusers_item = memberListContainer.querySelector(":scope .chat-session-onlineusers-item:last-of-type");
                         onlineusers_item.attr = i;
@@ -12957,8 +12983,6 @@
                     });
                 }
             }
-
-
 
 
 
