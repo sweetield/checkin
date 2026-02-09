@@ -4231,6 +4231,22 @@
         // 在聊天面板打开时调用 loadCandidateWords()，假设在 _switch_panel_to_chat() 中添加
     }
 
+    async function loadCandidatePhrases(self) {
+        try {
+            const response = await fetch('/api/candidate_words');
+            if (!response.ok) {
+                console.error('获取候选词失败', response.status);
+                self.candidatePhrases = []; // 清空，显示空列表
+                return;
+            }
+            const words = await response.json(); // 假设返回 ["好的", "在吗", ...]
+            self.candidatePhrases = words; // 更新实例变量
+            console.log('候选词加载成功，共', words.length, '个');
+        } catch (err) {
+            console.error('加载候选词出错:', err);
+            self.candidatePhrases = []; // 出错时清空
+        }
+    }
     // 加载全体通知并显示
     async function loadAllPeopleNotice() {
         try {
@@ -9910,22 +9926,7 @@
                 // 🔥 新增：从后端动态加载候选词
                 this.candidatePhrases = []; // 临时存储加载的列表，初始为空
 
-                async function loadCandidatePhrases(self) {
-                    try {
-                        const response = await fetch('/api/candidate_words');
-                        if (!response.ok) {
-                            console.error('获取候选词失败', response.status);
-                            self.candidatePhrases = []; // 清空，显示空列表
-                            return;
-                        }
-                        const words = await response.json(); // 假设返回 ["好的", "在吗", ...]
-                        self.candidatePhrases = words; // 更新实例变量
-                        console.log('候选词加载成功，共', words.length, '个');
-                    } catch (err) {
-                        console.error('加载候选词出错:', err);
-                        self.candidatePhrases = []; // 出错时清空
-                    }
-                }
+                
 
 
 				
