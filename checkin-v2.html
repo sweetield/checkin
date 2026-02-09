@@ -4053,8 +4053,9 @@
 
         // 文件名
         const nameEl = div.querySelector(".name");
-        nameEl.textContent = msgattr.plain_file_name || msgattr.file_attr.name;
-        nameEl.title = nameEl.textContent;
+        const fileName = msgattr.plain_file_name || msgattr.file_attr.name;
+        nameEl.textContent = fileName;
+        nameEl.title = fileName;
 
         // 文件大小
         const sizeEl = div.querySelector(".size");
@@ -4065,11 +4066,17 @@
         if (!msgattr.is_sent) {
             statusEl.textContent = msgattr.upload_task ? msgattr.upload_task.backtask_status_text.textContent : "正在上传...";
         } else if (msgattr.download_task) {
-            statusEl.textContent = msgattr.download_task.backtask_status_text.textContent;
+            const task = msgattr.download_task;
+            if (task.status === FloatBall.taskstatus.finished) {
+                statusEl.textContent = "已完成"; // ✅ 文件名不被覆盖
+            } else {
+                statusEl.textContent = task.backtask_status_text.textContent; // 下载中显示进度
+            }
         } else {
             statusEl.textContent = "";
         }
     }
+
 
     // 文件消息下载复用函数
     // ===== 文件下载复用逻辑（保持 FileMsg 功能） =====
