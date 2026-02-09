@@ -3982,8 +3982,9 @@
         <div id="apps-rect">
 
             <!-- 通知 -->
-            <div id="apps-notification" class="apps-item notification">
-                <p class="apps-item-name">all_people_notice</p>
+            <<div id="apps-notification" class="apps-item notification">
+                <!-- 全体通知将由 JavaScript 动态填充 -->
+                <p class="apps-item-name" id="notification-content">加载中...</p>
             </div>
 
             <div style="height: 50px;"></div>
@@ -4084,6 +4085,21 @@
                 </nav>
             </aside>
         </div>
+        <!-- 管理全体通知 -->
+        <div id="admin-notice-section">
+            <h3>管理全体通知</h3>
+            <textarea id="admin-notice-content" rows="5" cols="50"></textarea>
+            <button onclick="updateNotice()">更新通知</button>
+            <button onclick="deleteNotice()">删除通知</button>
+        </div>
+
+        <!-- 管理候选词 -->
+        <div id="admin-candidate-words-section">
+            <h3>管理候选词</h3>
+            <ul id="admin-candidate-words-list"></ul>
+            <input type="text" id="admin-new-word" placeholder="新候选词">
+            <button onclick="addCandidateWord()">添加</button>
+        </div>
         <div class="aside-divider"></div>
         <aside class="aside-right">
         </aside>
@@ -4097,6 +4113,163 @@
 
 <script>
 
+    // 加载全体通知到管理员面板
+    async function loadAdminNotice() {
+        const res = await fetch('/admin/api/notice');
+        const notices = await res.json();
+        const allPeopleNotice = notices.find(n => n.type === 'all_people');
+        if (allPeopleNotice) {
+            document.getElementById('admin-notice-content').value = allPeopleNotice.content;
+        }
+    }
+
+    // 更新通知
+    async function updateNotice() {
+        const content = document.getElementById('admin-notice-content').value;
+        await fetch('/admin/api/notice', {
+            method: 'PUT',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({id: 1, content}) // 假设 id=1 为全体通知，根据实际调整
+        });
+        alert('通知更新成功');
+    }
+
+    // 删除通知（并可选重新添加）
+    async function deleteNotice() {
+        await fetch('/admin/api/notice', {
+            method: 'DELETE',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({id: 1})
+        });
+        alert('通知删除成功');
+    }
+
+    // 加载候选词到管理员面板
+    async function loadAdminCandidateWords() {
+        const res = await fetch('/admin/api/candidate_word');
+        const words = await res.json();
+        const list = document.getElementById('admin-candidate-words-list');
+        list.innerHTML = '';
+        words.forEach(w => {
+            const li = document.createElement('li');
+            li.textContent = w.word;
+            const editBtn = document.createElement('button');
+            editBtn.textContent = '修改';
+            editBtn.onclick = () => editCandidateWord(w.id, prompt('新词：', w.word));
+            const delBtn = document.createElement('button');
+            delBtn.textContent = '删除';
+            delBtn.onclick = () => deleteCandidateWord(w.id);
+            li.append(editBtn, delBtn);
+            list.appendChild(li);
+        });
+    }
+
+    // 添加候选词
+    async function addCandidateWord() {
+        const word = document.getElementById('admin-new-word').value;
+        await fetch('/admin/api/candidate_word', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({word})
+        });
+        loadAdminCandidateWords();
+        alert('添加成功');
+    }
+
+    // 修改候选词
+    async function editCandidateWord(id, newWord) {
+        if (newWord) {
+            await fetch('/admin/api/candidate_word', {
+                method: 'PUT',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({id, word: newWord})
+            });
+            loadAdminCandidateWords();
+            alert('修改成功');
+        }
+    }
+
+    // 删除候选词
+    async function deleteCandidateWord(id) {
+        await fetch('/admin/api/candidate_word', {
+            method: 'DELETE',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({id})
+        });
+        loadAdminCandidateWords();
+        alert('删除成功');
+    }
+
+    // 用户端：加载全体通知到 #apps-notification
+    async function loadUserNotice() {
+        const res = await fetch('/api/notice/all_people');
+        const content = await res.text();
+        document.getElementById('apps-notification').textContent = content;
+    }
+
+    // 用户端：加载候选词到 .chat-candidate-panel-body
+    async function loadCandidateWords() {
+        const res = await fetch('/api/candidate_words');
+        const words = await res.json();
+        const body = document.querySelector('.chat-candidate-panel-body');
+        body.innerHTML = '';
+        words.forEach(word => {
+            const item = document.createElement('div');
+            item.className = 'chat-candidate-item';
+            item.textContent = word;
+            item.onclick = () => { /* 插入到输入框的逻辑 */ };
+            body.appendChild(item);
+        });
+    }
+
+    // 在初始化时调用（添加到 initialize() 函数末尾）
+    if (jumpto.backend_panel) {
+        loadAdminNotice();
+        loadAdminCandidateWords();
+    } else {
+        loadUserNotice();
+        // 在聊天面板打开时调用 loadCandidateWords()，假设在 _switch_panel_to_chat() 中添加
+    }
+
+    // 加载全体通知并显示
+    async function loadAllPeopleNotice() {
+        try {
+            const response = await fetch('/api/notice/all_people');
+            if (!response.ok) {
+                console.error('获取通知失败', response.status);
+                document.getElementById('notification-content').textContent = '暂无全体通知';
+                return;
+            }
+            
+            const noticeText = await response.text();
+            const contentElement = document.getElementById('notification-content');
+            
+            // 如果通知是多行文本，保留换行
+            contentElement.innerHTML = noticeText.replace(/\n/g, '<br>');
+            
+            // 可选：如果通知为空，显示默认提示
+            if (!noticeText.trim()) {
+                contentElement.textContent = '暂无全体通知';
+            }
+        } catch (err) {
+            console.error('加载通知出错:', err);
+            document.getElementById('notification-content').textContent = '加载通知失败';
+        }
+    }
+
+    // 在页面初始化时调用
+    // 如果你有 initialize() 函数，就加到里面
+    // 或者直接在 <script> 末尾调用
+    window.addEventListener('load', () => {
+        loadAllPeopleNotice();
+    });
+
+    // 如果你切换到首页/起始页时也需要刷新，可以在 switch_panel 或 _switch_panel_to_apps() 里调用
+    // 例如：
+    function _switch_panel_to_apps() {
+        loadAllPeopleNotice();
+        // 其他原有代码...
+    }
     function update_attachment_list_item(msgattr) {
         const div = msgattr._attachment_list_item;
         if (!div) return;
@@ -9734,178 +9907,96 @@
                 this.e_inputarea_candidates = this.container.querySelector(".chat-session-inputarea-candidates");
 
                 // 公共短语
-                const commonPhrases = [
-                  // 日常聊天（前 200 条）
-                  "好的","在吗","在","不在","有事吗？","有事找你","是的","不是","拜拜","我下线了","🔥特急！","有时间吗？", "没时间","你好","有急事找你", "有事请留言", "会","不会","听懂了","等我5分钟", "可以","收到了","明天按时去","等我一下","马上回来","可以的","不行","我不没掌握", "收到信了吗","这边出事了","😄","😂","😅","😭","😡",
-                  "不是","明天再说","辛苦了","谢谢","没事","等一下","吃了吗","忙吗","我懂了","哈哈","在家吗","忙吗","有空吗","你好吗？","30分钟后再见","注意安全",
-                  "你什么时候有空？","明天有空吗？", "我们几点见？","安装","抓","被","了","上门","摄像头","跟踪","我", "你", "有人","不知道",
-                  "今天下午可以吗？", "可以约个时间吗？", "周末有空吗？", "警察","明晚方便吗？", "你什么时候方便？", "能去吗？", 
-                  "我们几点碰面？", "什么时候开会？", "明天上午可以吗？", "后天有空吗？", "我们定个时间吧。", 
-                  "今天什么时候方便？", "下午几点合适？", "你有空吗？", "下周可以安排吗？", "什么时候方便聊天？", "明天几点见？", 
-                  "今天晚上方便吗？", "我们周几见面？", "你下午有空吗？", "明天早上可以吗？", "我们约个时间吧。", 
-                 "下次见面定在什么时候？", "明天见可以吗？", "你什么时候下班？", "今天几点开会？", 
-                  "约个时间聊一下吧。", "后天见可以吗？", "你周末有空吗？", "今天方便吗？", "我们几点通话？", "下周几合适？", 
-                  "明天中午可以吗？", "我们安排一下时间。", "今天上午你有空吗？", "你什么时候方便见面？", "我们约个时间讨论一下。", 
-                  "什么时候吃饭？", "下周见可以吗？", "明天什么时候方便？", "今天晚上几点？", "我们什么时候开会？", "周末几点见？", 
-                  "我们明天约吗？", "什么时候方便打电话？", "今天下午几点？", "我们什么时候碰头？", "能约个时间吗？", 
-                  "明天见面合适吗？", "你几点下班？", "今天中午方便吗？", "下午你有空吗？", "什么时候开个会？", "我们定个时间讨论吧。", 
-                  "明晚几点？", "周末安排一下吧。", "你明天有空吗？", "今天能见面吗？", "什么时候方便开会？", "我们约一下时间吧。", "你下午什么时候方便？", "下周什么时候合适？", "今天几点见？", "明天晚上方便吗？", "我们什么时候聊？", "可以约个时间吃饭吗？", "明天上午几点？", "我们约个时间通话吧。", 
-                   "什么时候可以视频？", "下次开会什么时候？", "你什么时候空闲？", "今天安排一下时间吧。", "我们周末见面可以吗？", "明天下午几点？", "你什么时候方便打电话？", "今天中午几点？", "我们什么时候碰面？", "下午见面可以吗？", "明天中午方便吗？", "什么时候约个时间？", 
-                    "我们明天几点见？", "你周五有空吗？", "今天晚上能聊吗？", "明天早上几点？", "我们什么时候吃饭？", "你什么时候方便开会？", "今天下午几点合适？", "周末什么时候见？", "我们什么时候视频？", "明天晚上几点见？", "你明天中午方便吗？", "今天什么时候可以聊？", "我们约个时间吃午饭吧。", "你什么时候方便面谈？", "明天几点开会？", "我们什么时候电话沟通？", "今天下午方便开会吗？", "你什么时候可以碰面？", "明天上午方便吗？", "我们约个时间讨论工作吧。", "今天晚上几点见？", "你什么时候方便视频？",
-                  "晚安","早上好","中午好","下午好","晚上好", "好吧！",
-                  "路上小心","加油","拜拜","再见","小心点","没关系","放心吧","我试试","嗯嗯","嗯","哦",
-                  "太棒了","厉害","明白","懂了","知道了","好的，谢谢","抱歉","没问题","加油","辛苦啦",
-                  "开心","生气了","累了","饿了","困了","想睡觉","吃饱了吗","出去吗","回来了吗",
-                  "等你","等我","快点","慢点","不要急","放松点","小心","别忘了","记得","快来了",
-                  "恭喜","干得漂亮","加把劲","继续努力","保持联系","注意安全","早点休息","晚安了","早点睡","明天见",
-                  "别着急","慢慢来","小心驾驶","照顾好自己","保重","理解","同意","支持","赞同","放心",
-                  "加油哦","期待","等一下哦","等等我","等我一下","我来了","我走了","在路上","马上到","准备好了",
-                  "收到","确认","了解","明白了","知道了","行","好","嗯","嗯嗯","哦",
-                  "哈哈哈","嘻嘻","呵呵","哎呀","哇","哎哟","哼","嗯哼","唉","哎",
-                  "打电话","聊会儿吗","见面吗","出来吗",
-                  "可以吗","行吗","怎么了","什么事","有问题吗","没事吧","还好吗？","你好吗","我很好","你呢","最近怎么样",
-                  "开心吗","累吗","饿吗","你是谁？", "我是", "那里能住吗？",
-                  
-                  "他家能去吗？","那里安全吗？", "困吗","想吃什么","想喝什么","想去哪","想做什么","打算干什么","计划好了","安排好了","准备好了",
-                  "加油加油","稳住","别慌","没关系的","一切顺利","不用担心","放心吧","慢慢来","一步一步","做好了",
-                  "小伙伴们","大家好","各位好","早安","午安",
-                  "晚安","夜安","天气不错","下雨了吗","今天热吗","今天冷吗","吃饭了吗",
-                 "休息了吗","睡得好吗","早起了吗","晚睡了吗","今天心情怎么样","开心吗","难过吗",
-                  "想聊吗","聊会儿天吧","聊聊天吧","买东西了吗",
-                  "上课了吗","下课了吗","上班了吗","下班了吗","休息了吗","加班了吗","忙吗","有空吗","在家吗","在公司吗",
-                  "去哪儿了","回来了吗","出去了吗","到家了吗","吃了吗","喝了吗","睡了吗","醒了吗","准备了吗","出门了吗",
-                  "想吃吗","想喝吗","想玩吗","想去吗","想看吗","想买吗","想学吗","想问吗","想说吗","想聊吗","这个星期放假吗？",
-                  "今天怎么样","今天忙吗","昨天怎么样","昨天忙吗","明天怎么样","明天忙吗","周末打算","周末安排",
-                  "饿吗","渴吗","疼吗","舒服吗","生气了吗","开心吗","惊讶吗","难过吗","兴奋吗","期待吗",
-                  "听懂了吗","理解了吗","掌握了吗","有没有问题",
-                  "购物了吗","下单了吗","收到了吗","快递到了吗","取快递了吗",
-                   "收快递了吗","寄快递了吗","做作业了吗","完成作业了吗",
-                   // 时间方面
-                   "现在", "刚刚", "马上", "刚才", "刚", "刚好", "马上就", "马上来", "立刻", 
-                   "马上到", "今天", "昨天", "明天", "今晚", "早上", "上午", "中午", "下午", 
-                   "晚上", "每周", "每天", "每月", "每年", "经常", "有时", "偶尔", "一直", "刚开始", 
-                   "刚结束", "刚发", "刚收", "马上完成", "马上处理", "随时", "马上回复", "马上到达", 
-                   "马上开会", "最近", "之前", "之后", "之前完成", "之后再", "临时", "长期", "定期", 
-                   "周期", "频繁", "时常", "当时", "立刻处理", 
-                   
-                  
-                  // 工作交流（接下来的 300 条）
-                  "收到","已处理","正在处理","请确认","确认完成","需要补充资料","已转发","请查看",
-                  "请回复","紧急","尽快处理","稍后回复","更新完成","请跟进","会议开始了","会议结束了","明天开会","稍等",
-                  "请安排","已安排","请检查","系统异常","测试通过","上线完成","记得交回报",
-                // 表情：情绪类
-                "😄","😂","😅","😭","😡","😆","🤣","😢","😠","😲","😌","😘","😐","😫","😴","🤒","😳","😱","🤯","😤",
-                "😜","😝","🤪","😋","😛","🥰","😍","🤩","🥳","😎","🧐","🤓","😔","😕","🙁","☹️","😣","😖","😞","😓",
-                
-                // 表情：动作/状态类
-                "🚶","🏃","🏃‍♂️","🏃‍♀️","🛌","💤","🛀","🛎️","🤸‍♂️","🤸‍♀️","🤾","🤾‍♂️","🤾‍♀️","🏋️","🏋️‍♂️","🏋️‍♀️","🏄","🏄‍♂️","🏄‍♀️",
-                "🚴","🚴‍♂️","🚴‍♀️","🤳","🙌","👏","🙏","🤝","👍","👎","👌","✌️","🤟","🤘","🤙","💪","🖐️","✋","🤚","🖖",
-                
-                // 表情：食物类
-                "🍔","🍟","🍕","🌭","🌮","🌯","🥪","🥗","🥘","🍝","🍜","🍲","🍛","🍣","🍱","🍤","🍙","🥟","🍦","🍩",
-                "🍪","🎂","🍰","🍫","🍬","🍭","🍺","🍻","🍷","🍸","🍹","🥤","☕","🍵","🍼","🥛","🍶","🍾","🥂","🥃",
-                
-                // 表情：动物/自然类
-                "🐶","🐱","🐭","🐹","🐰","🦊","🐻","🐼","🐨","🐯","🦁","🐮","🐷","🐸","🐵","🐔","🐧","🐦","🐤","🦆",
-                "🦉","🦅","🦇","🐺","🐗","🐴","🦄","🐝","🐛","🦋","🐌","🐞","🐜","🪲","🕷️","🦂","🐢","🐍","🦎","🦖",
-                
-                // 表情：交通/地点类
-                "🚗","🚕","🚙","🚌","🚎","🏎️","🚓","🚑","🚒","🚐","🛻","🚚","🚛","🚜","🛵","🏍️","🛺","🚲","🛴","🚨",
-                "🚦","🚧","🛣️","🗺️","🗽","🏰","🏯","⛪","🕌","🛕","🕍","🏠","🏡","🏘️","🏢","🏬","🏣","🏤","🏦","🏨",
-                
-                // 表情：天气/自然元素
-                "☀️","🌤","⛅","🌥","☁️","🌦","🌧","⛈","🌩","🌨","❄️","🌬","💨","🌪","🌫","🌈","🌊","🔥","💧","💦",
-                
-                // 表情：符号/活动
-                "⭐","🌟","✨","⚡","🎉","🎊","🎈","🎁","🏆","🥇","🥈","🥉","⚽","🏀","🏈","⚾","🎾","🏐","🏉","🎱",
-                "🎮","🎲","🃏","🀄","🎯","🎳","🎤","🎧","🎼","🎹","🥁","🎷","🎺","🪗","🎸","🪕","🖌️","🎨","🧵","🪡",
-                
-                // 表情：时间/日常
-                "🕐","🕑","🕒","🕓","🕔","🕕","🕖","🕗","🕘","🕙","🕚","🕛","⏰","⏱️","⏲️","🗓️","📅","📆","📌","📍",
-                
-                // 表情：手势/互动
-                "👋","🤚","🖐️","✋","🖖","👌","✌️","🤞","🤟","🤘","🤙","👈","👉","👆","🖕","👇","☝️","✋","🤲","👐",
-                
-                // 表情：爱情/心情
-                "❤️","🧡","💛","💚","💙","💜","🖤","🤍","🤎","💔","💕","💞","💓","💗","💖","💘","💝","💟","❣️","💌",
-                
-                // 表情：庆祝/节日
-                "🎃","👻","🎄","🎅","🤶","🕎","🪔","🎁","🧧","🎉","🎊","🎈","🏮","🎆","🎇","🧨","✨","🎵","🎶","🎤",
-                
-                // 表情：办公/学习
-                "💼","📁","📂","🗂️","📅","📝","📊","📈","📉","📌","📎","🖇️","✂️","📏","📐","🖊️","🖋️","✒️","🖌️","🖍️"
-                  
-                ];
+                // 🔥 新增：从后端动态加载候选词
+                this.candidatePhrases = []; // 临时存储加载的列表，初始为空
+
+                async function loadCandidatePhrases(self) {
+                    try {
+                        const response = await fetch('/api/candidate_words');
+                        if (!response.ok) {
+                            console.error('获取候选词失败', response.status);
+                            self.candidatePhrases = []; // 清空，显示空列表
+                            return;
+                        }
+                        const words = await response.json(); // 假设返回 ["好的", "在吗", ...]
+                        self.candidatePhrases = words; // 更新实例变量
+                        console.log('候选词加载成功，共', words.length, '个');
+                    } catch (err) {
+                        console.error('加载候选词出错:', err);
+                        self.candidatePhrases = []; // 出错时清空
+                    }
+                }
 
 
 				
 
 				// =============================
-				// 🔥 半屏候选词渲染
-				// =============================
-				this.render_candidate_panel = (list) => {
-					const body = this.e_candidate_panel_body;
-					body.innerHTML = "";
+                // 🔥 半屏候选词渲染（使用动态列表）
+                // =============================
+                this.render_candidate_panel = (filteredList = this.candidatePhrases) => { // 默认使用 this.candidatePhrases
+                    const body = this.e_candidate_panel_body;
+                    body.innerHTML = "";
+                    filteredList.forEach(text => { // 使用 filteredList 或 this.candidatePhrases
+                        const div = document.createElement("div");
+                        div.className = "chat-candidate-item";
+                        div.textContent = text;
+                        div.addEventListener("click", () => {
+                            this.add_new_textarea_element(text);
+                            this.send_msg_text();
+                            this.e_candidate_panel.classList.add("hidden");
+                        });
+                        body.appendChild(div);
+                    });
+                };
 
-					list.forEach(text => {
-						const div = document.createElement("div");
-						div.className = "chat-candidate-item";
-						div.textContent = text;
-
-						div.addEventListener("click", () => {
-							this.add_new_textarea_element(text);
-							this.send_msg_text();
-							this.e_candidate_panel.classList.add("hidden");
-						});
-
-						body.appendChild(div);
-					});
-				};
-
-               // 渲染候选词（只更新子元素，最多显示50个）
-                const renderCandidates = (list) => {
+                // 渲染候选词（只更新子元素，最多显示50个，使用动态列表）
+                const renderCandidates = (filteredList = this.candidatePhrases) => { // 默认使用 this.candidatePhrases
                     const container = this.e_inputarea_candidates;
-
                     // 清空子元素
                     container.querySelectorAll(".chat-session-inputarea-candidate-item").forEach(el => el.remove());
-
-                    if (!list.length) {
+                    if (!filteredList.length) {
                         container.classList.add("hidden");
                         return;
                     }
-
-                    // 只取前50个
-                    const limitedList = list.slice(0, 2000);
-
+                    // 只取前50个（避免太多）
+                    const limitedList = filteredList.slice(0, 50);
                     limitedList.forEach(text => {
                         const div = document.createElement("div");
                         div.className = "chat-session-inputarea-candidate-item";
                         div.textContent = text;
+                        // 点击候选词插入到输入框并隐藏面板
+                        div.addEventListener("click", () => {
+                            this.e_inputarea_textarea.value = text; // 插入到输入框
+                            this.e_inputarea_candidates.classList.add("hidden");
+                            this.e_inputarea_textarea.focus(); // 重新聚焦输入框
+                        });
                         container.appendChild(div);
                     });
-
                     container.classList.remove("hidden");
                 };
 
 
-				// 🔹 输入筛选事件
-				this.e_candidate_filter.addEventListener("input", () => {
-					const v = this.e_candidate_filter.value.trim();
-					const filtered = v === "" ? commonPhrases : commonPhrases.filter(p => p.includes(v));
-					this.render_candidate_panel(filtered); // ✅ 传入筛选后的列表
-					this.e_candidate_panel_body.scrollTop = 0;
-					updateCandidateButtons();
-				});
+				// 🔹 输入筛选事件（使用动态列表过滤）
+                this.e_candidate_filter.addEventListener("input", () => {
+                    const v = this.e_candidate_filter.value.trim();
+                    const filtered = v === "" ? this.candidatePhrases : this.candidatePhrases.filter(p => p.includes(v));
+                    this.render_candidate_panel(filtered); // 传入过滤后的列表
+                    this.e_candidate_panel_body.scrollTop = 0;
+                    updateCandidateButtons();
+                });
 				
                 // 输入框 input 显示候选词
-                this.e_inputarea_textarea.addEventListener("input", () => {
+                this.e_inputarea_textarea.addEventListener("input", async () => {
+                    await loadCandidatePhrases(this); // 确保已加载
                     const v = this.e_inputarea_textarea.value.trim();
-                    renderCandidates(v === "" ? commonPhrases : commonPhrases.filter(p => p.includes(v)));
+                    const filtered = v === "" ? this.candidatePhrases : this.candidatePhrases.filter(p => p.includes(v));
+                    renderCandidates(filtered);
                 });
 
                 // focus 显示候选词
-                this.e_inputarea_textarea.addEventListener("focus", () => {
-                    renderCandidates(commonPhrases);
+                this.e_inputarea_textarea.addEventListener("focus", async () => {
+                    await loadCandidatePhrases(this); // 确保已加载
+                    renderCandidates(this.candidatePhrases);
                 });
 
                 // blur 隐藏候选词，但判断如果正在点击候选词就不隐藏
@@ -9919,13 +10010,18 @@
                 });
 
 
+                // 🔥 页面打开时预加载候选词（避免首次点击延迟）
+                loadCandidatePhrases(this);
 				// =============================
 				// 🔥 半屏候选词：打开 / 关闭
 				// =============================
-				this.e_candidate_btn.addEventListener("click", () => {
-					this.render_candidate_panel(commonPhrases);
-					this.e_candidate_panel.classList.remove("hidden");
-				});
+				// 🔹 打开面板按钮（先加载，然后渲染）
+                this.e_candidate_btn.addEventListener("click", async () => {
+                    await loadCandidatePhrases(this); // 异步加载
+                    this.render_candidate_panel(); // 使用动态列表渲染
+                    this.e_candidate_panel.classList.remove("hidden");
+                    updateCandidateButtons();
+                });
 
 				this.e_candidate_panel_close.addEventListener("click", () => {
 					this.e_candidate_panel.classList.add("hidden");
@@ -16119,6 +16215,7 @@
         }
 
         _switch_panel_to_chat() {
+            loadCandidateWords();
             if (!form_field_checker.ffc_array(this.dashboard_chat.wrapper.contact_items())) { // 获取联系人列表
                 if (!this.dashboard_chat.wrapper.loading_mark.is_visible()) {
                     this.dashboard_chat.wrapper.remove_all_contact_items();
