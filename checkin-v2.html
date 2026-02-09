@@ -4068,7 +4068,7 @@
         } else if (msgattr.download_task) {
             const task = msgattr.download_task;
             if (task.status === FloatBall.taskstatus.finished) {
-                statusEl.textContent = "已完成"; // ✅ 文件名不被覆盖
+                statusEl.textContent = "✅"; // ✅ 文件名不被覆盖
             } else {
                 statusEl.textContent = task.backtask_status_text.textContent; // 下载中显示进度
             }
