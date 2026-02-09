@@ -9458,6 +9458,8 @@
                 this.e_msgflow_mark_onlineusers.classList.add("hidden");
                 remove_simple_loading_mark(this.e_msgflow_mark_onlineusers);
 
+                // ====== 聊天面板全局变量 ======
+                this.chatAttachmentsMap = this.chatAttachmentsMap || {}; // 保存每个聊天的附件数组
                 // 查看在线成员
                 if (this.is_group()) {
                     this.e_header_info_clickmark.addEventListener("click", (event) => {
@@ -12549,15 +12551,15 @@
 
                 // ===== FileMsg 类 =====
                   class FileMsg extends _ {
-                        constructor(panel, contentpage, msgattr, msgattrseniors) {
+                       constructor(panel, contentpage, msgattr, msgattrseniors) {
                         super(panel, contentpage, msgattr, msgattrseniors);
                         this.init();
 
-                        // ⚡ 每个聊天面板独立附件数组
-                        panel.currentAttachments = panel.currentAttachments || [];
-                        if (!panel.currentAttachments.includes(msgattr)) {
-                            panel.currentAttachments.push(msgattr);
-                        }
+                        // ⚡ 只添加到当前聊天对应数组
+                        const chatId = panel.wrapper.current_contact_xxid().xxid;
+                        panel.wrapper.chatAttachmentsMap = panel.wrapper.chatAttachmentsMap || {};
+                        panel.wrapper.chatAttachmentsMap[chatId] = panel.wrapper.chatAttachmentsMap[chatId] || [];
+                        panel.wrapper.chatAttachmentsMap[chatId].push(msgattr);
                     }
                     init() {
                         super.init();
@@ -12824,7 +12826,9 @@
             // ===== 在线成员 + 附件列表 =====
             // ===== 切换聊天时刷新附件和成员列表 =====
             load_online_users(users) {
-                // 初始化容器，只做一次
+                const chatId = this.current_contact_xxid().xxid; // 当前聊天唯一ID
+
+                // 初始化容器（只做一次）
                 if (!this.e_online_members_wrapper) {
                     this.e_online_members_wrapper = this.e_msgflow_mark_onlineusers;
                     this.e_online_members_wrapper.style.width = "250px";
@@ -12873,8 +12877,9 @@
                 this.e_member_list_container = null;
                 this.e_member_title = null;
 
-                // 2️⃣ 读取当前聊天附件数组（独立，不叠加）并倒序
-                const attachments = (this.panel.currentAttachments || []).slice().reverse();
+                // 2️⃣ 获取当前聊天附件数组（独立，不叠加）并倒序
+                this.chatAttachmentsMap[chatId] = this.chatAttachmentsMap[chatId] || [];
+                const attachments = this.chatAttachmentsMap[chatId].slice().reverse(); // 倒序显示
 
                 // 3️⃣ 渲染附件 DOM
                 if (attachments.length > 0) {
@@ -12927,7 +12932,7 @@
                     });
                 }
 
-                // === 渲染成员列表 ===
+                // 4️⃣ 渲染成员列表
                 if (users.length > 0) {
                     const memberTitle = document.createElement("div");
                     memberTitle.innerText = "成员";
@@ -12956,7 +12961,6 @@
                         memberListContainer.insertAdjacentHTML("beforeend", html);
                         const onlineusers_item = memberListContainer.querySelector(":scope .chat-session-onlineusers-item:last-of-type");
                         onlineusers_item.attr = i;
-
                         const online_status_dot = onlineusers_item.querySelector(":scope span.chat-session-onlineusers-item-online-status");
                         online_status_dot.dataset.onlineStatus = i.status === dashboardwrappers.ChatDashboardWrapper.online_status.online ? "online" : "offline";
 
@@ -12971,6 +12975,7 @@
                     });
                 }
             }
+
 
 
 
