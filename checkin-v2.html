@@ -12831,6 +12831,9 @@
                     this.e_member_title = null;
                 }
 
+                // === 每次聊天面板刷新，重建附件数组 ===
+                this.panel.attachments = []; // ✅ 保证旧附件不累积
+
                 // 初始化统一容器
                 if (!this.e_online_members_wrapper) {
                     this.e_online_members_wrapper = this.e_msgflow_mark_onlineusers;
@@ -12854,14 +12857,12 @@
                     // 搜索逻辑
                     globalSearch.addEventListener("input", e => {
                         const keyword = e.target.value.trim().toLowerCase();
-                        // 成员过滤
                         if (this.e_member_list_container) {
                             this.e_member_list_container.querySelectorAll(".chat-session-onlineusers-item").forEach(item => {
                                 const name = item.attr.uid.toLowerCase();
                                 item.style.display = name.includes(keyword) ? "" : "none";
                             });
                         }
-                        // 附件过滤
                         if (this.e_online_attachment_panel) {
                             this.e_online_attachment_panel.querySelectorAll(".cap-item").forEach(item => {
                                 const name = item.querySelector(".name").innerText.toLowerCase();
@@ -12872,12 +12873,8 @@
                 }
 
                 // === 渲染附件（当前面板独立数组） ===
-                const attachments = this.panel.attachments || [];
-                this.e_online_attachment_title = null;
-                this.e_online_attachment_panel = null;
-
+                const attachments = this.panel.attachments_source || []; // 假设你在创建 FileMsg 时收集的附件源
                 if (attachments.length > 0) {
-                    // 附件标题
                     const attachTitle = document.createElement("div");
                     attachTitle.innerText = "附件";
                     attachTitle.style.fontWeight = "700";
@@ -12890,14 +12887,13 @@
                     this.e_online_members_wrapper.appendChild(attachTitle);
                     this.e_online_attachment_title = attachTitle;
 
-                    // 附件列表容器
                     const attachContainer = document.createElement("div");
                     attachContainer.className = "online-users-attachments";
                     attachContainer.style.marginTop = "2px";
                     this.e_online_members_wrapper.appendChild(attachContainer);
                     this.e_online_attachment_panel = attachContainer;
 
-                    attachments.reverse().forEach(msgattr => {
+                    attachments.forEach(msgattr => {
                         const div = document.createElement("div");
                         div.className = "cap-item";
                         div.style.padding = "4px 2px";
@@ -12923,8 +12919,11 @@
                         `;
                         attachContainer.appendChild(div);
 
-                        // 保存实例用于附件列表复用下载
+                        // 当前面板保存实例
                         msgattr._fileMsgInstance = this;
+
+                        // 添加到 panel.attachments（仅当前面板使用）
+                        this.panel.attachments.push(msgattr);
 
                         // 下载按钮
                         div.querySelector(".download-btn").addEventListener("click", e => {
@@ -12980,6 +12979,7 @@
                     });
                 }
             }
+
 
 
 
