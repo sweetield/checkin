@@ -49,17 +49,6 @@
         }
         /* ================= 附件列表 ================= */
         /* ===== 在线成员 & 附件列表字体增强 ===== */
-       
-        .cap-item {
-            font-size: 13px;
-            line-height: 1.5;
-        }
-
-
-
-        .cap-item .name {
-            font-weight: 500;
-        }
 
 
 
@@ -2935,48 +2924,42 @@
         }
 
         .chat-session-onlineusers-item {
-            padding: 6px 8px;              /* 横向稍微松一点 */
+            padding: 6px 6px;
             margin: 4px 0;
-            border-radius: 4px;            /* 2px 太硬了 */
+            border-radius: 2px;
             cursor: pointer;
-            transition: background-color 0.1s;
+            transition: background-color 0.1s, transform 0.1s;
             user-select: none;
 
             display: flex;
             flex-direction: row;
-            gap: 6px;                      /* 成员点和名字拉开 */
+            gap: 4px;
+
             align-items: center;
 
-            font-size: 14px;               /* ✅ 关键：整体字号抬高 */
-            line-height: 1.6;
         }
 
         .chat-session-onlineusers-item:hover {
-            background-color: rgba(0, 123, 255, 0.12);
+            background-color: rgba(0, 123, 255, 0.15);
         }
 
+        /*.chat-session-onlineusers-item:active {*/
+        /*    background-color: rgba(0, 123, 255, 0.4);*/
+        /*}*/
+
         .chat-session-onlineusers-item.active {
-            background-color: rgba(255, 255, 0, 0.28);
+            background-color: rgba(255, 255, 0, 0.35);
         }
 
         .chat-session-onlineusers-item-name {
             display: inline-block;
             flex-grow: 1;
             align-self: center;
-
-            font-size: 14px;               /* 明确指定，防止被父级覆盖 */
-            font-weight: 500;              /* 比 bold 高级 */
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
         }
 
-        /* 在线状态点：别再当主角了 */
         span.chat-session-onlineusers-item-online-status {
-            font-size: 10px;               /* 原来 18px 太离谱 */
-            line-height: 1;
-            align-self: center;            /* ❌ 不要 flex-start */
-            margin-top: 1px;               /* 微调对齐 */
+            font-size: 18px;
+            align-self: flex-start;
         }
 
         span.chat-session-onlineusers-item-online-status[data-online-status="online"] {
