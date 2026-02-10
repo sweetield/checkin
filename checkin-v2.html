@@ -52,18 +52,21 @@
          /* =================人员列表筛选框 ================= */
         .chat-contact-type-private {
             display: flex;
-            align-items: center;
-            gap: 6px;
+            flex-direction: column;   /* ✅ 纵向排列 */
+            align-items: stretch;     /* ✅ 搜索框撑满宽度 */
+            gap: 4px;
         }
 
+
         .chat-contact-search {
-            flex: 1;
-            height: 20px;
+            width: 100%;
+            box-sizing: border-box;
+            height: 22px;
             font-size: 12px;
             padding: 0 6px;
             border-radius: 4px;
-            border: 1px solid rgba(0,0,0,.2);
         }
+
 
         .chat-contact-search:focus {
             outline: none;
