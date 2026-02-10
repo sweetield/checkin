@@ -49,6 +49,29 @@
         }
 
 
+         /* =================人员列表筛选框 ================= */
+        .chat-contact-type-private {
+            display: flex;
+            flex-direction: column;   /* ✅ 纵向排列 */
+            align-items: stretch;     /* ✅ 搜索框撑满宽度 */
+            gap: 4px;
+        }
+
+
+        .chat-contact-search {
+            width: 100%;
+            box-sizing: border-box;
+            height: 22px;
+            font-size: 12px;
+            padding: 0 6px;
+            border-radius: 4px;
+        }
+
+
+        .chat-contact-search:focus {
+            outline: none;
+            border-color: var(--accent-color);
+        }
 
         /* ================= 附件列表 ================= */
         /* ===== 在线成员 & 附件列表字体增强 ===== */
@@ -4047,11 +4070,19 @@
                     <ol class="nav-buttons">
                     </ol>
                 </nav>
-                <nav>
-                    <p class="chat-contact-type">私聊：</p>
-                    <ol class="nav-buttons">
-                    </ol>
-                </nav>
+               <nav>
+                <div class="chat-contact-type chat-contact-type-private">
+                    <span>私聊：</span>
+                    <input
+                        type="text"
+                        class="chat-contact-search"
+                        placeholder="搜索"
+                    />
+                </div>
+
+                <ol class="nav-buttons chat-private-list">
+                </ol>
+            </nav>
             </aside>
             <div class="chat-contacts-mark-syncing"><p>正在同步...</p></div>
         </div>
@@ -14823,6 +14854,35 @@
                 this.ws_callbacks = {};
                 this.ws_lasttime_connecting = 0;
 
+                // ✅ 初始化私聊搜索（只会执行一次）
+                this.init_private_contact_search();
+            }
+
+            init_private_contact_search() {
+                const input = this.dashboard_element.querySelector(".chat-contact-search");
+                const privateList = this.dashboard_element.querySelector(".chat-private-list");
+
+                // DOM 还没渲染好就直接跳过（安全兜底）
+                if (!input || !privateList) return;
+
+                input.addEventListener("input", () => {
+                    const keyword = input.value.trim().toLowerCase();
+
+                    privateList.querySelectorAll(".chat-contact").forEach(li => {
+                        const nameEl = li.querySelector(
+                            ".chat-contact-session-status-top-name"
+                        );
+
+                        const name = nameEl
+                            ? nameEl.textContent.toLowerCase()
+                            : "";
+
+                        li.style.display =
+                            !keyword || name.includes(keyword)
+                                ? ""
+                                : "none";
+                    });
+                });
             }
 
             leave() {
@@ -14978,6 +15038,9 @@
                     // }
 
                 }
+
+                // 🔥 新增：每次状态变化后重排联系人
+                this.resort_contact_items();
 
             }
 
@@ -15274,6 +15337,52 @@
                     string = `已删除的消息`;
                 }
                 return string;
+            }
+
+            get_contact_sort_weight(item) {
+                const status = item.status_attr;
+                if (!status) return 999;
+
+                // 1️⃣ 有未读消息，最高优先级
+                if (status.unread_count > 0) return 0;
+
+                // 2️⃣ 在线
+                if (status.type === subviews.Chat.receiver_type.group) {
+                    if (status.online_count > 0) return 1;
+                } else if (status.type === subviews.Chat.receiver_type.user) {
+                    if (status.online_status === ChatDashboardWrapper.online_status.online) {
+                        return 1;
+                    }
+                }
+
+                // 3️⃣ 离线
+                return 2;
+            }
+
+            resort_contact_items() {
+                // 两个 mainactions：群 + 私聊
+                for (let i = 0; i < 2; i++) {
+                    const mainaction_group = this.dashboard_element.mainactions[i];
+                    const lis = mainaction_group.lis;
+                    const ol = mainaction_group.ol;
+
+                    // 排序 mainaction 数组
+                    lis.sort((a, b) => {
+                        const wa = this.get_contact_sort_weight(a);
+                        const wb = this.get_contact_sort_weight(b);
+                        if (wa !== wb) return wa - wb;
+
+                        // 同级别，按最后消息时间倒序
+                        const ta = a.status_attr?.last_message_time || 0;
+                        const tb = b.status_attr?.last_message_time || 0;
+                        return tb - ta;
+                    });
+
+                    // 按新顺序重新插入 DOM（不会新建元素）
+                    lis.forEach(item => {
+                        ol.appendChild(item.element);
+                    });
+                }
             }
 
             async format_contact_item_status__lastmsgview(newest_msg) {
