@@ -9801,7 +9801,7 @@
                 // 公共短语
                 const commonPhrases = [
                   // 日常聊天（前 200 条）
-                  "好的","在吗","在","不在","有事吗？","有事找你","是的","不是","拜拜","我下线了","🔥特急！","📌", "有时间吗？", "没时间","你好","有急事找你", "有事请留言", "会","不会","听懂了","等我5分钟", "可以","收到了","明天按时去","等我一下","马上回来","可以的","不行","我不没掌握", "收到信了吗","这边出事了","😄","😂","😅","😭","😡",
+                  "好的","在吗","在","不在","有事吗？","有事找你","是的","不是","拜拜","我下线了","🔥特急！","有时间吗？", "没时间","你好","有急事找你", "有事请留言", "会","不会","听懂了","等我5分钟", "可以","收到了","明天按时去","等我一下","马上回来","可以的","不行","我不没掌握", "收到信了吗","这边出事了","😄","😂","😅","😭","😡",
                   "不是","明天再说","辛苦了","谢谢","没事","等一下","吃了吗","忙吗","我懂了","哈哈","在家吗","忙吗","有空吗","你好吗？","30分钟后再见","注意安全",
                   "你什么时候有空？","明天有空吗？", "我们几点见？","安装","抓","被","了","上门","摄像头","跟踪","我", "你", "有人","不知道",
                   "今天下午可以吗？", "可以约个时间吗？", "周末有空吗？", "警察","明晚方便吗？", "你什么时候方便？", "能去吗？", 
@@ -9886,7 +9886,7 @@
                 "🎮","🎲","🃏","🀄","🎯","🎳","🎤","🎧","🎼","🎹","🥁","🎷","🎺","🪗","🎸","🪕","🖌️","🎨","🧵","🪡",
                 
                 // 表情：时间/日常
-                "🕐","🕑","🕒","🕓","🕔","🕕","🕖","🕗","🕘","🕙","🕚","🕛","⏰","⏱️","⏲️","🗓️","📅","📆","📌","📍",
+                "🕐","🕑","🕒","🕓","🕔","🕕","🕖","🕗","🕘","🕙","🕚","🕛","⏰","⏱️","⏲️","🗓️","📅","📆","📌置顶","📍",
                 
                 // 表情：手势/互动
                 "👋","🤚","🖐️","✋","🖖","👌","✌️","🤞","🤟","🤘","🤙","👈","👉","👆","🖕","👇","☝️","✋","🤲","👐",
@@ -11212,6 +11212,12 @@
             /*
             * 管理缓存的消息和渲染
             * */
+            // ===== 置顶消息安全判断 =====
+            function is_pinned_msg(msgattr) {
+                const text = msgattr?.msgobj?.msgattr?.text;
+                return typeof text === "string" && text.includes("📌");
+            }
+
             msgflow_manage = { // this=contentpage
 
                 load_sending_msgs: () => {
@@ -11228,7 +11234,7 @@
                         sendingMsg.msgobj.contentpage = this;
                         if (sendingMsg.msgobj.is_header()) {
                             // ===== 置顶功能 =====
-                            if (sendingMsg.msgobj.msgattr.text.includes("📌")) {
+                            if (is_pinned_msg(sendingMsg)) {
                                 sendingMsg.msgobj.msgelement.classList.add("chat-msg-pinned");
                                 this.e_msgflow.prepend(sendingMsg.msgobj.msgelement);
                             } else {
@@ -11278,8 +11284,7 @@
                     for (const sendingMsg of this.li.bindmap.msgs) {
                         sendingMsg.msgobj.contentpage = this;
                         if (sendingMsg.msgobj.is_header()) {
-                            // ===== 置顶功能 =====
-                            if (sendingMsg.msgobj.msgattr.text.includes("📌")) {
+                            if (is_pinned_msg(sendingMsg)) {
                                 sendingMsg.msgobj.msgelement.classList.add("chat-msg-pinned");
                                 this.e_msgflow.prepend(sendingMsg.msgobj.msgelement);
                             } else {
@@ -11313,13 +11318,17 @@
                     const msgseniors = [...this.li.bindmap.msgs].reverse();
 
                     // ===== 置顶功能 =====
-                    if (msgattr.msgobj.msgattr.text.includes("📌")) {
-                        this.li.bindmap.msgs.push(msgattr);
+                    this.li.bindmap.msgs.push(msgattr);
+
+                    if (is_pinned_msg(msgattr)) {
                         msgattr.msgobj.msgelement.classList.add("chat-msg-pinned");
                         this.e_msgflow.prepend(msgattr.msgobj.msgelement);
                     } else {
-                        this.li.bindmap.msgs.push(msgattr);
-                        this.panel.wrapper.msgflow_manage.add_element(this, msgattr, msgseniors);
+                        this.panel.wrapper.msgflow_manage.add_element(
+                            this,
+                            msgattr,
+                            msgseniors
+                        );
                     }
 
                     if (sent_one) {
@@ -15187,6 +15196,8 @@
             /*
              * 管理缓存的消息和渲染，可能与contentpage无关的部分
              * */
+           
+
             msgflow_manage = { // this=dashboardwrapper
 
                 _assign_new_message_attr: (this_msgattr, new_message_attr) => {
