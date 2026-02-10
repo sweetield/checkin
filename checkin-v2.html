@@ -48,7 +48,14 @@
             100% { box-shadow: 0 8px 20px rgba(59,130,246,0.18), inset 0 1px 0 rgba(255,255,255,0.6); }
         }
 
+        /* ================= 置顶人员 ================= */
+        .chat-contact.chat-contact-pinned {
+            background: rgba(255, 215, 0, 0.08);
+        }
 
+        .chat-contact.chat-contact-pinned .chat-contact-session-status-top-name::before {
+            content: "📌 ";
+        }
 
         /* ================= 附件列表 ================= */
         /* ===== 在线成员 & 附件列表字体增强 ===== */
@@ -14838,7 +14845,7 @@
             * */
             add_contact_item(attr,) {
                 if (attr.type === subviews.Chat.receiver_type.group) {
-                    const mainaction = {text: attr.gid, pagetype: contentpages.dashboard_chat.group,};
+                    const mainaction = {text: attr.gid, pagetype: contentpages.dashboard_chat.group,is_pinned: false,};
                     mainaction.contact_attr = attr;
 
                     mainaction.status_attr = {};
@@ -14852,7 +14859,7 @@
                     lis.push(mainaction);
                     this.add_contact_item_(mainaction, ol,);
                 } else if (attr.type === subviews.Chat.receiver_type.user) {
-                    const mainaction = {text: attr.uid, pagetype: contentpages.dashboard_chat.user,};
+                    const mainaction = {text: attr.uid, pagetype: contentpages.dashboard_chat.user,is_pinned: false,};
                     mainaction.contact_attr = attr;
 
                     mainaction.status_attr = {};
@@ -15283,7 +15290,10 @@
                 const status = item.status_attr;
                 if (!status) return 999;
 
-                // 1️⃣ 有未读消息，最高优先级
+                // 🔝 0：置顶，永远最前
+                if (item.is_pinned) return -1;
+
+                // 1️⃣ 有未读消息
                 if (status.unread_count > 0) return 0;
 
                 // 2️⃣ 在线
@@ -15298,6 +15308,7 @@
                 // 3️⃣ 离线
                 return 2;
             }
+
 
             resort_contact_items() {
                 // 两个 mainactions：群 + 私聊
@@ -15931,7 +15942,20 @@
                 li.addEventListener("click", (event) => {
                     // li.bindmap.func.call(this, event);
                     this.switch_content_page(event, li);
+                }
+                li.addEventListener("contextmenu", (event) => {
+                    event.preventDefault();
+
+                    mainaction.is_pinned = !mainaction.is_pinned;
+
+                    // 可选：给个 class，方便你写样式
+                    li.classList.toggle("chat-contact-pinned", mainaction.is_pinned);
+
+                    // 🔁 立即重排
+                    this.resort_contact_items();
                 });
+
+                );
             }
         }
 
