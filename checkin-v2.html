@@ -14979,6 +14979,9 @@
 
                 }
 
+                // 🔥 新增：每次状态变化后重排联系人
+                this.resort_contact_items();
+
             }
 
             sync_edited_messages(item, former_ceid, status_attr, message_ids) {
@@ -15274,6 +15277,52 @@
                     string = `已删除的消息`;
                 }
                 return string;
+            }
+
+            get_contact_sort_weight(item) {
+                const status = item.status_attr;
+                if (!status) return 999;
+
+                // 1️⃣ 有未读消息，最高优先级
+                if (status.unread_count > 0) return 0;
+
+                // 2️⃣ 在线
+                if (status.type === subviews.Chat.receiver_type.group) {
+                    if (status.online_count > 0) return 1;
+                } else if (status.type === subviews.Chat.receiver_type.user) {
+                    if (status.online_status === ChatDashboardWrapper.online_status.online) {
+                        return 1;
+                    }
+                }
+
+                // 3️⃣ 离线
+                return 2;
+            }
+
+            resort_contact_items() {
+                // 两个 mainactions：群 + 私聊
+                for (let i = 0; i < 2; i++) {
+                    const mainaction_group = this.dashboard_element.mainactions[i];
+                    const lis = mainaction_group.lis;
+                    const ol = mainaction_group.ol;
+
+                    // 排序 mainaction 数组
+                    lis.sort((a, b) => {
+                        const wa = this.get_contact_sort_weight(a);
+                        const wb = this.get_contact_sort_weight(b);
+                        if (wa !== wb) return wa - wb;
+
+                        // 同级别，按最后消息时间倒序
+                        const ta = a.status_attr?.last_message_time || 0;
+                        const tb = b.status_attr?.last_message_time || 0;
+                        return tb - ta;
+                    });
+
+                    // 按新顺序重新插入 DOM（不会新建元素）
+                    lis.forEach(item => {
+                        ol.appendChild(item.element);
+                    });
+                }
             }
 
             async format_contact_item_status__lastmsgview(newest_msg) {
