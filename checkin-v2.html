@@ -49,6 +49,26 @@
         }
 
 
+         /* =================人员列表筛选框 ================= */
+        .chat-contact-type-private {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .chat-contact-search {
+            flex: 1;
+            height: 20px;
+            font-size: 12px;
+            padding: 0 6px;
+            border-radius: 4px;
+            border: 1px solid rgba(0,0,0,.2);
+        }
+
+        .chat-contact-search:focus {
+            outline: none;
+            border-color: var(--accent-color);
+        }
 
         /* ================= 附件列表 ================= */
         /* ===== 在线成员 & 附件列表字体增强 ===== */
@@ -4047,11 +4067,19 @@
                     <ol class="nav-buttons">
                     </ol>
                 </nav>
-                <nav>
-                    <p class="chat-contact-type">私聊：</p>
-                    <ol class="nav-buttons">
-                    </ol>
-                </nav>
+               <nav>
+                <div class="chat-contact-type chat-contact-type-private">
+                    <span>私聊：</span>
+                    <input
+                        type="text"
+                        class="chat-contact-search"
+                        placeholder="搜索"
+                    />
+                </div>
+
+                <ol class="nav-buttons chat-private-list">
+                </ol>
+            </nav>
             </aside>
             <div class="chat-contacts-mark-syncing"><p>正在同步...</p></div>
         </div>
@@ -14823,6 +14851,35 @@
                 this.ws_callbacks = {};
                 this.ws_lasttime_connecting = 0;
 
+                // ✅ 初始化私聊搜索（只会执行一次）
+                this.init_private_contact_search();
+            }
+
+            init_private_contact_search() {
+                const input = this.dashboard_element.querySelector(".chat-contact-search");
+                const privateList = this.dashboard_element.querySelector(".chat-private-list");
+
+                // DOM 还没渲染好就直接跳过（安全兜底）
+                if (!input || !privateList) return;
+
+                input.addEventListener("input", () => {
+                    const keyword = input.value.trim().toLowerCase();
+
+                    privateList.querySelectorAll(".chat-contact").forEach(li => {
+                        const nameEl = li.querySelector(
+                            ".chat-contact-session-status-top-name"
+                        );
+
+                        const name = nameEl
+                            ? nameEl.textContent.toLowerCase()
+                            : "";
+
+                        li.style.display =
+                            !keyword || name.includes(keyword)
+                                ? ""
+                                : "none";
+                    });
+                });
             }
 
             leave() {
