@@ -59,18 +59,46 @@
 
 
         .chat-contact-search {
-            width: 100%;
-            box-sizing: border-box;
-            height: 22px;
-            font-size: 12px;
-            padding: 0 6px;
-            border-radius: 4px;
+            margin-top: 4px;
+            background: rgba(120, 180, 255, 0.08);
+            border: 1px solid rgba(120, 180, 255, 0.25);
+            color: #3a5f8a;
         }
+
+        .chat-contact-search::placeholder {
+            color: rgba(80, 130, 180, 0.6);
+        }
+
 
 
         .chat-contact-search:focus {
             outline: none;
             border-color: var(--accent-color);
+        }
+
+        .chat-contact-title {
+            position: relative;
+            padding-left: 10px;
+            font-size: 13px;
+            font-weight: 600;
+            color: #4a84c4; /* 淡蓝主色 */
+            letter-spacing: 0.5px;
+            line-height: 1.2;
+        }
+
+        .chat-contact-title::before {
+            content: "";
+            position: absolute;
+            left: 0;
+            top: 1px;
+            bottom: 1px;
+            width: 3px;
+            border-radius: 2px;
+            background: linear-gradient(
+                to bottom,
+                rgba(120, 180, 255, 0.9),
+                rgba(120, 180, 255, 0.4)
+            );
         }
 
         /* ================= 附件列表 ================= */
@@ -4072,7 +4100,7 @@
                 </nav>
                <nav>
                 <div class="chat-contact-type chat-contact-type-private">
-                    <span>私聊：</span>
+                    <<span class="chat-contact-title">私聊：</span>
                     <input
                         type="text"
                         class="chat-contact-search"
