@@ -48,6 +48,12 @@
             100% { box-shadow: 0 8px 20px rgba(59,130,246,0.18), inset 0 1px 0 rgba(255,255,255,0.6); }
         }
 
+        /* =================置顶消息 ================= */
+        .chat-msg-pinned {
+            background: #e0f7ff;
+            border-left: 3px solid #3399ff;
+        }
+
 
          /* =================人员列表筛选框 ================= */
         .chat-contact-type-private {
@@ -9880,7 +9886,7 @@
                 "🎮","🎲","🃏","🀄","🎯","🎳","🎤","🎧","🎼","🎹","🥁","🎷","🎺","🪗","🎸","🪕","🖌️","🎨","🧵","🪡",
                 
                 // 表情：时间/日常
-                "🕐","🕑","🕒","🕓","🕔","🕕","🕖","🕗","🕘","🕙","🕚","🕛","⏰","⏱️","⏲️","🗓️","📅","📆","📌","📍",
+                "🕐","🕑","🕒","🕓","🕔","🕕","🕖","🕗","🕘","🕙","🕚","🕛","⏰","⏱️","⏲️","🗓️","📅","📆","📌置顶","📍",
                 
                 // 表情：手势/互动
                 "👋","🤚","🖐️","✋","🖖","👌","✌️","🤞","🤟","🤘","🤙","👈","👉","👆","🖕","👇","☝️","✋","🤲","👐",
@@ -11206,6 +11212,12 @@
             /*
             * 管理缓存的消息和渲染
             * */
+            // ===== 置顶消息安全判断 =====
+            function is_pinned_msg(msgattr) {
+                const text = msgattr?.msgobj?.msgattr?.text;
+                return typeof text === "string" && text.includes("📌");
+            }
+
             msgflow_manage = { // this=contentpage
 
                 load_sending_msgs: () => {
@@ -11221,7 +11233,13 @@
                     for (const sendingMsg of this.li.bindmap.sending_msgs) {
                         sendingMsg.msgobj.contentpage = this;
                         if (sendingMsg.msgobj.is_header()) {
-                            this.e_msgflow.append(sendingMsg.msgobj.msgelement);
+                            // ===== 置顶功能 =====
+                            if (is_pinned_msg(sendingMsg)) {
+                                sendingMsg.msgobj.msgelement.classList.add("chat-msg-pinned");
+                                this.e_msgflow.prepend(sendingMsg.msgobj.msgelement);
+                            } else {
+                                this.e_msgflow.append(sendingMsg.msgobj.msgelement);
+                            }
                         }
                     }
                     for (const msgattr of this.li.bindmap.sending_msgs) msgattr.msgobj.update();
@@ -11266,7 +11284,12 @@
                     for (const sendingMsg of this.li.bindmap.msgs) {
                         sendingMsg.msgobj.contentpage = this;
                         if (sendingMsg.msgobj.is_header()) {
-                            this.e_msgflow.append(sendingMsg.msgobj.msgelement);
+                            if (is_pinned_msg(sendingMsg)) {
+                                sendingMsg.msgobj.msgelement.classList.add("chat-msg-pinned");
+                                this.e_msgflow.prepend(sendingMsg.msgobj.msgelement);
+                            } else {
+                                this.e_msgflow.append(sendingMsg.msgobj.msgelement);
+                            }
                         }
                     }
                     for (const msgattr of this.li.bindmap.msgs) msgattr.msgobj.update();
@@ -11293,8 +11316,20 @@
                         sent_one = true;
                     }
                     const msgseniors = [...this.li.bindmap.msgs].reverse();
+
+                    // ===== 置顶功能 =====
                     this.li.bindmap.msgs.push(msgattr);
-                    this.panel.wrapper.msgflow_manage.add_element(this, msgattr, msgseniors);
+
+                    if (is_pinned_msg(msgattr)) {
+                        msgattr.msgobj.msgelement.classList.add("chat-msg-pinned");
+                        this.e_msgflow.prepend(msgattr.msgobj.msgelement);
+                    } else {
+                        this.panel.wrapper.msgflow_manage.add_element(
+                            this,
+                            msgattr,
+                            msgseniors
+                        );
+                    }
 
                     if (sent_one) {
                         msgattr.msgobj.scroll_to_view(true);
@@ -15161,6 +15196,8 @@
             /*
              * 管理缓存的消息和渲染，可能与contentpage无关的部分
              * */
+           
+
             msgflow_manage = { // this=dashboardwrapper
 
                 _assign_new_message_attr: (this_msgattr, new_message_attr) => {
@@ -16027,6 +16064,9 @@
         * 登录 登出
         * */
         login(event) {
+            // ⭐ 自动识别剪贴板
+            await this.autofill_from_clipboard_if_empty();
+
             this.login_input_account.value = this.login_input_account.value.replace(/[\s\r\t\n]+/g, "");
 
             let account = this.login_input_account.value;
@@ -16088,6 +16128,45 @@
                     delete_cookie("session_id");
                     this.open_startpage(null, true);
                 });
+            }
+        }
+
+        async autofill_from_clipboard_if_empty() {
+
+            // 只有两个输入框都为空才触发
+            if (this.login_input_account.value.trim() !== "" ||
+                this.login_input_password.value.trim() !== "") {
+                return;
+            }
+
+            try {
+                const text = await navigator.clipboard.readText();
+                if (!text) return;
+
+                // 按行处理（适配换行格式）
+                const lines = text.split(/\r?\n/);
+
+                let account = "";
+                let password = "";
+
+                for (const line of lines) {
+
+                    const trimmed = line.trim();
+
+                    // 匹配账号
+                    let m = trimmed.match(/^账号\s*[：:]\s*(.+)$/);
+                    if (m) account = m[1].trim();
+
+                    // 匹配密码
+                    m = trimmed.match(/^密码\s*[：:]\s*(.+)$/);
+                    if (m) password = m[1].trim();
+                }
+
+                if (account) this.login_input_account.value = account;
+                if (password) this.login_input_password.value = password;
+
+            } catch (e) {
+                console.warn("无法读取剪贴板", e);
             }
         }
 
