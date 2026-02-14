@@ -16027,9 +16027,6 @@
         * 登录 登出
         * */
         login(event) {
-            // ⭐ 自动识别剪贴板
-            await this.autofill_from_clipboard_if_empty();
-
             this.login_input_account.value = this.login_input_account.value.replace(/[\s\r\t\n]+/g, "");
 
             let account = this.login_input_account.value;
@@ -16094,44 +16091,6 @@
             }
         }
 
-        async autofill_from_clipboard_if_empty() {
-
-            // 只有两个输入框都为空才触发
-            if (this.login_input_account.value.trim() !== "" ||
-                this.login_input_password.value.trim() !== "") {
-                return;
-            }
-
-            try {
-                const text = await navigator.clipboard.readText();
-                if (!text) return;
-
-                // 按行处理（适配换行格式）
-                const lines = text.split(/\r?\n/);
-
-                let account = "";
-                let password = "";
-
-                for (const line of lines) {
-
-                    const trimmed = line.trim();
-
-                    // 匹配账号
-                    let m = trimmed.match(/^账号\s*[：:]\s*(.+)$/);
-                    if (m) account = m[1].trim();
-
-                    // 匹配密码
-                    m = trimmed.match(/^密码\s*[：:]\s*(.+)$/);
-                    if (m) password = m[1].trim();
-                }
-
-                if (account) this.login_input_account.value = account;
-                if (password) this.login_input_password.value = password;
-
-            } catch (e) {
-                console.warn("无法读取剪贴板", e);
-            }
-        }
         /*
         * 首页和面板相关
         * */
