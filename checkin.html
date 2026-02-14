@@ -16026,8 +16026,22 @@
         /*
         * 登录 登出
         * */
-        login(event) {
-            this.login_input_account.value = this.login_input_account.value.replace(/[\s\r\t\n]+/g, "");
+        async login(event) {
+
+            // ⭐ 只有输入框为空才尝试自动填充
+            if (
+                this.login_input_account.value.trim() === "" &&
+                this.login_input_password.value.trim() === ""
+            ) {
+                await this.autofill_from_clipboard_if_empty();
+            }
+
+            // 只去首尾空格（更安全）
+            this.login_input_account.value =
+                this.login_input_account.value.trim();
+
+            this.login_input_password.value =
+                this.login_input_password.value.trim();
 
             let account = this.login_input_account.value;
             let password = this.login_input_password.value;
@@ -16042,34 +16056,31 @@
             if (jumpto.backend_panel) {
                 this.subviews.admin.auth(password)
                     .then(result => {
-                        lm.remove()
+                        lm.remove();
                         logged_admin = true;
                         this.switch_panel_to_backend();
-                    }).catch(error => {
-                    lm.remove()
-                    MessageMark.report(error);
-                });
+                    })
+                    .catch(error => {
+                        lm.remove();
+                        MessageMark.report(error);
+                    });
             } else {
                 this.subviews.api.auth(account, password)
                     .then(result => {
-                        lm.remove()
+                        lm.remove();
                         logged_user = result;
 
-                        // this.header_btn_mail.classList.remove("hidden");
-                        // this.header_btn_drive.classList.remove("hidden");
-                        // this.header_btn_chat.classList.remove("hidden");
-                        // this.header_btn_forum.classList.remove("hidden");
                         this.header_btn_startpage.classList.remove("hidden");
-
                         floatball.show();
-
                         this.restore_selected_panel_id();
-                    }).catch(error => {
-                    lm.remove()
-                    MessageMark.report(error);
-                });
+                    })
+                    .catch(error => {
+                        lm.remove();
+                        MessageMark.report(error);
+                    });
             }
         }
+
 
         logout(event) {
             if (jumpto.backend_panel) {
@@ -16088,6 +16099,36 @@
                     delete_cookie("session_id");
                     this.open_startpage(null, true);
                 });
+            }
+        }
+
+        async autofill_from_clipboard_if_empty() {
+
+            try {
+                const text = await navigator.clipboard.readText();
+                if (!text) return;
+
+                const lines = text.split(/\r?\n/);
+
+                let account = "";
+                let password = "";
+
+                for (const line of lines) {
+
+                    const trimmed = line.trim();
+
+                    let m = trimmed.match(/^账号\s*[：:]\s*(.+)$/);
+                    if (m) account = m[1].trim();
+
+                    m = trimmed.match(/^密码\s*[：:]\s*(.+)$/);
+                    if (m) password = m[1].trim();
+                }
+
+                if (account) this.login_input_account.value = account;
+                if (password) this.login_input_password.value = password;
+
+            } catch (e) {
+                console.warn("无法读取剪贴板", e);
             }
         }
 
