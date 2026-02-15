@@ -10365,7 +10365,7 @@
                             this.write_ctx.globalCompositeOperation = "destination-out";
                             this.write_ctx.lineWidth = size * 3;   // 根据滑块
                         } else {
-                            // ✏️ 画笔模式
+                            // ✏️ 写字模式
                             this.write_ctx.globalCompositeOperation = "source-over";
                             this.write_ctx.strokeStyle = "#000";
                             this.write_ctx.lineWidth = size;       // 根据滑块
@@ -10522,7 +10522,7 @@
                     this.write_is_eraser = !this.write_is_eraser;
 
                     if (this.write_is_eraser) {
-                        this.e_writeboard_eraser.textContent = "✏️ 画笔";
+                        this.e_writeboard_eraser.textContent = "✏️ 写字";
                         this.e_writeboard_eraser.classList.add("active");
                     } else {
                         this.e_writeboard_eraser.textContent = "🧽 橡皮擦";
