@@ -10459,41 +10459,6 @@
                     });
                 };
 
-
-
-                // 点击按钮打开写字板
-                this.e_writeboard_btn.addEventListener("click", () => {
-
-                    this.e_writeboard.classList.remove("hidden");
-                    this.init_writeboard();
-
-                    // 默认画笔模式
-                    this.write_is_eraser = false;
-                    this.e_writeboard_canvas.style.cursor = "crosshair";
-
-                    if (this.e_writeboard_eraser) {
-                        this.e_writeboard_eraser.textContent = "🧽 橡皮擦";
-                        this.e_writeboard_eraser.classList.remove("active");
-                    }
-                });
-
-
-                // 点击关闭按钮隐藏写字板
-                this.e_writeboard_close.addEventListener("click", () => {
-                    this.e_writeboard.classList.add("hidden");
-                    if (this.write_ctx) {
-                        this.write_ctx.clearRect(0, 0, this.e_writeboard_canvas.width, this.e_writeboard_canvas.height);
-                    }
-                });
-
-                // 清空按钮
-                this.e_writeboard_clear.addEventListener("click", () => {
-                    if (this.write_ctx) {
-                        this.write_ctx.fillStyle = "#fff";
-                        this.write_ctx.fillRect(0, 0, this.e_writeboard_canvas.width, this.e_writeboard_canvas.height);
-                    }
-                });
-
                 // ⚡ 更新鼠标光标（画笔/橡皮）
                 this.updateCursor = () => {
                     const size = parseInt(this.e_writeboard_size.value || 4);
@@ -10513,6 +10478,42 @@
                     const dataURL = cursorCanvas.toDataURL("image/png");
                     this.e_writeboard_canvas.style.cursor = `url(${dataURL}) ${diameter/2} ${diameter/2}, auto`;
                 };
+
+                // 点击按钮打开写字板
+                this.e_writeboard_btn.addEventListener("click", () => {
+
+                    this.e_writeboard.classList.remove("hidden");
+                    this.init_writeboard();
+
+                    // 默认画笔模式
+                    this.write_is_eraser = false;
+                    if (this.e_writeboard_eraser) {
+                        this.e_writeboard_eraser.textContent = "🧽 橡皮擦";
+                        this.e_writeboard_eraser.classList.remove("active");
+                    }
+
+                    // ⭐ 使用统一光标更新函数
+                    this.updateCursor();
+                });
+
+
+                // 点击关闭按钮隐藏写字板
+                this.e_writeboard_close.addEventListener("click", () => {
+                    this.e_writeboard.classList.add("hidden");
+                    if (this.write_ctx) {
+                        this.write_ctx.clearRect(0, 0, this.e_writeboard_canvas.width, this.e_writeboard_canvas.height);
+                    }
+                });
+
+                // 清空按钮
+                this.e_writeboard_clear.addEventListener("click", () => {
+                    if (this.write_ctx) {
+                        this.write_ctx.fillStyle = "#fff";
+                        this.write_ctx.fillRect(0, 0, this.e_writeboard_canvas.width, this.e_writeboard_canvas.height);
+                    }
+                });
+
+
 
 
                 // ⭐ 橡皮擦按钮
