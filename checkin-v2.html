@@ -10462,15 +10462,15 @@
                 // ⚡ 更新鼠标光标（画笔/橡皮）
                 this.updateCursor = () => {
                     const size = parseInt(this.e_writeboard_size.value || 4);
-                    const diameter = this.write_is_eraser ? size * 3 : size;
+                    const diameter = this.write_is_eraser ? size * 3 : size * 2; // 画笔稍微大一点才显示圆形
 
                     const cursorCanvas = document.createElement("canvas");
                     cursorCanvas.width = diameter;
                     cursorCanvas.height = diameter;
 
                     const ctx = cursorCanvas.getContext("2d");
-                    ctx.fillStyle = this.write_is_eraser ? "#000" : "#000"; // 橡皮擦半透明，画笔纯黑
-                    ctx.globalAlpha = this.write_is_eraser ? 0.5 : 1;
+                    ctx.fillStyle = "#000"; // 画笔纯黑
+                    ctx.globalAlpha = this.write_is_eraser ? 0.5 : 1; // 橡皮半透明
                     ctx.beginPath();
                     ctx.arc(diameter / 2, diameter / 2, diameter / 2, 0, Math.PI * 2);
                     ctx.fill();
@@ -10478,6 +10478,7 @@
                     const dataURL = cursorCanvas.toDataURL("image/png");
                     this.e_writeboard_canvas.style.cursor = `url(${dataURL}) ${diameter/2} ${diameter/2}, auto`;
                 };
+
 
                 // 点击按钮打开写字板
                 this.e_writeboard_btn.addEventListener("click", () => {
