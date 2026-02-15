@@ -10494,20 +10494,18 @@
                     }
                 });
 
-                // ⚡ 更新橡皮光标
-                this.updateEraserCursor = () => {
-                    if (!this.write_is_eraser) return;
-
+                // ⚡ 更新鼠标光标（画笔/橡皮）
+                this.updateCursor = () => {
                     const size = parseInt(this.e_writeboard_size.value || 4);
-                    const diameter = size * 3;
+                    const diameter = this.write_is_eraser ? size * 3 : size;
 
                     const cursorCanvas = document.createElement("canvas");
                     cursorCanvas.width = diameter;
                     cursorCanvas.height = diameter;
 
                     const ctx = cursorCanvas.getContext("2d");
-                    ctx.fillStyle = "#000";
-                    ctx.globalAlpha = 0.5;
+                    ctx.fillStyle = this.write_is_eraser ? "#000" : "#000"; // 橡皮擦半透明，画笔纯黑
+                    ctx.globalAlpha = this.write_is_eraser ? 0.5 : 1;
                     ctx.beginPath();
                     ctx.arc(diameter / 2, diameter / 2, diameter / 2, 0, Math.PI * 2);
                     ctx.fill();
@@ -10516,6 +10514,7 @@
                     this.e_writeboard_canvas.style.cursor = `url(${dataURL}) ${diameter/2} ${diameter/2}, auto`;
                 };
 
+
                 // ⭐ 橡皮擦按钮
                 this.e_writeboard_eraser.addEventListener("click", () => {
                     this.write_is_eraser = !this.write_is_eraser;
@@ -10523,13 +10522,15 @@
                     if (this.write_is_eraser) {
                         this.e_writeboard_eraser.textContent = "✏️ 画笔";
                         this.e_writeboard_eraser.classList.add("active");
-                        this.updateEraserCursor(); // ⭐ 点击立即更新光标
                     } else {
                         this.e_writeboard_eraser.textContent = "🧽 橡皮擦";
                         this.e_writeboard_eraser.classList.remove("active");
-                        this.e_writeboard_canvas.style.cursor = "crosshair";
                     }
+
+                    // ⭐ 不管是切换画笔还是橡皮，实时更新光标
+                    this.updateCursor();
                 });
+
 
 
 
@@ -10541,11 +10542,14 @@
 
                     if (this.write_is_eraser) {
                         this.write_ctx.lineWidth = size * 3; 
-                        this.updateEraserCursor(); // ⭐ 实时更新光标
                     } else {
                         this.write_ctx.lineWidth = size;
                     }
+
+                    // ⭐ 滑块变化时立即更新光标
+                    this.updateCursor();
                 });
+
 
 
 
