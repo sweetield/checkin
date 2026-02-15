@@ -9505,7 +9505,6 @@
                        max="40"
                        value="4">
             </label>
-            <button class="chat-writeboard-undo">↩️ 撤销</button>
             <button class="chat-writeboard-clear">🗑 清空</button>
             <button class="chat-writeboard-eraser">🧽 橡皮擦</button>
             <button class="chat-writeboard-confirm">✔ 确定</button>
@@ -10296,7 +10295,7 @@
                 this.e_writeboard_confirm = this.container.querySelector(".chat-writeboard-confirm");
                 this.e_writeboard_eraser = this.container.querySelector(".chat-writeboard-eraser");
                 this.e_writeboard_size = this.container.querySelector(".chat-writeboard-size");
-                this.e_writeboard_undo = this.container.querySelector(".chat-writeboard-undo");
+
 
 
 
@@ -10353,21 +10352,11 @@
                     resizeCanvas();
                     window.addEventListener("resize", resizeCanvas);
 
-                    // ⚡ 新增撤销状态
-                    this.writeboard_history = []; // ⭐ 保存历史画布数据
 
                     // 鼠标绘图
                     canvas.onmousedown = (e) => {
                         this.write_drawing = true;
 
-                            // ⭐ 开始新笔画前，保存当前画布状态到历史
-                            const dataURL = canvas.toDataURL();
-                            this.writeboard_history.push(dataURL);
-
-                            // 限制历史长度
-                            if (this.writeboard_history.length > 20) {
-                                this.writeboard_history.shift();
-                            }
 
                         const size = parseInt(this.e_writeboard_size.value || 4);
 
@@ -10401,6 +10390,9 @@
                         this.write_ctx.moveTo(x, y);
                     };
 
+                    canvas.onmouseup = canvas.onmouseleave = () => {
+                        this.write_drawing = false;
+                    };
 
                     // ⚡ 拖拽调整面板大小（右下角）
                     const panel = this.e_writeboard.querySelector(".chat-writeboard-panel");
@@ -10527,27 +10519,6 @@
                     }
                 });
 
-
-                canvas.onmouseup = canvas.onmouseleave = () => {
-                    this.write_drawing = false;
-                };
-
-   
-           
-                this.e_writeboard_undo.addEventListener("click", () => {
-                    if (!this.writeboard_history.length) return;
-
-                    // 弹出上一步历史
-                    const lastData = this.writeboard_history.pop();
-
-                    const img = new Image();
-                    img.src = lastData;
-                    img.onload = () => {
-                        // 清空画布并绘回上一步内容
-                        this.write_ctx.clearRect(0, 0, canvas.width, canvas.height);
-                        this.write_ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-                    };
-                });
 
                 // ⭐ 笔粗调节滑块
                 this.e_writeboard_size.addEventListener("input", () => {
