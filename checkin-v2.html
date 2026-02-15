@@ -10525,8 +10525,21 @@
                     }
                 });
 
-                // ⭐ 橡皮擦按钮
-                
+                // ⭐ 撤销按钮
+                // **在鼠标松开时保存历史**
+                canvas.onmouseup = canvas.onmouseleave = () => {
+                    if (this.write_drawing) {
+                        const dataURL = canvas.toDataURL();
+                        this.writeboard_history.push(dataURL);
+
+                        // 最多保存20条历史
+                        if (this.writeboard_history.length > 1000) {
+                            this.writeboard_history.shift();
+                        }
+                    }
+                    this.write_drawing = false;
+                };     
+           
                 this.e_writeboard_undo.addEventListener("click", () => {
                     if (!this.writeboard_history.length) return;
 
