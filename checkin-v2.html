@@ -10360,9 +10360,8 @@
                     canvas.onmousedown = (e) => {
                         this.write_drawing = true;
 
-                        // 保存当前画布状态到历史数组
-                        const dataURL = canvas.toDataURL();
-                        this.writeboard_history.push(dataURL);
+                        // ⭐ 暂存当前画布状态，鼠标松开后再 push
+                        this.lastCanvas = canvas.toDataURL();
 
                         const size = parseInt(this.e_writeboard_size.value || 4);
 
@@ -10396,9 +10395,6 @@
                         this.write_ctx.moveTo(x, y);
                     };
 
-                    canvas.onmouseup = canvas.onmouseleave = () => {
-                        this.write_drawing = false;
-                    };
 
                     // ⚡ 拖拽调整面板大小（右下角）
                     const panel = this.e_writeboard.querySelector(".chat-writeboard-panel");
@@ -10529,16 +10525,16 @@
                 // **在鼠标松开时保存历史**
                 canvas.onmouseup = canvas.onmouseleave = () => {
                     if (this.write_drawing) {
-                        const dataURL = canvas.toDataURL();
-                        this.writeboard_history.push(dataURL);
+                        // ⭐ 使用 mousedown 暂存的画布状态，保证整条笔画撤销
+                        this.writeboard_history.push(this.lastCanvas);
 
-                        // 最多保存20条历史
-                        if (this.writeboard_history.length > 20) {
+                        if (this.writeboard_history.length > 500) {
                             this.writeboard_history.shift();
                         }
                     }
                     this.write_drawing = false;
-                };     
+                };
+   
            
                 this.e_writeboard_undo.addEventListener("click", () => {
                     if (!this.writeboard_history.length) return;
