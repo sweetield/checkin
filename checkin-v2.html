@@ -10462,7 +10462,10 @@
                 // ⚡ 更新鼠标光标（画笔/橡皮）
                 this.updateCursor = () => {
                     const size = parseInt(this.e_writeboard_size.value || 4);
-                    const diameter = this.write_is_eraser ? size * 6 : size * 6; // 画笔稍微大一点才显示圆形
+                    // 基础光标直径 = size * 4，最小 16px，最大 28px
+                    let diameter = size * 4;
+                    diameter = Math.max(diameter, 16);
+                    diameter = Math.min(diameter, 28);
 
                     const cursorCanvas = document.createElement("canvas");
                     cursorCanvas.width = diameter;
