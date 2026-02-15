@@ -10494,79 +10494,59 @@
                     }
                 });
 
+                // ⚡ 更新橡皮光标
+                this.updateEraserCursor = () => {
+                    if (!this.write_is_eraser) return;
+
+                    const size = parseInt(this.e_writeboard_size.value || 4);
+                    const diameter = size * 3;
+
+                    const cursorCanvas = document.createElement("canvas");
+                    cursorCanvas.width = diameter;
+                    cursorCanvas.height = diameter;
+
+                    const ctx = cursorCanvas.getContext("2d");
+                    ctx.fillStyle = "#000";
+                    ctx.globalAlpha = 0.5;
+                    ctx.beginPath();
+                    ctx.arc(diameter / 2, diameter / 2, diameter / 2, 0, Math.PI * 2);
+                    ctx.fill();
+
+                    const dataURL = cursorCanvas.toDataURL("image/png");
+                    this.e_writeboard_canvas.style.cursor = `url(${dataURL}) ${diameter/2} ${diameter/2}, auto`;
+                };
+
                 // ⭐ 橡皮擦按钮
                 this.e_writeboard_eraser.addEventListener("click", () => {
-
                     this.write_is_eraser = !this.write_is_eraser;
 
                     if (this.write_is_eraser) {
-
-                        // 🧽 橡皮擦模式
                         this.e_writeboard_eraser.textContent = "✏️ 画笔";
                         this.e_writeboard_eraser.classList.add("active");
-
-                        // 鼠标样式：自定义圆形
-                        const size = parseInt(this.e_writeboard_size.value || 4);
-                        const cursorCanvas = document.createElement("canvas");
-                        const ctx = cursorCanvas.getContext("2d");
-                        const diameter = size * 3; // 橡皮半径
-                        cursorCanvas.width = diameter;
-                        cursorCanvas.height = diameter;
-
-                        // 绘制圆形
-                        ctx.fillStyle = "#000";  // 光标颜色，可以用半透明
-                        ctx.globalAlpha = 0.5;
-                        ctx.beginPath();
-                        ctx.arc(diameter / 2, diameter / 2, diameter / 2, 0, Math.PI * 2);
-                        ctx.fill();
-
-                        // 设置为 cursor
-                        const dataURL = cursorCanvas.toDataURL("image/png");
-                        this.e_writeboard_canvas.style.cursor = `url(${dataURL}) ${diameter/2} ${diameter/2}, auto`;
-
+                        this.updateEraserCursor(); // ⭐ 点击立即更新光标
                     } else {
-
-                        // ✏️ 画笔模式
                         this.e_writeboard_eraser.textContent = "🧽 橡皮擦";
                         this.e_writeboard_eraser.classList.remove("active");
-
-                        // 恢复普通十字光标
                         this.e_writeboard_canvas.style.cursor = "crosshair";
                     }
                 });
+
 
 
 
                 // ⭐ 笔粗调节滑块
                 this.e_writeboard_size.addEventListener("input", () => {
                     if (!this.write_ctx) return;
-
                     const size = parseInt(this.e_writeboard_size.value);
 
                     if (this.write_is_eraser) {
-                        this.write_ctx.lineWidth = size * 3; // 橡皮擦更粗
-
-                        // ⚡ 同步更新圆形光标
-                        const cursorCanvas = document.createElement("canvas");
-                        const ctx = cursorCanvas.getContext("2d");
-                        const diameter = size * 3; // 橡皮半径
-                        cursorCanvas.width = diameter;
-                        cursorCanvas.height = diameter;
-
-                        ctx.fillStyle = "#000";
-                        ctx.globalAlpha = 0.5;
-                        ctx.beginPath();
-                        ctx.arc(diameter / 2, diameter / 2, diameter / 2, 0, Math.PI * 2);
-                        ctx.fill();
-
-                        const dataURL = cursorCanvas.toDataURL("image/png");
-                        this.e_writeboard_canvas.style.cursor = `url(${dataURL}) ${diameter/2} ${diameter/2}, auto`;
-
+                        this.write_ctx.lineWidth = size * 3; 
+                        this.updateEraserCursor(); // ⭐ 实时更新光标
                     } else {
                         this.write_ctx.lineWidth = size;
-                        this.e_writeboard_canvas.style.cursor = "crosshair";
                     }
                 });
+
 
 
                 // 确定按钮（生成图片并发送）
