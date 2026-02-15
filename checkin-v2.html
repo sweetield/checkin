@@ -10356,20 +10356,23 @@
                     canvas.onmousedown = (e) => {
                         this.write_drawing = true;
 
+                        const size = parseInt(this.e_writeboard_size.value || 4);
+
                         if (this.write_is_eraser) {
-                            // ⭐ 橡皮擦模式
+                            // 🧽 橡皮擦模式
                             this.write_ctx.globalCompositeOperation = "destination-out";
-                            this.write_ctx.lineWidth = 20;
+                            this.write_ctx.lineWidth = size * 3;   // 根据滑块
                         } else {
-                            // ⭐ 画笔模式
+                            // ✏️ 画笔模式
                             this.write_ctx.globalCompositeOperation = "source-over";
                             this.write_ctx.strokeStyle = "#000";
-                            this.write_ctx.lineWidth = 4;
+                            this.write_ctx.lineWidth = size;       // 根据滑块
                         }
 
                         this.write_ctx.beginPath();
                         this.write_ctx.moveTo(e.offsetX, e.offsetY);
                     };
+
 
                     canvas.onmousemove = (e) => {
                         if (!this.write_drawing) return;
@@ -10499,7 +10502,7 @@
                         this.e_writeboard_eraser.classList.add("active");
 
                         // 鼠标样式
-                        this.e_writeboard_canvas.style.cursor = "not-allowed";
+                        this.e_writeboard_canvas.style.cursor = this.write_is_eraser ? "cell" : "crosshair";
 
                     } else {
 
