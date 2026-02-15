@@ -10396,9 +10396,9 @@
                         this.write_ctx.moveTo(x, y);
                     };
 
-                    canvas.addEventListener("mouseleave", () => {
+                    canvas.onmouseup = canvas.onmouseleave = () => {
                         this.write_drawing = false;
-                    });
+                    };
 
                     // ⚡ 拖拽调整面板大小（右下角）
                     const panel = this.e_writeboard.querySelector(".chat-writeboard-panel");
@@ -10527,7 +10527,7 @@
 
                 // ⭐ 撤销按钮
                 // **在鼠标松开时保存历史**
-                canvas.addEventListener("mouseup", () => {
+                canvas.onmouseup = canvas.onmouseleave = () => {
                     if (this.write_drawing) {
                         const dataURL = canvas.toDataURL();
                         this.writeboard_history.push(dataURL);
@@ -10538,7 +10538,7 @@
                         }
                     }
                     this.write_drawing = false;
-                });     
+                };     
            
                 this.e_writeboard_undo.addEventListener("click", () => {
                     if (!this.writeboard_history.length) return;
