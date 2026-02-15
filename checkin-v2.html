@@ -9484,9 +9484,9 @@
         <canvas class="chat-writeboard-canvas"></canvas>
 
         <div class="chat-writeboard-actions">
-            <button class="chat-writeboard-eraser">橡皮擦</button>
-            <button class="chat-writeboard-clear">清空</button>
-            <button class="chat-writeboard-confirm">确定</button>
+            <button class="chat-writeboard-clear">🗑 清空</button>
+            <button class="chat-writeboard-eraser">🧽 橡皮擦</button>
+            <button class="chat-writeboard-confirm">✔ 确定</button>
         </div>
     </div>
 </div>
@@ -10419,9 +10419,20 @@
 
                 // 点击按钮打开写字板
                 this.e_writeboard_btn.addEventListener("click", () => {
+
                     this.e_writeboard.classList.remove("hidden");
                     this.init_writeboard();
+
+                    // 默认画笔模式
+                    this.write_is_eraser = false;
+                    this.e_writeboard_canvas.style.cursor = "crosshair";
+
+                    if (this.e_writeboard_eraser) {
+                        this.e_writeboard_eraser.textContent = "🧽 橡皮擦";
+                        this.e_writeboard_eraser.classList.remove("active");
+                    }
                 });
+
 
                 // 点击关闭按钮隐藏写字板
                 this.e_writeboard_close.addEventListener("click", () => {
@@ -10441,12 +10452,29 @@
 
                 // ⭐ 橡皮擦按钮
                 this.e_writeboard_eraser.addEventListener("click", () => {
+
                     this.write_is_eraser = !this.write_is_eraser;
 
-                    // 按钮文字切换（可选）
-                    this.e_writeboard_eraser.textContent =
-                        this.write_is_eraser ? "画笔" : "橡皮擦";
+                    if (this.write_is_eraser) {
+
+                        // 🧽 橡皮擦模式
+                        this.e_writeboard_eraser.textContent = "✏️ 画笔";
+                        this.e_writeboard_eraser.classList.add("active");
+
+                        // 鼠标样式
+                        this.e_writeboard_canvas.style.cursor = "not-allowed";
+
+                    } else {
+
+                        // ✏️ 画笔模式
+                        this.e_writeboard_eraser.textContent = "🧽 橡皮擦";
+                        this.e_writeboard_eraser.classList.remove("active");
+
+                        // 鼠标样式
+                        this.e_writeboard_canvas.style.cursor = "crosshair";
+                    }
                 });
+
 
                 // 确定按钮（生成图片并发送）
                 this.e_writeboard_confirm.addEventListener("click", () => {
