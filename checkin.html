@@ -49,6 +49,7 @@
         }
 
 
+
          /* =================人员列表筛选框 ================= */
         .chat-contact-type-private {
             display: flex;
@@ -389,6 +390,18 @@
 
 
         /* 写字板整体 */
+        /* =================写字笔粗 ================= */
+        .brush-size {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 1rem;
+            margin-right: auto; /* 推到左侧 */
+        }
+
+        .chat-writeboard-size {
+            width: 120px;
+        }
         /* Header */
         .chat-writeboard-header {
             display: flex;
@@ -9484,8 +9497,17 @@
         <canvas class="chat-writeboard-canvas"></canvas>
 
         <div class="chat-writeboard-actions">
-            <button class="chat-writeboard-clear">清空</button>
-            <button class="chat-writeboard-confirm">确定</button>
+            <label class="brush-size">
+                ✏️ 粗细
+                <input type="range"
+                       class="chat-writeboard-size"
+                       min="1"
+                       max="40"
+                       value="4">
+            </label>
+            <button class="chat-writeboard-clear">🗑 清空</button>
+            <button class="chat-writeboard-eraser">🧽 橡皮擦</button>
+            <button class="chat-writeboard-confirm">✔ 确定</button>
         </div>
     </div>
 </div>
@@ -10263,6 +10285,7 @@
                 this.refresh();
                 this.start_timer__fetch_unread_msgs(false);
                 this.start_timer__update_read_progress(false);
+
                 // ⚡ 新增写字功能 DOM
                 this.e_writeboard = this.container.querySelector(".chat-writeboard");
                 this.e_writeboard_canvas = this.container.querySelector(".chat-writeboard-canvas");
@@ -10270,10 +10293,17 @@
                 this.e_writeboard_close = this.container.querySelector(".chat-writeboard-close");
                 this.e_writeboard_clear = this.container.querySelector(".chat-writeboard-clear");
                 this.e_writeboard_confirm = this.container.querySelector(".chat-writeboard-confirm");
+                this.e_writeboard_eraser = this.container.querySelector(".chat-writeboard-eraser");
+                this.e_writeboard_size = this.container.querySelector(".chat-writeboard-size");
+
+
+
 
                 // 鼠标绘图状态
                 this.write_ctx = null;
                 this.write_drawing = false;
+                this.write_is_eraser = false; // ⭐ 是否橡皮擦
+
 
                 // ⚡ 初始化写字板
                 this.init_writeboard = () => {
@@ -10303,23 +10333,63 @@
 
                         // 设置画笔属性
                         this.write_ctx.strokeStyle = "#000";
-                        this.write_ctx.lineWidth = 4;
+                        const size = parseInt(this.e_writeboard_size.value || 4);
+
+                        if (this.write_is_eraser) {
+
+                            this.write_ctx.globalCompositeOperation = "destination-out";
+                            this.write_ctx.lineWidth = size * 3;
+
+                        } else {
+
+                            this.write_ctx.globalCompositeOperation = "source-over";
+                            this.write_ctx.strokeStyle = "#000";
+                            this.write_ctx.lineWidth = size;
+                        }
+
                         this.write_ctx.lineCap = "round";
                     };
                     resizeCanvas();
                     window.addEventListener("resize", resizeCanvas);
 
+
                     // 鼠标绘图
                     canvas.onmousedown = (e) => {
                         this.write_drawing = true;
+
+
+                        const size = parseInt(this.e_writeboard_size.value || 4);
+
+                        if (this.write_is_eraser) {
+                            // 🧽 橡皮擦模式
+                            this.write_ctx.globalCompositeOperation = "destination-out";
+                            this.write_ctx.lineWidth = size * 3;   // 根据滑块
+                        } else {
+                            // ✏️ 写字模式
+                            this.write_ctx.globalCompositeOperation = "source-over";
+                            this.write_ctx.strokeStyle = "#000";
+                            this.write_ctx.lineWidth = size;       // 根据滑块
+                        }
+
                         this.write_ctx.beginPath();
                         this.write_ctx.moveTo(e.offsetX, e.offsetY);
                     };
+
+
                     canvas.onmousemove = (e) => {
                         if (!this.write_drawing) return;
-                        this.write_ctx.lineTo(e.offsetX, e.offsetY);
+
+                        const x = e.offsetX;
+                        const y = e.offsetY;
+
+                        this.write_ctx.lineTo(x, y);
                         this.write_ctx.stroke();
+
+                        // ⭐ 关键：让路径连续，橡皮擦更丝滑
+                        this.write_ctx.beginPath();
+                        this.write_ctx.moveTo(x, y);
                     };
+
                     canvas.onmouseup = canvas.onmouseleave = () => {
                         this.write_drawing = false;
                     };
@@ -10389,11 +10459,47 @@
                     });
                 };
 
+                // ⚡ 更新鼠标光标（画笔/橡皮）
+                this.updateCursor = () => {
+                    const size = parseInt(this.e_writeboard_size.value || 4);
+                    // 光标直径控制在 12~28px 内
+                    let diameter = this.write_is_eraser ? size * 2 : size * 2; 
+                    diameter = Math.min(diameter, 28);
+                    diameter = Math.max(diameter, 12);
+
+                    const cursorCanvas = document.createElement("canvas");
+                    cursorCanvas.width = diameter;
+                    cursorCanvas.height = diameter;
+
+                    const ctx = cursorCanvas.getContext("2d");
+                    ctx.fillStyle = "#000"; // 画笔纯黑
+                    ctx.globalAlpha = this.write_is_eraser ? 0.5 : 1; // 橡皮半透明
+                    ctx.beginPath();
+                    ctx.arc(diameter / 2, diameter / 2, diameter / 2, 0, Math.PI * 2);
+                    ctx.fill();
+
+                    const dataURL = cursorCanvas.toDataURL("image/png");
+                    this.e_writeboard_canvas.style.cursor = `url(${dataURL}) ${diameter/2} ${diameter/2}, auto`;
+                };
+
+
                 // 点击按钮打开写字板
                 this.e_writeboard_btn.addEventListener("click", () => {
+
                     this.e_writeboard.classList.remove("hidden");
                     this.init_writeboard();
+
+                    // 默认画笔模式
+                    this.write_is_eraser = false;
+                    if (this.e_writeboard_eraser) {
+                        this.e_writeboard_eraser.textContent = "🧽 橡皮擦";
+                        this.e_writeboard_eraser.classList.remove("active");
+                    }
+
+                    // ⭐ 使用统一光标更新函数
+                    this.updateCursor();
                 });
+
 
                 // 点击关闭按钮隐藏写字板
                 this.e_writeboard_close.addEventListener("click", () => {
@@ -10410,6 +10516,47 @@
                         this.write_ctx.fillRect(0, 0, this.e_writeboard_canvas.width, this.e_writeboard_canvas.height);
                     }
                 });
+
+
+
+
+                // ⭐ 橡皮擦按钮
+                this.e_writeboard_eraser.addEventListener("click", () => {
+                    this.write_is_eraser = !this.write_is_eraser;
+
+                    if (this.write_is_eraser) {
+                        this.e_writeboard_eraser.textContent = "✏️ 写字";
+                        this.e_writeboard_eraser.classList.add("active");
+                    } else {
+                        this.e_writeboard_eraser.textContent = "🧽 橡皮擦";
+                        this.e_writeboard_eraser.classList.remove("active");
+                    }
+
+                    // ⭐ 不管是切换画笔还是橡皮，实时更新光标
+                    this.updateCursor();
+                });
+
+
+
+
+
+                // ⭐ 笔粗调节滑块
+                this.e_writeboard_size.addEventListener("input", () => {
+                    if (!this.write_ctx) return;
+                    const size = parseInt(this.e_writeboard_size.value);
+
+                    if (this.write_is_eraser) {
+                        this.write_ctx.lineWidth = size * 3; 
+                    } else {
+                        this.write_ctx.lineWidth = size;
+                    }
+
+                    // ⭐ 滑块变化时立即更新光标
+                    this.updateCursor();
+                });
+
+
+
 
                 // 确定按钮（生成图片并发送）
                 this.e_writeboard_confirm.addEventListener("click", () => {
