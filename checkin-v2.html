@@ -9484,6 +9484,7 @@
         <canvas class="chat-writeboard-canvas"></canvas>
 
         <div class="chat-writeboard-actions">
+            <button class="chat-writeboard-eraser">橡皮擦</button>
             <button class="chat-writeboard-clear">清空</button>
             <button class="chat-writeboard-confirm">确定</button>
         </div>
@@ -10263,6 +10264,7 @@
                 this.refresh();
                 this.start_timer__fetch_unread_msgs(false);
                 this.start_timer__update_read_progress(false);
+
                 // ⚡ 新增写字功能 DOM
                 this.e_writeboard = this.container.querySelector(".chat-writeboard");
                 this.e_writeboard_canvas = this.container.querySelector(".chat-writeboard-canvas");
@@ -10270,10 +10272,14 @@
                 this.e_writeboard_close = this.container.querySelector(".chat-writeboard-close");
                 this.e_writeboard_clear = this.container.querySelector(".chat-writeboard-clear");
                 this.e_writeboard_confirm = this.container.querySelector(".chat-writeboard-confirm");
+                this.e_writeboard_eraser = this.container.querySelector(".chat-writeboard-eraser");
+
 
                 // 鼠标绘图状态
                 this.write_ctx = null;
                 this.write_drawing = false;
+                this.write_is_eraser = false; // ⭐ 是否橡皮擦
+
 
                 // ⚡ 初始化写字板
                 this.init_writeboard = () => {
@@ -10312,14 +10318,36 @@
                     // 鼠标绘图
                     canvas.onmousedown = (e) => {
                         this.write_drawing = true;
+
+                        if (this.write_is_eraser) {
+                            // ⭐ 橡皮擦模式
+                            this.write_ctx.globalCompositeOperation = "destination-out";
+                            this.write_ctx.lineWidth = 20;
+                        } else {
+                            // ⭐ 画笔模式
+                            this.write_ctx.globalCompositeOperation = "source-over";
+                            this.write_ctx.strokeStyle = "#000";
+                            this.write_ctx.lineWidth = 4;
+                        }
+
                         this.write_ctx.beginPath();
                         this.write_ctx.moveTo(e.offsetX, e.offsetY);
                     };
+
                     canvas.onmousemove = (e) => {
                         if (!this.write_drawing) return;
-                        this.write_ctx.lineTo(e.offsetX, e.offsetY);
+
+                        const x = e.offsetX;
+                        const y = e.offsetY;
+
+                        this.write_ctx.lineTo(x, y);
                         this.write_ctx.stroke();
+
+                        // ⭐ 关键：让路径连续，橡皮擦更丝滑
+                        this.write_ctx.beginPath();
+                        this.write_ctx.moveTo(x, y);
                     };
+
                     canvas.onmouseup = canvas.onmouseleave = () => {
                         this.write_drawing = false;
                     };
@@ -10409,6 +10437,15 @@
                         this.write_ctx.fillStyle = "#fff";
                         this.write_ctx.fillRect(0, 0, this.e_writeboard_canvas.width, this.e_writeboard_canvas.height);
                     }
+                });
+
+                // ⭐ 橡皮擦按钮
+                this.e_writeboard_eraser.addEventListener("click", () => {
+                    this.write_is_eraser = !this.write_is_eraser;
+
+                    // 按钮文字切换（可选）
+                    this.e_writeboard_eraser.textContent =
+                        this.write_is_eraser ? "画笔" : "橡皮擦";
                 });
 
                 // 确定按钮（生成图片并发送）
