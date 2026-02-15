@@ -10532,8 +10532,8 @@
                         const dataURL = canvas.toDataURL();
                         this.writeboard_history.push(dataURL);
 
-                        // 最多保存1000条历史
-                        if (this.writeboard_history.length > 1000) {
+                        // 最多保存20条历史
+                        if (this.writeboard_history.length > 20) {
                             this.writeboard_history.shift();
                         }
                     }
