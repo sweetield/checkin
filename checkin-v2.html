@@ -10539,17 +10539,35 @@
 
                 // ⭐ 笔粗调节滑块
                 this.e_writeboard_size.addEventListener("input", () => {
-
                     if (!this.write_ctx) return;
 
                     const size = parseInt(this.e_writeboard_size.value);
 
                     if (this.write_is_eraser) {
                         this.write_ctx.lineWidth = size * 3; // 橡皮擦更粗
+
+                        // ⚡ 同步更新圆形光标
+                        const cursorCanvas = document.createElement("canvas");
+                        const ctx = cursorCanvas.getContext("2d");
+                        const diameter = size * 3; // 橡皮半径
+                        cursorCanvas.width = diameter;
+                        cursorCanvas.height = diameter;
+
+                        ctx.fillStyle = "#000";
+                        ctx.globalAlpha = 0.5;
+                        ctx.beginPath();
+                        ctx.arc(diameter / 2, diameter / 2, diameter / 2, 0, Math.PI * 2);
+                        ctx.fill();
+
+                        const dataURL = cursorCanvas.toDataURL("image/png");
+                        this.e_writeboard_canvas.style.cursor = `url(${dataURL}) ${diameter/2} ${diameter/2}, auto`;
+
                     } else {
                         this.write_ctx.lineWidth = size;
+                        this.e_writeboard_canvas.style.cursor = "crosshair";
                     }
                 });
+
 
                 // 确定按钮（生成图片并发送）
                 this.e_writeboard_confirm.addEventListener("click", () => {
