@@ -10505,8 +10505,24 @@
                         this.e_writeboard_eraser.textContent = "✏️ 画笔";
                         this.e_writeboard_eraser.classList.add("active");
 
-                        // 鼠标样式
-                        this.e_writeboard_canvas.style.cursor = "cell";
+                        // 鼠标样式：自定义圆形
+                        const size = parseInt(this.e_writeboard_size.value || 4);
+                        const cursorCanvas = document.createElement("canvas");
+                        const ctx = cursorCanvas.getContext("2d");
+                        const diameter = size * 3; // 橡皮半径
+                        cursorCanvas.width = diameter;
+                        cursorCanvas.height = diameter;
+
+                        // 绘制圆形
+                        ctx.fillStyle = "#000";  // 光标颜色，可以用半透明
+                        ctx.globalAlpha = 0.5;
+                        ctx.beginPath();
+                        ctx.arc(diameter / 2, diameter / 2, diameter / 2, 0, Math.PI * 2);
+                        ctx.fill();
+
+                        // 设置为 cursor
+                        const dataURL = cursorCanvas.toDataURL("image/png");
+                        this.e_writeboard_canvas.style.cursor = `url(${dataURL}) ${diameter/2} ${diameter/2}, auto`;
 
                     } else {
 
@@ -10514,10 +10530,11 @@
                         this.e_writeboard_eraser.textContent = "🧽 橡皮擦";
                         this.e_writeboard_eraser.classList.remove("active");
 
-                        // 鼠标样式
+                        // 恢复普通十字光标
                         this.e_writeboard_canvas.style.cursor = "crosshair";
                     }
                 });
+
 
 
                 // ⭐ 笔粗调节滑块
