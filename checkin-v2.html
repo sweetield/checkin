@@ -49,6 +49,7 @@
         }
 
 
+
          /* =================人员列表筛选框 ================= */
         .chat-contact-type-private {
             display: flex;
@@ -389,6 +390,18 @@
 
 
         /* 写字板整体 */
+        /* =================写字笔粗 ================= */
+        .brush-size {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 1rem;
+            margin-right: auto; /* 推到左侧 */
+        }
+
+        .chat-writeboard-size {
+            width: 120px;
+        }
         /* Header */
         .chat-writeboard-header {
             display: flex;
@@ -9484,6 +9497,15 @@
         <canvas class="chat-writeboard-canvas"></canvas>
 
         <div class="chat-writeboard-actions">
+            <label class="brush-size">
+                ✏️ 粗细
+                <input type="range"
+                       class="chat-writeboard-size"
+                       min="1"
+                       max="40"
+                       value="4">
+            </label>
+
             <button class="chat-writeboard-clear">🗑 清空</button>
             <button class="chat-writeboard-eraser">🧽 橡皮擦</button>
             <button class="chat-writeboard-confirm">✔ 确定</button>
@@ -10273,6 +10295,8 @@
                 this.e_writeboard_clear = this.container.querySelector(".chat-writeboard-clear");
                 this.e_writeboard_confirm = this.container.querySelector(".chat-writeboard-confirm");
                 this.e_writeboard_eraser = this.container.querySelector(".chat-writeboard-eraser");
+                this.e_writeboard_size = this.container.querySelector(".chat-writeboard-size");
+
 
 
                 // 鼠标绘图状态
@@ -10309,7 +10333,20 @@
 
                         // 设置画笔属性
                         this.write_ctx.strokeStyle = "#000";
-                        this.write_ctx.lineWidth = 4;
+                        const size = parseInt(this.e_writeboard_size.value || 4);
+
+                        if (this.write_is_eraser) {
+
+                            this.write_ctx.globalCompositeOperation = "destination-out";
+                            this.write_ctx.lineWidth = size * 3;
+
+                        } else {
+
+                            this.write_ctx.globalCompositeOperation = "source-over";
+                            this.write_ctx.strokeStyle = "#000";
+                            this.write_ctx.lineWidth = size;
+                        }
+
                         this.write_ctx.lineCap = "round";
                     };
                     resizeCanvas();
@@ -10475,6 +10512,20 @@
                     }
                 });
 
+
+                // ⭐ 笔粗调节滑块
+                this.e_writeboard_size.addEventListener("input", () => {
+
+                    if (!this.write_ctx) return;
+
+                    const size = parseInt(this.e_writeboard_size.value);
+
+                    if (this.write_is_eraser) {
+                        this.write_ctx.lineWidth = size * 3; // 橡皮擦更粗
+                    } else {
+                        this.write_ctx.lineWidth = size;
+                    }
+                });
 
                 // 确定按钮（生成图片并发送）
                 this.e_writeboard_confirm.addEventListener("click", () => {
