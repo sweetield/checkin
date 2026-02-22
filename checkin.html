@@ -2976,8 +2976,8 @@
             /* 出现爆出 + 持续提醒 */
             animation:
                 unreadPop 0.35s ease-out,
-                unreadAttention 1.6s infinite 0.35s,
-                unreadGlow 2s infinite 0.35s;
+                unreadBreath 2.8s ease-in-out infinite 0.35s,
+                unreadGlow 3.5s ease-in-out infinite 0.35s;
 
             transition: transform 0.15s ease;
         }
@@ -2985,6 +2985,12 @@
         /* 鼠标悬停：暗示可点击 */
         span.chat-contact-session-status-bottom-unreadcount:hover {
             transform: scale(1.2);
+        }
+
+
+        @keyframes unreadBreath {
+            0%,100% { transform: scale(1); }
+            50%     { transform: scale(1.08); }
         }
 
         @keyframes unreadPop {
