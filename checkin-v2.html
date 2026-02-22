@@ -2984,9 +2984,20 @@
 
         /* 鼠标悬停：暗示可点击 */
         span.chat-contact-session-status-bottom-unreadcount:hover {
-            transform: scale(1.2);
+            transform: scale(1.15);
+
+            box-shadow:
+                0 0 0 4px rgba(255, 0, 0, 0.35),
+                0 6px 16px rgba(0, 0, 0, 0.45);
         }
 
+        /*「微立体高光」：*/
+        background: linear-gradient(
+            135deg,
+            #ff6b6b 0%,
+            #ff2a2a 60%,
+            #d90000 100%
+        );
 
         @keyframes unreadBreath {
             0%,100% { transform: scale(1); }
