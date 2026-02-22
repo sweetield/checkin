@@ -2943,16 +2943,34 @@
         }
 
         span.chat-contact-session-status-bottom-unreadcount {
-            font-size: 12px;
+            font-size: 11px;
+            font-weight: bold;
             color: white;
-            background: #F44336;
-            border-radius: 50%;
-            width: 16px;
-            height: 16px;
+
+            background: linear-gradient(135deg, #ff5252, #ff1744);
+
+            width: 20px;
+            height: 20px;
+
+            border-radius: 999px;
+
             display: flex;
             align-items: center;
             justify-content: center;
-            white-space: nowrap;
+
+            box-shadow:
+                0 0 0 2px white,
+                0 2px 8px rgba(0,0,0,0.4);
+
+            cursor: pointer;
+
+            animation: unreadPulse 1.5s ease-in-out infinite;
+        }
+
+        @keyframes unreadPulse {
+            0%   { transform: scale(1); }
+            50%  { transform: scale(1.15); }
+            100% { transform: scale(1); }
         }
 
     </style>
