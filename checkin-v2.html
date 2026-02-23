@@ -10991,10 +10991,7 @@
                         URL.revokeObjectURL(urlDirect);
                         const d = {
                             file_name: name,
-                            image_attr: {
-                                width: imgDirect.width,
-                                height: imgDirect.height,
-                            },
+                            image_attr: { width: imgDirect.width, height: imgDirect.height },
                         };
                         this.send_msg_file(file, dashboardwrappers.ChatDashboardWrapper.message_type.image, d);
                     };
@@ -11010,17 +11007,34 @@
                 const img = new Image();
                 const url = URL.createObjectURL(file);
                 img.onload = () => {
-                    const canvas = document.createElement("canvas");
-                    canvas.width = img.width;
-                    canvas.height = img.height;
-                    const ctx = canvas.getContext("2d");
-                    ctx.drawImage(img, 0, 0);
+                    // 限制最大宽高
+                    const MAX_WIDTH = 1920;
+                    const MAX_HEIGHT = 1080;
+                    let width = img.width;
+                    let height = img.height;
 
+                    if (width > MAX_WIDTH || height > MAX_HEIGHT) {
+                        const ratio = Math.min(MAX_WIDTH / width, MAX_HEIGHT / height);
+                        width = Math.round(width * ratio);
+                        height = Math.round(height * ratio);
+                    }
+
+                    const canvas = document.createElement("canvas");
+                    canvas.width = width;
+                    canvas.height = height;
+                    const ctx = canvas.getContext("2d");
+                    ctx.drawImage(img, 0, 0, width, height);
+
+                    // 使用 JPEG 压缩，PNG 也可转为 JPEG 以保证大小和显示
                     let type = file.type.toLowerCase();
                     if (!type.startsWith("image/")) {
                         MessageMark.report("不支持的图片格式。");
                         URL.revokeObjectURL(url);
                         return;
+                    }
+                    // 可选：把 PNG 转 JPEG 来降低体积
+                    if (type === "image/png") {
+                        type = "image/jpeg";
                     }
 
                     canvas.toBlob(
@@ -11030,18 +11044,15 @@
                                 URL.revokeObjectURL(url);
                                 return;
                             }
-                            const compressedFile = new File([blob], name, { type: type });
+                            const compressedFile = new File([blob], name.replace(/\.[^.]+$/, ".jpg"), { type: type });
                             const d = {
-                                file_name: name,
-                                image_attr: {
-                                    width: canvas.width,
-                                    height: canvas.height,
-                                },
+                                file_name: compressedFile.name,
+                                image_attr: { width, height },
                             };
                             this.send_msg_file(compressedFile, dashboardwrappers.ChatDashboardWrapper.message_type.image, d);
                             URL.revokeObjectURL(url);
                         },
-                        type === "image/png" ? "image/png" : "image/jpeg",
+                        type,
                         0.7
                     );
                 };
