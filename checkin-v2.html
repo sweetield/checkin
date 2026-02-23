@@ -10983,24 +10983,73 @@
                 let name = normalizeName(file.name);
                 if (!name) return;
 
+                // 小于200KB直接发送
+                if (file.size <= 200 * 1024) {
+                    const imgDirect = new Image();
+                    const urlDirect = URL.createObjectURL(file);
+                    imgDirect.onload = () => {
+                        URL.revokeObjectURL(urlDirect);
+                        const d = {
+                            file_name: name,
+                            image_attr: {
+                                width: imgDirect.width,
+                                height: imgDirect.height,
+                            },
+                        };
+                        this.send_msg_file(file, dashboardwrappers.ChatDashboardWrapper.message_type.image, d);
+                    };
+                    imgDirect.onerror = () => {
+                        MessageMark.report("选择的图片无效。");
+                        URL.revokeObjectURL(urlDirect);
+                    };
+                    imgDirect.src = urlDirect;
+                    return;
+                }
+
+                // 大于200KB才压缩
                 const img = new Image();
                 const url = URL.createObjectURL(file);
                 img.onload = () => {
-                    URL.revokeObjectURL(url);
-                    const d = {
-                        file_name: name,
-                        image_attr: {
-                            width: img.width,
-                            height: img.height,
-                        }
+                    const canvas = document.createElement("canvas");
+                    canvas.width = img.width;
+                    canvas.height = img.height;
+                    const ctx = canvas.getContext("2d");
+                    ctx.drawImage(img, 0, 0);
+
+                    let type = file.type.toLowerCase();
+                    if (!type.startsWith("image/")) {
+                        MessageMark.report("不支持的图片格式。");
+                        URL.revokeObjectURL(url);
+                        return;
                     }
-                    this.send_msg_file(file, dashboardwrappers.ChatDashboardWrapper.message_type.image, d);
+
+                    canvas.toBlob(
+                        (blob) => {
+                            if (!blob) {
+                                MessageMark.report("图片压缩失败。");
+                                URL.revokeObjectURL(url);
+                                return;
+                            }
+                            const compressedFile = new File([blob], name, { type: type });
+                            const d = {
+                                file_name: name,
+                                image_attr: {
+                                    width: canvas.width,
+                                    height: canvas.height,
+                                },
+                            };
+                            this.send_msg_file(compressedFile, dashboardwrappers.ChatDashboardWrapper.message_type.image, d);
+                            URL.revokeObjectURL(url);
+                        },
+                        type === "image/png" ? "image/png" : "image/jpeg",
+                        0.7
+                    );
                 };
                 img.onerror = () => {
                     MessageMark.report("选择的图片无效。");
+                    URL.revokeObjectURL(url);
                 };
                 img.src = url;
-
             }
 
             start__send_msg_file(file) {
