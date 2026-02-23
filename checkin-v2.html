@@ -10983,49 +10983,24 @@
                 let name = normalizeName(file.name);
                 if (!name) return;
 
-                // 小于200KB直接发送
-                if (file.size <= 200 * 1024) {
-                    const imgDirect = new Image();
-                    const urlDirect = URL.createObjectURL(file);
-                    imgDirect.onload = () => {
-                        URL.revokeObjectURL(urlDirect);
-                        const d = { file_name: name, image_attr: { width: imgDirect.width, height: imgDirect.height } };
-                        this.send_msg_file(file, dashboardwrappers.ChatDashboardWrapper.message_type.image, d);
-                    };
-                    imgDirect.onerror = () => { MessageMark.report("选择的图片无效。"); URL.revokeObjectURL(urlDirect); };
-                    imgDirect.src = urlDirect;
-                    return;
-                }
-
                 const img = new Image();
                 const url = URL.createObjectURL(file);
                 img.onload = () => {
-                    const canvas = document.createElement("canvas");
-                    canvas.width = img.width;
-                    canvas.height = img.height;
-                    const ctx = canvas.getContext("2d");
-                    ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-
-                    let type = file.type.toLowerCase();
-                    if (type !== "image/jpeg") {
-                        type = "image/jpeg";
-                        name = name.replace(/\.[^.]+$/, ".jpg");
+                    URL.revokeObjectURL(url);
+                    const d = {
+                        file_name: name,
+                        image_attr: {
+                            width: img.width,
+                            height: img.height,
+                        }
                     }
-
-                    canvas.toBlob(
-                        (blob) => {
-                            if (!blob) { MessageMark.report("图片压缩失败。"); URL.revokeObjectURL(url); return; }
-                            const compressedFile = new File([blob], name, { type: type });
-                            const d = { file_name: compressedFile.name, image_attr: { width: canvas.width, height: canvas.height } };
-                            this.send_msg_file(compressedFile, dashboardwrappers.ChatDashboardWrapper.message_type.image, d);
-                            URL.revokeObjectURL(url);
-                        },
-                        type,
-                        0.7
-                    );
+                    this.send_msg_file(file, dashboardwrappers.ChatDashboardWrapper.message_type.image, d);
                 };
-                img.onerror = () => { MessageMark.report("选择的图片无效。"); URL.revokeObjectURL(url); };
+                img.onerror = () => {
+                    MessageMark.report("选择的图片无效。");
+                };
                 img.src = url;
+
             }
 
             start__send_msg_file(file) {
@@ -12885,17 +12860,73 @@
                     ================================= */
                     set_img_src(plain_file_data) {
 
-                        const blob = new Blob([plain_file_data]);
+                        const fileSize = plain_file_data.byteLength;
+                        const THRESHOLD = 200 * 1024; // 200KB
 
-                        this.e_mcr_img__urlobj = URL.createObjectURL(blob);
-                        this.e_mcr_img.src = this.e_mcr_img__urlobj;
+                        if (fileSize <= THRESHOLD) {
+                            // 小于 200KB，直接显示
+                            const blob = new Blob([plain_file_data]);
+                            this.e_mcr_img__urlobj = URL.createObjectURL(blob);
+                            this.e_mcr_img.src = this.e_mcr_img__urlobj;
+                            this.e_mcr_img.onload = () => {
+                                if (this.e_mcr_img__urlobj) {
+                                    URL.revokeObjectURL(this.e_mcr_img__urlobj);
+                                    this.e_mcr_img__urlobj = null;
+                                }
+                            };
+                            return;
+                        }
 
-                        this.e_mcr_img.onload = () => {
-                            if (this.e_mcr_img__urlobj) {
-                                URL.revokeObjectURL(this.e_mcr_img__urlobj);
-                                this.e_mcr_img__urlobj = null;
-                            }
+                        // 大于 200KB，压缩处理
+                        const img = new Image();
+                        const url = URL.createObjectURL(new Blob([plain_file_data]));
+                        img.onload = () => {
+                            const canvas = document.createElement("canvas");
+                            canvas.width = img.width;
+                            canvas.height = img.height;
+                            const ctx = canvas.getContext("2d");
+                            ctx.drawImage(img, 0, 0);
+
+                            // PNG 转 JPEG 避免显示异常
+                            let type = "image/jpeg";
+
+                            canvas.toBlob(
+                                (blob) => {
+                                    if (!blob) {
+                                        // 失败时直接显示原图
+                                        const fallbackBlob = new Blob([plain_file_data]);
+                                        this.e_mcr_img__urlobj = URL.createObjectURL(fallbackBlob);
+                                    } else {
+                                        this.e_mcr_img__urlobj = URL.createObjectURL(blob);
+                                    }
+                                    this.e_mcr_img.src = this.e_mcr_img__urlobj;
+
+                                    this.e_mcr_img.onload = () => {
+                                        if (this.e_mcr_img__urlobj) {
+                                            URL.revokeObjectURL(this.e_mcr_img__urlobj);
+                                            this.e_mcr_img__urlobj = null;
+                                        }
+                                    };
+                                },
+                                type,
+                                0.7 // 压缩质量
+                            );
+
+                            URL.revokeObjectURL(url);
                         };
+                        img.onerror = () => {
+                            // 加载失败，直接显示原图
+                            const fallbackBlob = new Blob([plain_file_data]);
+                            this.e_mcr_img__urlobj = URL.createObjectURL(fallbackBlob);
+                            this.e_mcr_img.src = this.e_mcr_img__urlobj;
+                            this.e_mcr_img.onload = () => {
+                                if (this.e_mcr_img__urlobj) {
+                                    URL.revokeObjectURL(this.e_mcr_img__urlobj);
+                                    this.e_mcr_img__urlobj = null;
+                                }
+                            };
+                        };
+                        img.src = url;
                     }
                 }
 
