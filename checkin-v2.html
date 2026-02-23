@@ -12860,97 +12860,41 @@
                     ================================= */
                     set_img_src(plain_file_data) {
 
-                        const fileSize = plain_file_data.byteLength;
-                        const THRESHOLD = 200 * 1024; // 200KB
+                        const blob = new Blob([plain_file_data]);
 
-                        if (fileSize <= THRESHOLD) {
-                            // 小于 200KB，直接显示
-                            const blob = new Blob([plain_file_data]);
-                            this.e_mcr_img__urlobj = URL.createObjectURL(blob);
-                            this.e_mcr_img.src = this.e_mcr_img__urlobj;
-                            this.e_mcr_img.onload = () => {
-                                if (this.e_mcr_img__urlobj) {
-                                    URL.revokeObjectURL(this.e_mcr_img__urlobj);
-                                    this.e_mcr_img__urlobj = null;
-                                }
-                            };
-                            return;
-                        }
+                        this.e_mcr_img__urlobj = URL.createObjectURL(blob);
+                        this.e_mcr_img.src = this.e_mcr_img__urlobj;
 
-                        // 大于 200KB，压缩处理
-                        const img = new Image();
-                        const url = URL.createObjectURL(new Blob([plain_file_data]));
-                        img.onload = () => {
-                            const canvas = document.createElement("canvas");
-                            canvas.width = img.width;
-                            canvas.height = img.height;
-                            const ctx = canvas.getContext("2d");
-                            ctx.drawImage(img, 0, 0);
-
-                            // PNG 转 JPEG 避免显示异常
-                            let type = "image/jpeg";
-
-                            canvas.toBlob(
-                                (blob) => {
-                                    if (!blob) {
-                                        // 失败时直接显示原图
-                                        const fallbackBlob = new Blob([plain_file_data]);
-                                        this.e_mcr_img__urlobj = URL.createObjectURL(fallbackBlob);
-                                    } else {
-                                        this.e_mcr_img__urlobj = URL.createObjectURL(blob);
-                                    }
-                                    this.e_mcr_img.src = this.e_mcr_img__urlobj;
-
-                                    this.e_mcr_img.onload = () => {
-                                        if (this.e_mcr_img__urlobj) {
-                                            URL.revokeObjectURL(this.e_mcr_img__urlobj);
-                                            this.e_mcr_img__urlobj = null;
-                                        }
-                                    };
-                                },
-                                type,
-                                0.7 // 压缩质量
-                            );
-
-                            URL.revokeObjectURL(url);
+                        this.e_mcr_img.onload = () => {
+                            if (this.e_mcr_img__urlobj) {
+                                URL.revokeObjectURL(this.e_mcr_img__urlobj);
+                                this.e_mcr_img__urlobj = null;
+                            }
                         };
-                        img.onerror = () => {
-                            // 加载失败，直接显示原图
-                            const fallbackBlob = new Blob([plain_file_data]);
-                            this.e_mcr_img__urlobj = URL.createObjectURL(fallbackBlob);
-                            this.e_mcr_img.src = this.e_mcr_img__urlobj;
-                            this.e_mcr_img.onload = () => {
-                                if (this.e_mcr_img__urlobj) {
-                                    URL.revokeObjectURL(this.e_mcr_img__urlobj);
-                                    this.e_mcr_img__urlobj = null;
-                                }
-                            };
-                        };
-                        img.src = url;
                     }
                 }
 
                 // ===== FileMsg 类 =====
                   class FileMsg extends _ {
-                    constructor(panel, contentpage, msgattr, msgattrseniors,) {
-                        super(panel, contentpage, msgattr, msgattrseniors,);
+                    constructor(panel, contentpage, msgattr, msgattrseniors) {
+                        super(panel, contentpage, msgattr, msgattrseniors);
                     }
 
                     init() {
                         super.init();
 
                         let html = `
-<div class="chat-message-content-rect chat-mcr-file">
-<span class="chat-mcr-file-icon" draggable="false">🗳️</span>
-<div class="chat-mcr-file-info">
-    <span class="chat-mcr-file-info-name"></span>
-    <div class="chat-mcr-file-info-others">
-        <span class="chat-mcr-file-info-size"></span>
-        <span class="chat-mcr-file-status"></span>
-    </div>
-</div>
-</div>
-`;
+                <div class="chat-message-content-rect chat-mcr-file">
+                    <span class="chat-mcr-file-icon" draggable="false">🗳️</span>
+                    <div class="chat-mcr-file-info">
+                        <span class="chat-mcr-file-info-name"></span>
+                        <div class="chat-mcr-file-info-others">
+                            <span class="chat-mcr-file-info-size"></span>
+                            <span class="chat-mcr-file-status"></span>
+                        </div>
+                    </div>
+                </div>
+                `;
                         this.e_container.insertAdjacentHTML("beforeend", html);
                         this.e_mcr = this.e_container.querySelector(":scope .chat-message-content-rect");
                         this.e_mcr.style.background = this.palette.rect_bg;
@@ -12969,9 +12913,9 @@
                         // ⚡ 保存实例到 msgattr，用于附件列表复用下载
                         this.msgattr._fileMsgInstance = this;
 
-                        this.e_mcr_icon = this.e_mcr.querySelector(":scope span"); // 点击开始下载
-                        this.e_mcr_icon.addEventListener("click", (event) => {
-                            if (!this.msgattr.is_sent) return
+                        // ----- 下载逻辑函数 -----
+                        const startDownload = () => {
+                            if (!this.msgattr.is_sent) return;
                             if (this.msgattr.upload_task && this.msgattr.upload_task.status !== FloatBall.taskstatus.finished) return;
                             if (!this.msgattr.plain_file_name) return;
                             if (this.msgattr.download_task && this.msgattr.download_task.status !== FloatBall.taskstatus.finished) {
@@ -12980,58 +12924,35 @@
                             }
 
                             const t = new FloatBall.tasktypes.Download_ChatMessage(floatball.dialog.tab_content_backtasks, {
-                                onfinished: () => {
-                                    this.update();
-                                },
-                                onwaiting: () => {
-                                    this.update();
-                                },
-                                onprogress: () => {
-                                    this.update();
-                                },
-                                onfailed: () => {
-                                    this.update();
-                                }
+                                onfinished: () => { this.update(); },
+                                onwaiting: () => { this.update(); },
+                                onprogress: () => { this.update(); },
+                                onfailed: () => { this.update(); }
                             });
 
                             this.msgattr.download_task = t;
 
                             floatball.dialog.addTask(t);
                             t.set_name(this.msgattr.plain_file_name);
-                            t.set_args({
-                                msg: this.msgattr,
-                            });
+                            t.set_args({ msg: this.msgattr });
 
                             floatball.dialog.checkToStartTask();
                             floatball.dialog.checkToHide(t);
+                        };
 
-                            // floatball.look_download_tasks(t);
-                        });
+                        // 图标点击下载
+                        this.e_mcr_icon.addEventListener("click", startDownload);
+                        // 文件名点击下载
+                        this.e_mcr_info_name.addEventListener("click", startDownload);
+                        this.e_mcr_info_name.style.cursor = "pointer";
 
-                        this.e_mcr_icon.addEventListener('dragstart', (event) => { // 拖拽保存
-                            if (event.target.tagName !== "SPAN") {
-                                return;
-                            }
+                        // ----- 拖拽逻辑 -----
+                        this.e_mcr_icon.addEventListener('dragstart', (event) => {
+                            if (event.target.tagName !== "SPAN") return;
                             dragging_item = this;
                             event.dataTransfer.effectAllowed = 'copy';
-
-                            // const content = "这是要生成的文件内容\n可以是文本、JSON等";
-                            // const filename = "example.txt";
-
-                            // const file = new File([content], filename, {type: "text/plain"});
-                            // event.dataTransfer.items.add(file);
-
-                            // const blob = new Blob([content], { type: "text/plain" });
-                            // const url = URL.createObjectURL(blob);
-                            // event.dataTransfer.setData("text/uri-list", url); // URL 作为下载链接
-                            // event.dataTransfer.setData("text/plain", url); // 兼容其他浏览器
-                            // event.dataTransfer.setData("DownloadURL", `text/plain:${filename}:${url}`);
-
                         });
-                        this.e_mcr_icon.addEventListener('dragend', (event) => {
-                            dragging_item = null;
-                        });
-
+                        this.e_mcr_icon.addEventListener('dragend', () => { dragging_item = null; });
                     }
 
                     update() {
