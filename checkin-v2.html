@@ -11004,21 +11004,18 @@
                     canvas.width = img.width;
                     canvas.height = img.height;
                     const ctx = canvas.getContext("2d");
-                    ctx.drawImage(img, 0, 0);
+                    ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
 
                     let type = file.type.toLowerCase();
-                    let ext = name.split('.').pop().toLowerCase();
-
-                    // PNG 转 JPEG 以保证压缩有效且可显示
-                    if (type === "image/png") {
+                    if (type !== "image/jpeg") {
                         type = "image/jpeg";
-                        ext = "jpg";
+                        name = name.replace(/\.[^.]+$/, ".jpg");
                     }
 
                     canvas.toBlob(
                         (blob) => {
                             if (!blob) { MessageMark.report("图片压缩失败。"); URL.revokeObjectURL(url); return; }
-                            const compressedFile = new File([blob], name.replace(/\.[^.]+$/, "." + ext), { type: type });
+                            const compressedFile = new File([blob], name, { type: type });
                             const d = { file_name: compressedFile.name, image_attr: { width: canvas.width, height: canvas.height } };
                             this.send_msg_file(compressedFile, dashboardwrappers.ChatDashboardWrapper.message_type.image, d);
                             URL.revokeObjectURL(url);
