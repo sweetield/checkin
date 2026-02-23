@@ -10634,14 +10634,13 @@
                     if (!this.write_ctx) return;
 
                     canvas.toBlob((blob) => {
-                        const file = new File([blob], "handwrite.png", { type: "image/png" });
-                        this.start__send_msg_image(file); // 调用你现有发图片逻辑
+                        const file = new File([blob], "handwrite.jpg", { type: "image/jpeg" });
+                        this.start__send_msg_image(file);
                         this.e_writeboard.classList.add("hidden");
 
-                        // 清空画布，下一次打开是空白
                         this.write_ctx.fillStyle = "#fff";
                         this.write_ctx.fillRect(0, 0, canvas.width, canvas.height);
-                    }, "image/png");
+                    }, "image/jpeg", 0.5);  // ⭐ 质量 0~1
                 });
 
 
