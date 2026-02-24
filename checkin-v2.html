@@ -15144,12 +15144,16 @@
                     this.container.insertAdjacentHTML("beforeend", html);
 
                     this.e_btn_back = this.container.querySelector(":scope button.btn-back-to-left-aside");
-                    this.e_btn_back.addEventListener("click", (event) => {
-                        this.client.close_content_page();
-                    });
+                    if (this.e_btn_back) {
+                        this.e_btn_back.addEventListener("click", (event) => {
+                            this.client.close_content_page();
+                        });
+                    }
 
                     this.e_btn_add = this.container.querySelector(":scope button.btn-add-notice");
-                    this.e_btn_add.addEventListener("click", (event) => this.show_editor());
+                    if (this.e_btn_add) {
+                        this.e_btn_add.addEventListener("click", (event) => this.show_editor());
+                    }
 
                     this.e_list = this.container.querySelector(":scope div.all-people-notice-list");
                     this.e_editor = this.container.querySelector(":scope div.all-people-notice-editor");
@@ -15159,14 +15163,22 @@
                     this.e_btn_save = this.container.querySelector(":scope button.btn-save");
                     this.e_btn_cancel = this.container.querySelector(":scope button.btn-cancel");
 
-                    this.e_btn_save.addEventListener("click", (event) => this.save_notice());
-                    this.e_btn_cancel.addEventListener("click", (event) => this.hide_editor());
+                    if (this.e_btn_save) {
+                        this.e_btn_save.addEventListener("click", (event) => this.save_notice());
+                    }
+                    if (this.e_btn_cancel) {
+                        this.e_btn_cancel.addEventListener("click", (event) => this.hide_editor());
+                    }
 
                     this.editing_id = null;
                     this.fetch_list();
                 }
 
                 show_editor(item = null) {
+                    if (!this.e_editor || !this.e_editor_title || !this.e_editor_content || !this.e_editor_enabled) {
+                        console.error("编辑器元素未初始化");
+                        return;
+                    }
                     this.editing_id = item ? item.id : null;
                     if (item) {
                         this.e_editor_title.textContent = "编辑通知";
@@ -15181,11 +15193,16 @@
                 }
 
                 hide_editor() {
+                    if (!this.e_editor) return;
                     this.e_editor.classList.remove("active");
                     this.editing_id = null;
                 }
 
                 save_notice() {
+                    if (!this.e_editor_content || !this.e_editor_enabled) {
+                        alert("编辑器未初始化");
+                        return;
+                    }
                     const content = this.e_editor_content.value.trim();
                     if (!content) {
                         alert("通知内容不能为空");
@@ -15282,13 +15299,19 @@
                             </div>
                         `;
 
-                        div.querySelector(".btn-enable").addEventListener("click", () => {
-                            this.toggle_enabled(div, item.id, false);
-                        });
+                        const btn_enable = div.querySelector(".btn-enable");
+                        if (btn_enable) {
+                            btn_enable.addEventListener("click", () => {
+                                this.toggle_enabled(div, item.id, false);
+                            });
+                        }
 
-                        div.querySelector(".btn-disable").addEventListener("click", () => {
-                            this.toggle_enabled(div, item.id, true);
-                        });
+                        const btn_disable = div.querySelector(".btn-disable");
+                        if (btn_disable) {
+                            btn_disable.addEventListener("click", () => {
+                                this.toggle_enabled(div, item.id, true);
+                            });
+                        }
 
                         div.querySelector(".btn-edit").addEventListener("click", () => {
                             this.show_editor(item);
