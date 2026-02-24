@@ -2625,6 +2625,19 @@
             box-sizing: border-box;
         }
 
+        .select-all-label {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            margin-bottom: 8px;
+            cursor: pointer;
+        }
+
+        .select-all-label input {
+            width: 16px;
+            height: 16px;
+        }
+
         .candidate-words-list {
             display: flex;
             flex-direction: column;
@@ -2640,8 +2653,14 @@
             padding: 8px 12px;
             border: 1px solid #e0e0e0;
             border-radius: 4px;
-            gap: 12px;
+            gap: 8px;
             background: #fafafa;
+        }
+
+        .candidate-word-item .candidate-checkbox {
+            width: 18px;
+            height: 18px;
+            cursor: pointer;
         }
 
         .candidate-word-item:hover {
@@ -2650,8 +2669,10 @@
 
         .candidate-index {
             width: 30px;
+            min-width: 30px;
             color: #888;
             font-size: 12px;
+            text-align: center;
         }
 
         .candidate-word {
@@ -14626,8 +14647,12 @@
     <button class="btn-add-candidate">➕ 添加候选词</button>
     <button class="btn-import-candidates">📥 批量导入</button>
     <button class="btn-reset-counts">🔄 重置频率</button>
+    <button class="btn-delete-selected" style="display:none">🗑️ 批量删除</button>
 </div>
 <div class="candidate-words-filter">
+    <label class="select-all-label" style="display:none">
+        <input type="checkbox" class="select-all-checkbox"> 全选
+    </label>
     <input type="text" class="filter-input" placeholder="筛选候选词...">
 </div>
 <div class="candidate-words-list"></div>
@@ -14647,6 +14672,13 @@
 
                     this.e_btn_reset = this.container.querySelector(":scope button.btn-reset-counts");
                     this.e_btn_reset.addEventListener("click", (event) => this.reset_counts());
+
+                    this.e_btn_delete_selected = this.container.querySelector(":scope button.btn-delete-selected");
+                    this.e_btn_delete_selected.addEventListener("click", (event) => this.delete_selected());
+
+                    this.e_select_all_label = this.container.querySelector(":scope label.select-all-label");
+                    this.e_select_all_checkbox = this.container.querySelector(":scope input.select-all-checkbox");
+                    this.e_select_all_checkbox.addEventListener("change", (event) => this.toggle_select_all());
 
                     this.e_filter_input = this.container.querySelector(":scope input.filter-input");
                     this.e_filter_input.addEventListener("input", (event) => this.filter_list());
@@ -14762,11 +14794,22 @@
 
                 render_list(list) {
                     this.e_list.innerHTML = "";
+                    this.selected_words = new Set();
+                    
+                    if (list.length > 0) {
+                        this.e_btn_delete_selected.style.display = "";
+                        this.e_select_all_label.style.display = "";
+                    } else {
+                        this.e_btn_delete_selected.style.display = "none";
+                        this.e_select_all_label.style.display = "none";
+                    }
+                    
                     list.forEach((item, index) => {
                         const div = document.createElement("div");
                         div.className = "candidate-word-item";
                         div.dataset.word = item.word;
                         div.innerHTML = `
+                            <input type="checkbox" class="candidate-checkbox">
                             <span class="candidate-index">${index + 1}</span>
                             <span class="candidate-word">${item.word}</span>
                             <span class="candidate-count">${item.use_count || 0}</span>
@@ -14775,6 +14818,16 @@
                                 <button class="btn-delete">删除</button>
                             </span>
                         `;
+                        
+                        const checkbox = div.querySelector(".candidate-checkbox");
+                        checkbox.addEventListener("change", (event) => {
+                            if (checkbox.checked) {
+                                this.selected_words.add(item.word);
+                            } else {
+                                this.selected_words.delete(item.word);
+                            }
+                            this.update_delete_button();
+                        });
                         
                         div.querySelector(".btn-edit").addEventListener("click", () => {
                             this.edit_candidate(div, item.word);
@@ -14785,6 +14838,58 @@
                         
                         this.e_list.appendChild(div);
                     });
+                }
+
+                toggle_select_all() {
+                    const checked = this.e_select_all_checkbox.checked;
+                    const checkboxes = this.e_list.querySelectorAll(".candidate-checkbox");
+                    checkboxes.forEach(cb => {
+                        cb.checked = checked;
+                    });
+                    
+                    if (checked) {
+                        const items = this.e_list.querySelectorAll(".candidate-word-item");
+                        items.forEach(item => {
+                            this.selected_words.add(item.dataset.word);
+                        });
+                    } else {
+                        this.selected_words.clear();
+                    }
+                    this.update_delete_button();
+                }
+
+                update_delete_button() {
+                    if (this.selected_words.size > 0) {
+                        this.e_btn_delete_selected.textContent = `🗑️ 批量删除 (${this.selected_words.size})`;
+                    } else {
+                        this.e_btn_delete_selected.textContent = `🗑️ 批量删除`;
+                    }
+                }
+
+                delete_selected() {
+                    if (this.selected_words.size === 0) {
+                        alert("请先选择要删除的候选词");
+                        return;
+                    }
+                    
+                    if (!confirm(`确定要删除选中的 ${this.selected_words.size} 个候选词吗？`)) return;
+
+                    const words = Array.from(this.selected_words);
+                    this.loading_mark.show();
+                    
+                    const deletePromises = words.map(word => 
+                        this.client.subviews.admin.delete_candidate_word(word)
+                    );
+                    
+                    Promise.all(deletePromises)
+                        .then(() => {
+                            this.remove_loading_mark();
+                            this.fetch_list();
+                        })
+                        .catch(error => {
+                            this.remove_loading_mark();
+                            MessageMark.report(error);
+                        });
                 }
             },
 
