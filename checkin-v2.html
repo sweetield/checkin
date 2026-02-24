@@ -14685,10 +14685,10 @@
                 }
 
                 import_candidates() {
-                    const words = prompt("请输入候选词（多个用换行或逗号分隔）：");
+                    const words = prompt("请输入候选词（多个用空格或|分隔）：");
                     if (!words || !words.trim()) return;
                     
-                    const word_list = words.split(/[\n,，]/).map(w => w.trim()).filter(w => w);
+                    const word_list = words.split(/[\n |]/).map(w => w.trim()).filter(w => w);
                     if (word_list.length === 0) return;
 
                     this.loading_mark.show();
