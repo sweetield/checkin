@@ -5178,7 +5178,9 @@
                 }
             }
             return await fetch(_url, {
-                method: "GET", headers: {
+                method: "GET",
+                credentials: "include",
+                headers: {
                     ...headers,
                 },
             });
@@ -5186,7 +5188,9 @@
 
         nf_delete: async (url, headers) => {
             return await fetch(url, {
-                method: "DELETE", headers: {
+                method: "DELETE",
+                credentials: "include",
+                headers: {
                     ...headers,
                 },
             });
@@ -5194,7 +5198,9 @@
 
         nf_post_json: async (url, json, headers) => {
             return await fetch(url, {
-                method: "POST", headers: {
+                method: "POST",
+                credentials: "include",
+                headers: {
                     ...headers,
                     "Content-Type": "application/json",
                 },
@@ -5204,7 +5210,9 @@
 
         nf_put_json: async (url, json, headers) => {
             return await fetch(url, {
-                method: "PUT", headers: {
+                method: "PUT",
+                credentials: "include",
+                headers: {
                     ...headers,
                     "Content-Type": "application/json",
                 },
