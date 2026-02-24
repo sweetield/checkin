@@ -2719,6 +2719,263 @@
 
     </style>
 
+    <!--通知管理-->
+    <style>
+        .notices-toolbar {
+            display: flex;
+            gap: 8px;
+            padding: 8px;
+            border-bottom: 1px solid #ddd;
+        }
+
+        .notices-toolbar button {
+            padding: 6px 12px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            background: #f5f5f5;
+            cursor: pointer;
+        }
+
+        .notices-toolbar button:hover {
+            background: #e8e8e8;
+        }
+
+        .notices-list {
+            display: flex;
+            flex-direction: column;
+            flex-grow: 1;
+            overflow-y: auto;
+            padding: 8px;
+            gap: 8px;
+        }
+
+        .no-notices {
+            text-align: center;
+            color: #888;
+            padding: 40px;
+        }
+
+        .notice-item {
+            border: 1px solid #e0e0e0;
+            border-radius: 6px;
+            padding: 12px;
+            background: #fafafa;
+        }
+
+        .notice-item.enabled {
+            border-color: #4caf50;
+            background: #f1f8e9;
+        }
+
+        .notice-header {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 8px;
+        }
+
+        .notice-index {
+            width: 24px;
+            color: #888;
+            font-size: 12px;
+        }
+
+        .notice-title {
+            flex: 1;
+            font-weight: bold;
+            font-size: 14px;
+        }
+
+        .notice-badge {
+            padding: 2px 8px;
+            border-radius: 10px;
+            font-size: 11px;
+            background: #e0e0e0;
+            color: #666;
+        }
+
+        .notice-badge.enabled {
+            background: #4caf50;
+            color: white;
+        }
+
+        .notice-content-preview {
+            font-size: 13px;
+            color: #666;
+            margin-bottom: 8px;
+            max-height: 60px;
+            overflow: hidden;
+            line-height: 1.5;
+        }
+
+        .notice-content-preview h1,
+        .notice-content-preview h2,
+        .notice-content-preview h3 {
+            margin: 4px 0;
+            font-size: 14px;
+        }
+
+        .notice-content-preview code {
+            background: #e8e8e8;
+            padding: 1px 4px;
+            border-radius: 3px;
+            font-size: 12px;
+        }
+
+        .notice-actions {
+            display: flex;
+            gap: 8px;
+        }
+
+        .notice-actions button {
+            padding: 4px 10px;
+            border: 1px solid #ccc;
+            border-radius: 3px;
+            background: #fff;
+            cursor: pointer;
+            font-size: 12px;
+        }
+
+        .notice-actions button:hover {
+            background: #f0f0f0;
+        }
+
+        .notice-actions .btn-enable {
+            color: #4caf50;
+            border-color: #4caf50;
+        }
+
+        .notice-actions .btn-enable:hover {
+            background: #e8f5e9;
+        }
+
+        .notice-actions .btn-disable {
+            color: #ff9800;
+            border-color: #ff9800;
+        }
+
+        .notice-actions .btn-disable:hover {
+            background: #fff3e0;
+        }
+
+        .notice-actions .btn-delete {
+            color: #d32f2f;
+            border-color: #d32f2f;
+        }
+
+        .notice-actions .btn-delete:hover {
+            background: #ffebee;
+        }
+
+        .notice-editor-modal {
+            position: fixed;
+            inset: 0;
+            z-index: 10000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .notice-editor-overlay {
+            position: absolute;
+            inset: 0;
+            background: rgba(0,0,0,0.5);
+        }
+
+        .notice-editor-content {
+            position: relative;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            width: 90%;
+            max-width: 600px;
+            max-height: 90vh;
+            overflow-y: auto;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+        }
+
+        .notice-editor-content h3 {
+            margin: 0 0 16px 0;
+        }
+
+        .notice-editor-field {
+            margin-bottom: 12px;
+        }
+
+        .notice-editor-field label {
+            display: block;
+            margin-bottom: 4px;
+            font-weight: 500;
+        }
+
+        .notice-editor-field input,
+        .notice-editor-field textarea {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            box-sizing: border-box;
+            font-family: inherit;
+        }
+
+        .notice-editor-field textarea {
+            resize: vertical;
+        }
+
+        .notice-editor-preview {
+            margin-bottom: 12px;
+        }
+
+        .notice-editor-preview label {
+            display: block;
+            margin-bottom: 4px;
+            font-weight: 500;
+        }
+
+        .notice-preview-content {
+            padding: 12px;
+            border: 1px solid #e0e0e0;
+            border-radius: 4px;
+            background: #fafafa;
+            min-height: 60px;
+            font-size: 13px;
+            line-height: 1.6;
+        }
+
+        .notice-preview-content h1 { font-size: 18px; }
+        .notice-preview-content h2 { font-size: 16px; }
+        .notice-preview-content h3 { font-size: 14px; }
+
+        .notice-editor-buttons {
+            display: flex;
+            justify-content: flex-end;
+            gap: 8px;
+            margin-top: 16px;
+        }
+
+        .notice-editor-buttons button {
+            padding: 8px 16px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        .notice-editor-buttons .btn-cancel {
+            background: #f5f5f5;
+        }
+
+        .notice-editor-buttons .btn-save {
+            background: #4caf50;
+            color: white;
+            border-color: #4caf50;
+        }
+
+        .notice-editor-buttons .btn-save:hover {
+            background: #45a049;
+        }
+
+    </style>
+
     <!--管理页面 服务状态-->
     <style>
         .service-status-rect {
@@ -7390,6 +7647,57 @@
             async reset_candidate_word_counts() {
                 let url = join_path(this.api_url(), "candidate_word", "reset");
                 let body = {};
+                let r = await net_fetcher.nf_post_json(url, body);
+                if (r.status === 200) {
+                    return true;
+                }
+                throw new Error(await format_error_response(r));
+            }
+
+            async fetch_notice_list() {
+                let url = join_path(this.api_url(), "notice", "list");
+                let r = await net_fetcher.nf_get(url);
+                if (r.status === 200) {
+                    let d = await r.json();
+                    return d;
+                }
+                throw new Error(await format_error_response(r));
+            }
+
+            async add_notice(title, content) {
+                let url = join_path(this.api_url(), "notice");
+                let body = {title, content};
+                let r = await net_fetcher.nf_post_json(url, body);
+                if (r.status === 200) {
+                    let d = await r.json();
+                    return d;
+                }
+                throw new Error(await format_error_response(r));
+            }
+
+            async edit_notice(id, title, content) {
+                let url = join_path(this.api_url(), "notice", id);
+                let body = {title, content};
+                let r = await net_fetcher.nf_put_json(url, body);
+                if (r.status === 200) {
+                    let d = await r.json();
+                    return d;
+                }
+                throw new Error(await format_error_response(r));
+            }
+
+            async delete_notice(id) {
+                let url = join_path(this.api_url(), "notice", id);
+                let r = await net_fetcher.nf_delete(url);
+                if (r.status === 200) {
+                    return;
+                }
+                throw new Error(await format_error_response(r));
+            }
+
+            async enable_notice(id, enabled) {
+                let url = join_path(this.api_url(), "notice", "enable");
+                let body = {id, enabled};
                 let r = await net_fetcher.nf_post_json(url, body);
                 if (r.status === 200) {
                     return true;
@@ -14893,6 +15201,295 @@
                 }
             },
 
+            notices: class extends _ {
+                constructor(client, panel, li) {
+                    super(client, panel, li);
+                }
+
+                close_page() {
+                    super.close_page();
+                }
+
+                open_page() {
+                    super.open_page();
+
+                    let html = `
+<button class="btn-back-to-left-aside">⮌</button>
+<div class="notices-toolbar">
+    <button class="btn-add-notice">➕ 添加通知</button>
+</div>
+<div class="notices-list"></div>
+`;
+                    this.container.insertAdjacentHTML("beforeend", html);
+
+                    this.e_btn_back_to_left_aside = this.container.querySelector(":scope button.btn-back-to-left-aside");
+                    this.e_btn_back_to_left_aside.addEventListener("click", (event) => {
+                        this.client.close_content_page();
+                    });
+
+                    this.e_btn_add = this.container.querySelector(":scope button.btn-add-notice");
+                    this.e_btn_add.addEventListener("click", (event) => this.add_notice());
+
+                    this.e_list = this.container.querySelector(":scope div.notices-list");
+
+                    this.fetch_list();
+                }
+
+                add_notice() {
+                    const html = `
+<div class="notice-editor-modal">
+    <div class="notice-editor-overlay"></div>
+    <div class="notice-editor-content">
+        <h3>添加通知</h3>
+        <div class="notice-editor-field">
+            <label>标题：</label>
+            <input type="text" class="notice-title-input" placeholder="通知标题">
+        </div>
+        <div class="notice-editor-field">
+            <label>内容（支持Markdown）：</label>
+            <textarea class="notice-content-input" rows="8" placeholder="通知内容，支持Markdown语法"></textarea>
+        </div>
+        <div class="notice-editor-preview">
+            <label>预览：</label>
+            <div class="notice-preview-content"></div>
+        </div>
+        <div class="notice-editor-buttons">
+            <button class="btn-cancel">取消</button>
+            <button class="btn-save">保存</button>
+        </div>
+    </div>
+</div>`;
+                    
+                    this.container.insertAdjacentHTML("beforeend", html);
+                    
+                    const modal = this.container.querySelector(".notice-editor-modal");
+                    const overlay = modal.querySelector(".notice-editor-overlay");
+                    const titleInput = modal.querySelector(".notice-title-input");
+                    const contentInput = modal.querySelector(".notice-content-input");
+                    const previewContent = modal.querySelector(".notice-preview-content");
+                    const btnCancel = modal.querySelector(".btn-cancel");
+                    const btnSave = modal.querySelector(".btn-save");
+                    
+                    const closeModal = () => modal.remove();
+                    
+                    overlay.addEventListener("click", closeModal);
+                    btnCancel.addEventListener("click", closeModal);
+                    
+                    contentInput.addEventListener("input", () => {
+                        previewContent.innerHTML = this.parseMarkdown(contentInput.value);
+                    });
+                    
+                    btnSave.addEventListener("click", () => {
+                        const title = titleInput.value.trim();
+                        const content = contentInput.value;
+                        
+                        if (!title) {
+                            alert("请输入标题");
+                            return;
+                        }
+                        
+                        this.loading_mark.show();
+                        this.client.subviews.admin.add_notice(title, content)
+                            .then(result => {
+                                this.remove_loading_mark();
+                                closeModal();
+                                this.fetch_list();
+                            })
+                            .catch(error => {
+                                this.remove_loading_mark();
+                                MessageMark.report(error);
+                            });
+                    });
+                }
+
+                edit_notice(notice) {
+                    const html = `
+<div class="notice-editor-modal">
+    <div class="notice-editor-overlay"></div>
+    <div class="notice-editor-content">
+        <h3>编辑通知</h3>
+        <div class="notice-editor-field">
+            <label>标题：</label>
+            <input type="text" class="notice-title-input" value="${this.escapeHtml(notice.title)}">
+        </div>
+        <div class="notice-editor-field">
+            <label>内容（支持Markdown）：</label>
+            <textarea class="notice-content-input" rows="8">${this.escapeHtml(notice.content || "")}</textarea>
+        </div>
+        <div class="notice-editor-preview">
+            <label>预览：</label>
+            <div class="notice-preview-content">${this.parseMarkdown(notice.content || "")}</div>
+        </div>
+        <div class="notice-editor-buttons">
+            <button class="btn-cancel">取消</button>
+            <button class="btn-save">保存</button>
+        </div>
+    </div>
+</div>`;
+                    
+                    this.container.insertAdjacentHTML("beforeend", html);
+                    
+                    const modal = this.container.querySelector(".notice-editor-modal");
+                    const overlay = modal.querySelector(".notice-editor-overlay");
+                    const titleInput = modal.querySelector(".notice-title-input");
+                    const contentInput = modal.querySelector(".notice-content-input");
+                    const previewContent = modal.querySelector(".notice-preview-content");
+                    const btnCancel = modal.querySelector(".btn-cancel");
+                    const btnSave = modal.querySelector(".btn-save");
+                    
+                    const closeModal = () => modal.remove();
+                    
+                    overlay.addEventListener("click", closeModal);
+                    btnCancel.addEventListener("click", closeModal);
+                    
+                    contentInput.addEventListener("input", () => {
+                        previewContent.innerHTML = this.parseMarkdown(contentInput.value);
+                    });
+                    
+                    btnSave.addEventListener("click", () => {
+                        const title = titleInput.value.trim();
+                        const content = contentInput.value;
+                        
+                        if (!title) {
+                            alert("请输入标题");
+                            return;
+                        }
+                        
+                        this.loading_mark.show();
+                        this.client.subviews.admin.edit_notice(notice.id, title, content)
+                            .then(result => {
+                                this.remove_loading_mark();
+                                closeModal();
+                                this.fetch_list();
+                            })
+                            .catch(error => {
+                                this.remove_loading_mark();
+                                MessageMark.report(error);
+                            });
+                    });
+                }
+
+                escapeHtml(text) {
+                    const div = document.createElement("div");
+                    div.textContent = text;
+                    return div.innerHTML;
+                }
+
+                parseMarkdown(text) {
+                    if (!text) return "";
+                    let html = text;
+                    
+                    html = html.replace(/^### (.*$)/gm, '<h3>$1</h3>');
+                    html = html.replace(/^## (.*$)/gm, '<h2>$1</h2>');
+                    html = html.replace(/^# (.*$)/gm, '<h1>$1</h1>');
+                    
+                    html = html.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+                    html = html.replace(/\*(.*?)\*/g, '<em>$1</em>');
+                    html = html.replace(/~~(.*?)~~/g, '<del>$1</del>');
+                    
+                    html = html.replace(/`([^`]+)`/g, '<code>$1</code>');
+                    
+                    html = html.replace(/^\* (.*$)/gm, '<li>$1</li>');
+                    html = html.replace(/(<li>.*<\/li>)/s, '<ul>$1</ul>');
+                    
+                    html = html.replace(/\n/g, '<br>');
+                    
+                    return html;
+                }
+
+                delete_notice(item, notice) {
+                    if (!confirm(`确定要删除通知"${notice.title}"吗？`)) return;
+
+                    this.loading_mark.show();
+                    this.client.subviews.admin.delete_notice(notice.id)
+                        .then(result => {
+                            this.remove_loading_mark();
+                            item.remove();
+                        })
+                        .catch(error => {
+                            this.remove_loading_mark();
+                            MessageMark.report(error);
+                        });
+                }
+
+                enable_notice(item, notice) {
+                    this.loading_mark.show();
+                    this.client.subviews.admin.enable_notice(notice.id, true)
+                        .then(result => {
+                            this.remove_loading_mark();
+                            this.fetch_list();
+                        })
+                        .catch(error => {
+                            this.remove_loading_mark();
+                            MessageMark.report(error);
+                        });
+                }
+
+                disable_notice(item, notice) {
+                    this.loading_mark.show();
+                    this.client.subviews.admin.enable_notice(notice.id, false)
+                        .then(result => {
+                            this.remove_loading_mark();
+                            this.fetch_list();
+                        })
+                        .catch(error => {
+                            this.remove_loading_mark();
+                            MessageMark.report(error);
+                        });
+                }
+
+                fetch_list() {
+                    this.loading_mark.show();
+                    this.client.subviews.admin.fetch_notice_list()
+                        .then(result => {
+                            if (this.closed) return;
+                            this.render_list(result);
+                            this.remove_loading_mark();
+                        })
+                        .catch(error => {
+                            if (this.closed) return;
+                            this.remove_loading_mark();
+                            MessageMark.report(error);
+                        });
+                }
+
+                render_list(list) {
+                    this.e_list.innerHTML = "";
+                    
+                    if (list.length === 0) {
+                        this.e_list.innerHTML = '<div class="no-notices">暂无通知，点击"添加通知"创建</div>';
+                        return;
+                    }
+                    
+                    list.forEach((notice, index) => {
+                        const div = document.createElement("div");
+                        div.className = "notice-item" + (notice.enabled ? " enabled" : "");
+                        div.innerHTML = `
+                            <div class="notice-header">
+                                <span class="notice-index">${index + 1}</span>
+                                <span class="notice-title">${this.escapeHtml(notice.title)}</span>
+                                <span class="notice-badge ${notice.enabled ? 'enabled' : ''}">${notice.enabled ? '已启用' : '未启用'}</span>
+                            </div>
+                            <div class="notice-content-preview">${this.parseMarkdown(notice.content || "")}</div>
+                            <div class="notice-actions">
+                                ${notice.enabled ? 
+                                    '<button class="btn-disable">禁用</button>' : 
+                                    '<button class="btn-enable">启用</button>'}
+                                <button class="btn-edit">编辑</button>
+                                <button class="btn-delete">删除</button>
+                            </div>
+                        `;
+                        
+                        div.querySelector(".btn-enable")?.addEventListener("click", () => this.enable_notice(div, notice));
+                        div.querySelector(".btn-disable")?.addEventListener("click", () => this.disable_notice(div, notice));
+                        div.querySelector(".btn-edit").addEventListener("click", () => this.edit_notice(notice));
+                        div.querySelector(".btn-delete").addEventListener("click", () => this.delete_notice(div, notice));
+                        
+                        this.e_list.appendChild(div);
+                    });
+                }
+            },
+
             disk: class extends _ {
                 constructor(client, panel, li) {
                     super(client, panel, li);
@@ -16605,6 +17202,7 @@
                 {text: "用户列表", pagetype: contentpages.backend_panel.users,},
                 {text: "组列表", pagetype: contentpages.backend_panel.groups,},
                 {text: "候选词管理", pagetype: contentpages.backend_panel.candidate_words,},
+                {text: "通知管理", pagetype: contentpages.backend_panel.notices,},
                 {text: "储存空间", pagetype: contentpages.backend_panel.disk,},
                 {text: "服务状态", pagetype: contentpages.backend_panel.status,},
                 {text: "备份恢复", pagetype: contentpages.backend_panel.backup,},
