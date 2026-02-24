@@ -15106,6 +15106,272 @@
 
                     let html = `
 <button class="btn-back-to-left-aside">⮌</button>
+<div class="candidate-words-toolbar">
+    <button class="btn-add-candidate">➕ 添加候选词</button>
+    <button class="btn-import-candidates">📥 批量导入</button>
+    <button class="btn-reset-counts">🔄 重置频率</button>
+    <button class="btn-delete-selected" style="display:none">🗑️ 批量删除</button>
+</div>
+<div class="candidate-words-filter">
+    <label class="select-all-label" style="display:none">
+        <input type="checkbox" class="select-all-checkbox"> 全选
+    </label>
+    <input type="text" class="filter-input" placeholder="筛选候选词...">
+</div>
+<div class="candidate-words-list"></div>
+`;
+                    this.container.insertAdjacentHTML("beforeend", html);
+
+                    this.e_btn_back = this.container.querySelector(":scope button.btn-back-to-left-aside");
+                    this.e_btn_back.addEventListener("click", (event) => {
+                        this.client.close_content_page();
+                    });
+
+                    this.e_btn_add = this.container.querySelector(":scope button.btn-add-candidate");
+                    this.e_btn_add.addEventListener("click", (event) => this.add_candidate());
+
+                    this.e_btn_import = this.container.querySelector(":scope button.btn-import-candidates");
+                    this.e_btn_import.addEventListener("click", (event) => this.import_candidates());
+
+                    this.e_btn_reset = this.container.querySelector(":scope button.btn-reset-counts");
+                    this.e_btn_reset.addEventListener("click", (event) => this.reset_counts());
+
+                    this.e_btn_delete_selected = this.container.querySelector(":scope button.btn-delete-selected");
+                    this.e_btn_delete_selected.addEventListener("click", (event) => this.delete_selected());
+
+                    this.e_select_all_label = this.container.querySelector(":scope label.select-all-label");
+                    this.e_select_all_checkbox = this.container.querySelector(":scope input.select-all-checkbox");
+                    this.e_select_all_checkbox.addEventListener("change", (event) => this.toggle_select_all());
+
+                    this.e_filter_input = this.container.querySelector(":scope input.filter-input");
+                    this.e_filter_input.addEventListener("input", (event) => this.filter_list());
+
+                    this.e_list = this.container.querySelector(":scope div.candidate-words-list");
+
+                    this.fetch_list();
+                }
+
+                filter_list() {
+                    const v = this.e_filter_input.value.trim().toLowerCase();
+                    const items = this.e_list.querySelectorAll(".candidate-word-item");
+                    items.forEach(item => {
+                        const word = item.dataset.word.toLowerCase();
+                        if (v === "" || word.includes(v)) {
+                            item.style.display = "";
+                        } else {
+                            item.style.display = "none";
+                        }
+                    });
+                }
+
+                add_candidate() {
+                    const word = prompt("请输入候选词：");
+                    if (!word || !word.trim()) return;
+                    
+                    this.loading_mark.show();
+                    this.client.subviews.admin.add_candidate_word(word.trim())
+                        .then(result => {
+                            this.remove_loading_mark();
+                            this.fetch_list();
+                        }).catch(error => {
+                            this.remove_loading_mark();
+                            MessageMark.report(error);
+                        });
+                }
+
+                import_candidates() {
+                    const words = prompt("请输入候选词（多个用空格或|分隔）：");
+                    if (!words || !words.trim()) return;
+                    
+                    const word_list = words.split(/[\n |]/).map(w => w.trim()).filter(w => w);
+                    if (word_list.length === 0) return;
+
+                    this.loading_mark.show();
+                    this.client.subviews.admin.add_candidate_words(word_list)
+                        .then(result => {
+                            this.remove_loading_mark();
+                            this.fetch_list();
+                        }).catch(error => {
+                            this.remove_loading_mark();
+                            MessageMark.report(error);
+                        });
+                }
+
+                edit_candidate(item, word) {
+                    const new_word = prompt("请输入新的候选词：", word);
+                    if (!new_word || !new_word.trim()) return;
+                    if (new_word.trim() === word) return;
+
+                    this.loading_mark.show();
+                    this.client.subviews.admin.edit_candidate_word(word, new_word.trim())
+                        .then(result => {
+                            this.remove_loading_mark();
+                            this.fetch_list();
+                        }).catch(error => {
+                            this.remove_loading_mark();
+                            MessageMark.report(error);
+                        });
+                }
+
+                delete_candidate(item, word) {
+                    if (!confirm(`确定要删除候选词"${word}"吗？`)) return;
+
+                    this.loading_mark.show();
+                    this.client.subviews.admin.delete_candidate_word(word)
+                        .then(result => {
+                            this.remove_loading_mark();
+                            item.remove();
+                        }).catch(error => {
+                            this.remove_loading_mark();
+                            MessageMark.report(error);
+                        });
+                }
+
+                reset_counts() {
+                    if (!confirm("确定要重置所有候选词的使用频率吗？")) return;
+
+                    this.loading_mark.show();
+                    this.client.subviews.admin.reset_candidate_word_counts()
+                        .then(result => {
+                            this.remove_loading_mark();
+                            this.fetch_list();
+                        }).catch(error => {
+                            this.remove_loading_mark();
+                            MessageMark.report(error);
+                        });
+                }
+
+                fetch_list() {
+                    this.loading_mark.show();
+                    this.client.subviews.admin.fetch_candidate_word_list()
+                        .then(result => {
+                            if (this.closed) return;
+                            this.render_list(result);
+                            this.remove_loading_mark();
+                        }).catch(error => {
+                            if (this.closed) return;
+                            this.remove_loading_mark()
+                            MessageMark.report(error);
+                        });
+                }
+
+                render_list(list) {
+                    this.e_list.innerHTML = "";
+                    this.selected_words = new Set();
+                    
+                    if (list.length > 0) {
+                        this.e_btn_delete_selected.style.display = "";
+                        this.e_select_all_label.style.display = "";
+                    } else {
+                        this.e_btn_delete_selected.style.display = "none";
+                        this.e_select_all_label.style.display = "none";
+                    }
+                    
+                    list.forEach((item, index) => {
+                        const div = document.createElement("div");
+                        div.className = "candidate-word-item";
+                        div.dataset.word = item.word;
+                        div.innerHTML = `
+                            <input type="checkbox" class="candidate-checkbox">
+                            <span class="candidate-index">${index + 1}</span>
+                            <span class="candidate-word">${item.word}</span>
+                            <span class="candidate-count">${item.use_count || 0}</span>
+                            <span class="candidate-actions">
+                                <button class="btn-edit">编辑</button>
+                                <button class="btn-delete">删除</button>
+                            </span>
+                        `;
+                        
+                        const checkbox = div.querySelector(".candidate-checkbox");
+                        checkbox.addEventListener("change", (event) => {
+                            if (checkbox.checked) {
+                                this.selected_words.add(item.word);
+                            } else {
+                                this.selected_words.delete(item.word);
+                            }
+                            this.update_delete_button();
+                        });
+                        
+                        div.querySelector(".btn-edit").addEventListener("click", () => {
+                            this.edit_candidate(div, item.word);
+                        });
+                        div.querySelector(".btn-delete").addEventListener("click", () => {
+                            this.delete_candidate(div, item.word);
+                        });
+                        
+                        this.e_list.appendChild(div);
+                    });
+                }
+
+                toggle_select_all() {
+                    const checked = this.e_select_all_checkbox.checked;
+                    const checkboxes = this.e_list.querySelectorAll(".candidate-checkbox");
+                    checkboxes.forEach(cb => {
+                        cb.checked = checked;
+                    });
+                    
+                    if (checked) {
+                        const items = this.e_list.querySelectorAll(".candidate-word-item");
+                        items.forEach(item => {
+                            this.selected_words.add(item.dataset.word);
+                        });
+                    } else {
+                        this.selected_words.clear();
+                    }
+                    this.update_delete_button();
+                }
+
+                update_delete_button() {
+                    if (this.selected_words.size > 0) {
+                        this.e_btn_delete_selected.textContent = `🗑️ 批量删除 (${this.selected_words.size})`;
+                    } else {
+                        this.e_btn_delete_selected.textContent = `🗑️ 批量删除`;
+                    }
+                }
+
+                delete_selected() {
+                    if (this.selected_words.size === 0) {
+                        alert("请先选择要删除的候选词");
+                        return;
+                    }
+                    
+                    if (!confirm(`确定要删除选中的 ${this.selected_words.size} 个候选词吗？`)) return;
+
+                    const words = Array.from(this.selected_words);
+                    this.loading_mark.show();
+                    
+                    const deletePromises = words.map(word => 
+                        this.client.subviews.admin.delete_candidate_word(word)
+                    );
+
+                    Promise.all(deletePromises)
+                        .then(() => {
+                            this.remove_loading_mark();
+                            this.fetch_list();
+                        })
+                        .catch(error => {
+                            this.remove_loading_mark();
+                            MessageMark.report(error);
+                        });
+                }
+            },
+
+            all_people_notice: class extends _ {
+                constructor(client, panel, li) {
+                    super(client, panel, li);
+                }
+
+                close_page() {
+                    if (this.e_list) this.e_list.remove();
+                    if (this.e_editor) this.e_editor.remove();
+                    super.close_page();
+                }
+
+                open_page() {
+                    super.open_page();
+
+                    let html = `
+<button class="btn-back-to-left-aside">⮌</button>
 <div class="all-people-notice-toolbar">
     <button class="btn-add-notice">➕ 添加通知</button>
     <button class="btn-delete-selected" style="display:none">🗑️ 批量删除</button>
