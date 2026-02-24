@@ -6983,6 +6983,16 @@
                 }
                 throw new Error(await format_error_response(r));
             }
+
+            async commonphrase_list() {
+                let url = join_path(this.api_url(), "commonphrase");
+                let r = await net_fetcher.nf_get(url);
+                if (r.status === 200) {
+                    let d = await r.json();
+                    return d;
+                }
+                throw new Error(await format_error_response(r));
+            }
         }
 
         class Admin extends _ {
@@ -7203,6 +7213,45 @@
                     // let d = await r.json();
                     // return d;
                     return true;
+                }
+                throw new Error(await format_error_response(r));
+            }
+
+            async commonphrase_list() {
+                let url = join_path(this.api_url(), "commonphrase", "list");
+                let r = await net_fetcher.nf_get(url);
+                if (r.status === 200) {
+                    let d = await r.json();
+                    return d;
+                }
+                throw new Error(await format_error_response(r));
+            }
+
+            async commonphrase_add(attr) {
+                let url = join_path(this.api_url(), "commonphrase");
+                let r = await net_fetcher.nf_post_json(url, attr);
+                if (r.status === 200) {
+                    let d = await r.json();
+                    return d;
+                }
+                throw new Error(await format_error_response(r));
+            }
+
+            async commonphrase_edit(id, attr) {
+                let url = join_path(this.api_url(), "commonphrase", id);
+                let r = await net_fetcher.nf_put_json(url, attr);
+                if (r.status === 200) {
+                    let d = await r.json();
+                    return d;
+                }
+                throw new Error(await format_error_response(r));
+            }
+
+            async commonphrase_delete(id) {
+                let url = join_path(this.api_url(), "commonphrase", id);
+                let r = await net_fetcher.nf_delete(url);
+                if (r.status === 200) {
+                    return;
                 }
                 throw new Error(await format_error_response(r));
             }
@@ -9849,7 +9898,8 @@
 				this.e_candidate_panel_body.addEventListener("scroll", updateCandidateButtons);
 
 				// 🔹 打开面板按钮
-				this.e_candidate_btn.addEventListener("click", () => {
+				this.e_candidate_btn.addEventListener("click", async () => {
+					await this.loadCommonPhrasesFromApi();
 					this.render_candidate_panel(this.commonPhrases);
 					this.e_candidate_panel.classList.remove("hidden");
 					updateCandidateButtons();
@@ -9985,8 +10035,22 @@
                 
                 // 表情：办公/学习
                 "💼","📁","📂","🗂️","📅","📝","📊","📈","📉","📌","📎","🖇️","✂️","📏","📐","🖊️","🖋️","✒️","🖌️","🖍️"
-                  
+                   
                 ];
+
+                // 从API获取候选词
+                this.commonPhrases = commonPhrases;
+                this.loadCommonPhrasesFromApi = async () => {
+                    try {
+                        const list = await this.client.subviews.api.commonphrase_list();
+                        if (list && list.length > 0) {
+                            this.commonPhrases = list.map(p => p.content);
+                        }
+                    } catch (e) {
+                        console.log("使用默认候选词列表", e);
+                    }
+                };
+                this.loadCommonPhrasesFromApi();
 
 
 				
@@ -10042,7 +10106,7 @@
 				// 🔹 输入筛选事件
 				this.e_candidate_filter.addEventListener("input", () => {
 					const v = this.e_candidate_filter.value.trim();
-					const filtered = v === "" ? commonPhrases : commonPhrases.filter(p => p.includes(v));
+					const filtered = v === "" ? this.commonPhrases : this.commonPhrases.filter(p => p.includes(v));
 					this.render_candidate_panel(filtered); // ✅ 传入筛选后的列表
 					this.e_candidate_panel_body.scrollTop = 0;
 					updateCandidateButtons();
@@ -10051,12 +10115,12 @@
                 // 输入框 input 显示候选词
                 this.e_inputarea_textarea.addEventListener("input", () => {
                     const v = this.e_inputarea_textarea.value.trim();
-                    renderCandidates(v === "" ? commonPhrases : commonPhrases.filter(p => p.includes(v)));
+                    renderCandidates(v === "" ? this.commonPhrases : this.commonPhrases.filter(p => p.includes(v)));
                 });
 
                 // focus 显示候选词
                 this.e_inputarea_textarea.addEventListener("focus", () => {
-                    renderCandidates(commonPhrases);
+                    renderCandidates(this.commonPhrases);
                 });
 
                 // blur 隐藏候选词，但判断如果正在点击候选词就不隐藏
@@ -10074,7 +10138,7 @@
 				// 🔥 半屏候选词：打开 / 关闭
 				// =============================
 				this.e_candidate_btn.addEventListener("click", () => {
-					this.render_candidate_panel(commonPhrases);
+					this.render_candidate_panel(this.commonPhrases);
 					this.e_candidate_panel.classList.remove("hidden");
 				});
 
@@ -14745,6 +14809,198 @@
 
             },
 
+            commonphrase: class extends _ {
+                constructor(client, panel, li) {
+                    super(client, panel, li);
+                }
+
+                close_page() {
+                    this.tree1?.remove();
+                    super.close_page();
+                }
+
+                open_page() {
+                    super.open_page();
+                    let html = `
+<div class="commonphrase-rect">
+<button class="btn-back-to-left-aside">⮌</button>
+
+<div class="commonphrase-toolbar">
+    <button class="commonphrase-btn-add">➕ 添加候选词</button>
+    <input type="text" class="commonphrase-filter" placeholder="筛选...">
+</div>
+
+<div class="commonphrase-list"></div>
+</div>
+`;
+                    this.container.insertAdjacentHTML("beforeend", html);
+                    this.commonphrase_rect = this.container.querySelector(":scope div.commonphrase-rect");
+
+                    this.e_btn_back = this.commonphrase_rect.querySelector(":scope button.btn-back-to-left-aside");
+                    this.e_btn_back.addEventListener("click", () => {
+                        this.client.close_content_page();
+                    });
+
+                    this.e_btn_add = this.commonphrase_rect.querySelector(":scope button.commonphrase-btn-add");
+                    this.e_btn_add.addEventListener("click", () => {
+                        this.show_edit_dialog();
+                    });
+
+                    this.e_filter = this.commonphrase_rect.querySelector(":scope input.commonphrase-filter");
+                    this.e_filter.addEventListener("input", () => {
+                        this.render_list();
+                    });
+
+                    this.e_list = this.commonphrase_rect.querySelector(":scope div.commonphrase-list");
+
+                    const tree_headers = [
+                        {text: "ID", width: 50},
+                        {text: "内容", width: 300},
+                        {text: "分类", width: 120},
+                        {text: "排序", width: 60},
+                        {text: "操作", width: 100},
+                    ];
+                    this.tree1 = new TreeWidget(this.e_list, tree_headers, this.fill_tree_menu.bind(this));
+                    this.tree1.show();
+
+                    this.fetch_list();
+                }
+
+                async fetch_list() {
+                    try {
+                        const data = await this.client.subviews.admin.commonphrase_list();
+                        this.phrase_list = data || [];
+                        this.render_list();
+                    } catch (error) {
+                        MessageMark.report(error);
+                    }
+                }
+
+                render_list() {
+                    const filter = this.e_filter.value.trim().toLowerCase();
+                    const filtered = this.phrase_list.filter(p => 
+                        !filter || (p.content && p.content.toLowerCase().includes(filter)) || (p.category && p.category.toLowerCase().includes(filter))
+                    );
+                    this.tree1.clear();
+                    filtered.forEach(item => {
+                        this.tree1.add(this._item2columns(item));
+                    });
+                }
+
+                _item2columns(item) {
+                    return [
+                        {text: item.id, selectable: false},
+                        {text: item.content || "", selectable: true},
+                        {text: item.category || "", selectable: true},
+                        {text: item.sort_order || 0, selectable: true},
+                        {text: "编辑 删除", selectable: false, 
+                            buttons: [
+                                {text: "编辑", action: () => this.show_edit_dialog(item)},
+                                {text: "删除", action: () => this.delete_phrase(item.id)},
+                            ]
+                        },
+                    ];
+                }
+
+                fill_tree_menu(clicking_info) {
+                    return [];
+                }
+
+                async show_edit_dialog(item = null) {
+                    const is_edit = item && item.id;
+                    const content = item ? item.content : "";
+                    const category = item ? (item.category || "") : "";
+                    const sort_order = item ? (item.sort_order || 0) : 0;
+
+                    const html = `
+<div class="message-mark-overlay">
+    <div class="message-mark-dialog" style="width: 400px;">
+        <div class="message-mark-dialog-header">${is_edit ? "编辑候选词" : "添加候选词"}</div>
+        <div class="message-mark-dialog-body">
+            <div class="form-group">
+                <label>内容</label>
+                <input type="text" class="edit-content" value="${content}" placeholder="请输入候选词内容">
+            </div>
+            <div class="form-group">
+                <label>分类</label>
+                <input type="text" class="edit-category" value="${category}" placeholder="可选分类">
+            </div>
+            <div class="form-group">
+                <label>排序</label>
+                <input type="number" class="edit-sort-order" value="${sort_order}" placeholder="数字越小越靠前">
+            </div>
+        </div>
+        <div class="message-mark-dialog-footer">
+            <button class="btn-cancel">取消</button>
+            <button class="btn-confirm">${is_edit ? "保存" : "添加"}</button>
+        </div>
+    </div>
+</div>
+`;
+                    const div = document.createElement("div");
+                    div.innerHTML = html;
+                    document.body.appendChild(div);
+
+                    const overlay = div.querySelector(".message-mark-overlay");
+                    const dialog = div.querySelector(".message-mark-dialog");
+                    const btn_cancel = div.querySelector(".btn-cancel");
+                    const btn_confirm = div.querySelector(".btn-confirm");
+                    const input_content = div.querySelector(".edit-content");
+                    const input_category = div.querySelector(".edit-category");
+                    const input_sort_order = div.querySelector(".edit-sort-order");
+
+                    const close = () => {
+                        document.body.removeChild(overlay);
+                    };
+
+                    btn_cancel.addEventListener("click", close);
+                    overlay.addEventListener("click", (e) => {
+                        if (e.target === overlay) close();
+                    });
+
+                    btn_confirm.addEventListener("click", async () => {
+                        const new_content = input_content.value.trim();
+                        if (!new_content) {
+                            MessageMark.report("内容不能为空");
+                            return;
+                        }
+
+                        try {
+                            if (is_edit) {
+                                await this.client.subviews.admin.commonphrase_edit(item.id, {
+                                    content: new_content,
+                                    category: input_category.value.trim(),
+                                    sort_order: parseInt(input_sort_order.value) || 0,
+                                });
+                            } else {
+                                await this.client.subviews.admin.commonphrase_add({
+                                    content: new_content,
+                                    category: input_category.value.trim(),
+                                    sort_order: parseInt(input_sort_order.value) || 0,
+                                });
+                            }
+                            close();
+                            this.fetch_list();
+                        } catch (error) {
+                            MessageMark.report(error);
+                        }
+                    });
+
+                    input_content.focus();
+                }
+
+                async delete_phrase(id) {
+                    MessageMark.confirm(`确定删除这条候选词？`, null, null, async () => {
+                        try {
+                            await this.client.subviews.admin.commonphrase_delete(id);
+                            this.fetch_list();
+                        } catch (error) {
+                            MessageMark.report(error);
+                        }
+                    });
+                }
+            },
+
         }
 
         return {_drive, _chat, dashboard_mail, dashboard_drive, dashboard_chat, dashboard_forum, backend_panel,};
@@ -16196,6 +16452,7 @@
                 {text: "储存空间", pagetype: contentpages.backend_panel.disk,},
                 {text: "服务状态", pagetype: contentpages.backend_panel.status,},
                 {text: "备份恢复", pagetype: contentpages.backend_panel.backup,},
+                {text: "候选词管理", pagetype: contentpages.backend_panel.commonphrase,},
             ])
 
             this.#bind_mainactions(this.dashboard_chat, 0, [])
