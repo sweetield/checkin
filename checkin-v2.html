@@ -2591,6 +2591,322 @@
 
     </style>
 
+    <!--候选词管理-->
+    <style>
+        .candidate-words-toolbar {
+            display: flex;
+            gap: 8px;
+            padding: 8px;
+            border-bottom: 1px solid #ddd;
+        }
+
+        .candidate-words-toolbar button {
+            padding: 6px 12px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            background: #f5f5f5;
+            cursor: pointer;
+        }
+
+        .candidate-words-toolbar button:hover {
+            background: #e8e8e8;
+        }
+
+        .candidate-words-filter {
+            padding: 8px;
+            border-bottom: 1px solid #ddd;
+        }
+
+        .candidate-words-filter input {
+            width: 100%;
+            padding: 6px 10px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+
+        .select-all-label {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            margin-bottom: 8px;
+            cursor: pointer;
+        }
+
+        .select-all-label input {
+            width: 16px;
+            height: 16px;
+        }
+
+        .candidate-words-list {
+            display: flex;
+            flex-direction: column;
+            flex-grow: 1;
+            overflow-y: auto;
+            padding: 8px;
+            gap: 4px;
+        }
+
+        .candidate-word-item {
+            display: flex;
+            align-items: center;
+            padding: 8px 12px;
+            border: 1px solid #e0e0e0;
+            border-radius: 4px;
+            gap: 8px;
+            background: #fafafa;
+        }
+
+        .candidate-word-item .candidate-checkbox {
+            width: 18px;
+            height: 18px;
+            cursor: pointer;
+        }
+
+        .candidate-word-item:hover {
+            background: #f0f0f0;
+        }
+
+        .candidate-index {
+            width: 30px;
+            min-width: 30px;
+            color: #888;
+            font-size: 12px;
+            text-align: center;
+        }
+
+        .candidate-word {
+            flex: 1;
+            word-break: break-all;
+        }
+
+        .candidate-count {
+            width: 60px;
+            text-align: center;
+            color: #666;
+            font-size: 12px;
+            padding: 2px 6px;
+            background: #e8f4ff;
+            border-radius: 10px;
+        }
+
+        .candidate-actions {
+            display: flex;
+            gap: 4px;
+        }
+
+        .candidate-actions button {
+            padding: 4px 8px;
+            border: 1px solid #ccc;
+            border-radius: 3px;
+            background: #fff;
+            cursor: pointer;
+            font-size: 12px;
+        }
+
+        .candidate-actions button:hover {
+            background: #f0f0f0;
+        }
+
+        .candidate-actions .btn-delete {
+            color: #d32f2f;
+            border-color: #d32f2f;
+        }
+
+        .candidate-actions .btn-delete:hover {
+            background: #ffebee;
+        }
+
+    </style>
+
+    <!--全体通知管理-->
+    <style>
+        .all-people-notice-rect {
+            display: flex;
+            flex-direction: column;
+            flex-grow: 1;
+            gap: 8px;
+            padding: 8px;
+        }
+
+        .all-people-notice-toolbar {
+            display: flex;
+            gap: 8px;
+            padding: 8px;
+            border-bottom: 1px solid #ddd;
+        }
+
+        .all-people-notice-toolbar button {
+            padding: 6px 12px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            background: #f5f5f5;
+            cursor: pointer;
+        }
+
+        .all-people-notice-toolbar button:hover {
+            background: #e8e8e8;
+        }
+
+        .all-people-notice-filter {
+            padding: 8px;
+            border-bottom: 1px solid #ddd;
+        }
+
+        .all-people-notice-filter input {
+            width: 100%;
+            padding: 6px 10px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+
+        .all-people-notice-list {
+            display: flex;
+            flex-direction: column;
+            flex-grow: 1;
+            overflow-y: auto;
+            padding: 8px;
+            gap: 8px;
+        }
+
+        .all-people-notice-item {
+            display: flex;
+            flex-direction: column;
+            padding: 12px;
+            border: 1px solid #e0e0e0;
+            border-radius: 4px;
+            gap: 8px;
+            background: #fafafa;
+        }
+
+        .all-people-notice-item.enabled {
+            border-color: #4caf50;
+            background: #f1f8f1;
+        }
+
+        .all-people-notice-content {
+            flex: 1;
+            word-break: break-all;
+            white-space: pre-wrap;
+        }
+
+        .all-people-notice-meta {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 12px;
+            color: #888;
+        }
+
+        .all-people-notice-actions {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+
+        .all-people-notice-actions button {
+            padding: 4px 8px;
+            border: 1px solid #ccc;
+            border-radius: 3px;
+            background: #fff;
+            cursor: pointer;
+            font-size: 12px;
+        }
+
+        .all-people-notice-actions button:hover {
+            background: #f0f0f0;
+        }
+
+        .all-people-notice-actions .btn-enable {
+            color: #4caf50;
+            border-color: #4caf50;
+        }
+
+        .all-people-notice-actions .btn-enable:hover {
+            background: #e8f5e9;
+        }
+
+        .all-people-notice-actions .btn-disable {
+            color: #ff9800;
+            border-color: #ff9800;
+        }
+
+        .all-people-notice-actions .btn-disable:hover {
+            background: #fff3e0;
+        }
+
+        .all-people-notice-actions .btn-delete {
+            color: #d32f2f;
+            border-color: #d32f2f;
+        }
+
+        .all-people-notice-actions .btn-delete:hover {
+            background: #ffebee;
+        }
+
+        .all-people-notice-empty {
+            text-align: center;
+            color: #888;
+            padding: 40px;
+        }
+
+        .all-people-notice-editor {
+            display: none;
+            flex-direction: column;
+            gap: 12px;
+            padding: 16px;
+            background: #f9f9f9;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+
+        .all-people-notice-editor.active {
+            display: flex;
+        }
+
+        .all-people-notice-editor textarea {
+            width: 100%;
+            min-height: 100px;
+            padding: 8px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            font-family: inherit;
+            resize: vertical;
+            box-sizing: border-box;
+        }
+
+        .all-people-notice-editor label {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 14px;
+        }
+
+        .all-people-notice-editor .editor-buttons {
+            display: flex;
+            gap: 8px;
+            justify-content: flex-end;
+        }
+
+        .all-people-notice-editor button {
+            padding: 6px 12px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        .all-people-notice-editor button.btn-save {
+            background: #4caf50;
+            color: white;
+            border-color: #4caf50;
+        }
+
+        .all-people-notice-editor button.btn-cancel {
+            background: #f5f5f5;
+        }
+    </style>
+
     <!--管理页面 服务状态-->
     <style>
         .service-status-rect {
@@ -7207,6 +7523,109 @@
                 throw new Error(await format_error_response(r));
             }
 
+            async fetch_candidate_word_list() {
+                let url = join_path(this.api_url(), "candidate_word", "list");
+                let r = await net_fetcher.nf_get(url,);
+                if (r.status === 200) {
+                    let d = await r.json();
+                    return d;
+                }
+                throw new Error(await format_error_response(r));
+            }
+
+            async add_candidate_word(word) {
+                let url = join_path(this.api_url(), "candidate_word",);
+                let body = word;
+                let r = await net_fetcher.nf_post_json(url, body);
+                if (r.status === 200) {
+                    let d = await r.json();
+                    return d;
+                }
+                throw new Error(await format_error_response(r));
+            }
+
+            async add_candidate_words(words) {
+                let url = join_path(this.api_url(), "candidate_word",);
+                let body = words;
+                let r = await net_fetcher.nf_post_json(url, body);
+                if (r.status === 200) {
+                    let d = await r.json();
+                    return d;
+                }
+                throw new Error(await format_error_response(r));
+            }
+
+            async edit_candidate_word(word, new_word) {
+                let url = join_path(this.api_url(), "candidate_word", encodeURIComponent(word));
+                let body = {word: new_word};
+                let r = await net_fetcher.nf_put_json(url, body);
+                if (r.status === 200) {
+                    let d = await r.json();
+                    return d;
+                }
+                throw new Error(await format_error_response(r));
+            }
+
+            async delete_candidate_word(word) {
+                let url = join_path(this.api_url(), "candidate_word", encodeURIComponent(word));
+                let r = await net_fetcher.nf_delete(url,);
+                if (r.status === 200) {
+                    return;
+                }
+                throw new Error(await format_error_response(r));
+            }
+
+            async reset_candidate_word_counts() {
+                let url = join_path(this.api_url(), "candidate_word", "reset");
+                let body = {};
+                let r = await net_fetcher.nf_post_json(url, body);
+                if (r.status === 200) {
+                    return true;
+                }
+                throw new Error(await format_error_response(r));
+            }
+
+            async fetch_all_people_notice_list() {
+                let url = join_path(this.api_url(), "all_people_notice", "list");
+                let r = await net_fetcher.nf_get(url,);
+                if (r.status === 200) {
+                    let d = await r.json();
+                    return d;
+                }
+                throw new Error(await format_error_response(r));
+            }
+
+            async add_all_people_notice(content, enabled) {
+                let url = join_path(this.api_url(), "all_people_notice",);
+                let body = {content: content, enabled: enabled};
+                let r = await net_fetcher.nf_post_json(url, body);
+                if (r.status === 200) {
+                    let d = await r.json();
+                    return d;
+                }
+                throw new Error(await format_error_response(r));
+            }
+
+            async edit_all_people_notice(id, content, enabled) {
+                let url = join_path(this.api_url(), "all_people_notice", id);
+                let body = {content: content, enabled: enabled};
+                let r = await net_fetcher.nf_put_json(url, body);
+                if (r.status === 200) {
+                    let d = await r.json();
+                    return d;
+                }
+                throw new Error(await format_error_response(r));
+            }
+
+            async delete_all_people_notice(id) {
+                let url = join_path(this.api_url(), "all_people_notice", id);
+                let r = await net_fetcher.nf_delete(url,);
+                if (r.status === 200) {
+                    return;
+                }
+                throw new Error(await format_error_response(r));
+            }
+
         }
 
         class Me extends _ {
@@ -9846,7 +10265,32 @@
 				});
 
 				// 🔹 滚动事件
-				this.e_candidate_panel_body.addEventListener("scroll", updateCandidateButtons);
+                this.e_candidate_panel_body.addEventListener("scroll", updateCandidateButtons);
+
+
+                // =============================
+                // 🔥 新增：滚轮翻页（放这里）
+                // =============================
+                let wheelLock = false;
+
+                this.e_candidate_panel_body.addEventListener("wheel", (e) => {
+                    e.preventDefault();
+
+                    if (wheelLock) return; // 防抖
+                    wheelLock = true;
+
+                    const body = this.e_candidate_panel_body;
+                    const pageHeight = body.clientHeight;
+
+                    body.scrollBy({
+                        top: e.deltaY > 0 ? pageHeight : -pageHeight,
+                        behavior: "smooth"
+                    });
+
+                    setTimeout(() => {
+                        wheelLock = false;
+                    }, 400);
+                });
 
 				// 🔹 打开面板按钮
 				this.e_candidate_btn.addEventListener("click", () => {
@@ -9884,113 +10328,53 @@
                 // 候选词容器
                 this.e_inputarea_candidates = this.container.querySelector(".chat-session-inputarea-candidates");
 
-                // 公共短语
-                const commonPhrases = [
-                  // 日常聊天（前 200 条）
-                  "好的","在吗","在","不在","有事吗？","有事找你","是的","不是","拜拜","我下线了","🔥特急！","有时间吗？", "没时间","你好","有急事找你", "有事请留言", "会","不会","听懂了","等我5分钟", "可以","收到了","明天按时去","等我一下","马上回来","可以的","不行","我不没掌握", "收到信了吗","这边出事了","😄","😂","😅","😭","😡",
-                  "不是","明天再说","辛苦了","谢谢","没事","等一下","吃了吗","忙吗","我懂了","哈哈","在家吗","忙吗","有空吗","你好吗？","30分钟后再见",
-                  "你什么时候有空？","明天有空吗？", "我们几点见？","不知道",
-                  "今天下午可以吗？", "可以约个时间吗？", "周末有空吗？","明晚方便吗？", "你什么时候方便？", "能去吗？", 
-                  "我们几点碰面？", "什么时候开会？", "明天上午可以吗？", "后天有空吗？", "我们定个时间吧。", 
-                  "今天什么时候方便？", "下午几点合适？", "你有空吗？", "下周可以安排吗？", "什么时候方便聊天？", "明天几点见？", 
-                  "今天晚上方便吗？", "我们周几见面？", "你下午有空吗？", "明天早上可以吗？", "我们约个时间吧。", 
-                 "下次见面定在什么时候？", "明天见可以吗？", "你什么时候下班？", "今天几点开会？", 
-                  "约个时间聊一下吧。", "后天见可以吗？", "你周末有空吗？", "今天方便吗？", "我们几点通话？", "下周几合适？", 
-                  "明天中午可以吗？", "我们安排一下时间。", "今天上午你有空吗？", "你什么时候方便见面？", "我们约个时间讨论一下。", 
-                  "什么时候吃饭？", "下周见可以吗？", "明天什么时候方便？", "今天晚上几点？", "我们什么时候开会？", "周末几点见？", 
-                  "我们明天约吗？", "什么时候方便打电话？", "今天下午几点？", "我们什么时候碰头？", "能约个时间吗？", 
-                  "明天见面合适吗？", "你几点下班？", "今天中午方便吗？", "下午你有空吗？", "什么时候开个会？", "我们定个时间讨论吧。", 
-                  "明晚几点？", "周末安排一下吧。", "你明天有空吗？", "今天能见面吗？", "什么时候方便开会？", "我们约一下时间吧。", "你下午什么时候方便？", "下周什么时候合适？", "今天几点见？", "明天晚上方便吗？", "我们什么时候聊？", "可以约个时间吃饭吗？", "明天上午几点？", "我们约个时间通话吧。", 
-                   "什么时候可以视频？", "下次开会什么时候？", "你什么时候空闲？", "今天安排一下时间吧。", "我们周末见面可以吗？", "明天下午几点？", "你什么时候方便打电话？", "今天中午几点？", "我们什么时候碰面？", "下午见面可以吗？", "明天中午方便吗？", "什么时候约个时间？", 
-                    "我们明天几点见？", "你周五有空吗？", "今天晚上能聊吗？", "明天早上几点？", "我们什么时候吃饭？", "你什么时候方便开会？", "今天下午几点合适？", "周末什么时候见？", "我们什么时候视频？", "明天晚上几点见？", "你明天中午方便吗？", "今天什么时候可以聊？", "我们约个时间吃午饭吧。", "你什么时候方便面谈？", "明天几点开会？", "我们什么时候电话沟通？", "今天下午方便开会吗？", "你什么时候可以碰面？", "明天上午方便吗？", "我们约个时间讨论工作吧。", "今天晚上几点见？", "你什么时候方便视频？",
-                  "晚安","早上好","中午好","下午好","晚上好", "好吧！",
-                  "路上小心","加油","拜拜","再见","小心点","没关系","放心吧","我试试","嗯嗯","嗯","哦",
-                  "太棒了","厉害","明白","懂了","知道了","好的，谢谢","抱歉","没问题","加油","辛苦啦",
-                  "开心","生气了","累了","饿了","困了","想睡觉","吃饱了吗","出去吗","回来了吗",
-                  "等你","等我","快点","慢点","不要急","放松点","小心","别忘了","记得","快来了",
-                  "恭喜","干得漂亮","加把劲","继续努力","保持联系","注意安全","早点休息","晚安了","早点睡","明天见",
-                  "别着急","慢慢来","小心驾驶","照顾好自己","保重","理解","同意","支持","赞同","放心",
-                  "加油哦","期待","等一下哦","等等我","等我一下","我来了","我走了","在路上","马上到","准备好了",
-                  "收到","确认","了解","明白了","知道了","行","好","嗯","嗯嗯","哦",
-                  "哈哈哈","嘻嘻","呵呵","哎呀","哇","哎哟","哼","嗯哼","唉","哎",
-                  "打电话","聊会儿吗","见面吗","出来吗",
-                  "可以吗","行吗","怎么了","什么事","有问题吗","没事吧","还好吗？","你好吗","我很好","你呢","最近怎么样",
-                  "开心吗","累吗","饿吗","你是谁？", "我是", 
-                  
-                  "困吗","想吃什么","想喝什么","想去哪","想做什么","打算干什么","计划好了","安排好了","准备好了",
-                  "加油加油","稳住","别慌","没关系的","一切顺利","不用担心","放心吧","慢慢来","一步一步","做好了",
-                  "小伙伴们","大家好","各位好","早安","午安",
-                  "晚安","夜安","天气不错","下雨了吗","今天热吗","今天冷吗","吃饭了吗",
-                 "休息了吗","睡得好吗","早起了吗","晚睡了吗","今天心情怎么样","开心吗","难过吗",
-                  "想聊吗","聊会儿天吧","聊聊天吧","买东西了吗",
-                  "上课了吗","下课了吗","上班了吗","下班了吗","休息了吗","加班了吗","忙吗","有空吗","在家吗","在公司吗",
-                  "去哪儿了","回来了吗","出去了吗","到家了吗","吃了吗","喝了吗","睡了吗","醒了吗","准备了吗","出门了吗",
-                  "想吃吗","想喝吗","想玩吗","想去吗","想看吗","想买吗","想学吗","想问吗","想说吗","想聊吗","这个星期放假吗？",
-                  "今天怎么样","今天忙吗","昨天怎么样","昨天忙吗","明天怎么样","明天忙吗","周末打算","周末安排",
-                  "饿吗","渴吗","疼吗","舒服吗","生气了吗","开心吗","惊讶吗","难过吗","兴奋吗","期待吗",
-                  "听懂了吗","理解了吗","掌握了吗","有没有问题",
-                  "购物了吗","下单了吗","收到了吗","快递到了吗","取快递了吗",
-                   "收快递了吗","寄快递了吗","做作业了吗","完成作业了吗",
-                   // 时间方面
-                   "现在", "刚刚", "马上", "刚才", "刚", "刚好", "马上就", "马上来", "立刻", 
-                   "马上到", "今天", "昨天", "明天", "今晚", "早上", "上午", "中午", "下午", 
-                   "晚上", "每周", "每天", "每月", "每年", "经常", "有时", "偶尔", "一直", "刚开始", 
-                   "刚结束", "刚发", "刚收", "马上完成", "马上处理", "随时", "马上回复", "马上到达", 
-                   "马上开会", "最近", "之前", "之后", "之前完成", "之后再", "临时", "长期", "定期", 
-                   "周期", "频繁", "时常", "当时", "立刻处理", 
-                   
-                  
-                  // 工作交流（接下来的 300 条）
-                  "收到","已处理","正在处理","请确认","确认完成","需要补充资料","已转发","请查看",
-                  "请回复","紧急","尽快处理","稍后回复","更新完成","请跟进","会议开始了","会议结束了","明天开会","稍等",
-                  "请安排","已安排","请检查","系统异常","测试通过","上线完成","记得交回报",
-                // 表情：情绪类
-                "😄","😂","😅","😭","😡","😆","🤣","😢","😠","😲","😌","😘","😐","😫","😴","🤒","😳","😱","🤯","😤",
-                "😜","😝","🤪","😋","😛","🥰","😍","🤩","🥳","😎","🧐","🤓","😔","😕","🙁","☹️","😣","😖","😞","😓",
-                
-                // 表情：动作/状态类
-                "🚶","🏃","🏃‍♂️","🏃‍♀️","🛌","💤","🛀","🛎️","🤸‍♂️","🤸‍♀️","🤾","🤾‍♂️","🤾‍♀️","🏋️","🏋️‍♂️","🏋️‍♀️","🏄","🏄‍♂️","🏄‍♀️",
-                "🚴","🚴‍♂️","🚴‍♀️","🤳","🙌","👏","🙏","🤝","👍","👎","👌","✌️","🤟","🤘","🤙","💪","🖐️","✋","🤚","🖖",
-                
-                // 表情：食物类
-                "🍔","🍟","🍕","🌭","🌮","🌯","🥪","🥗","🥘","🍝","🍜","🍲","🍛","🍣","🍱","🍤","🍙","🥟","🍦","🍩",
-                "🍪","🎂","🍰","🍫","🍬","🍭","🍺","🍻","🍷","🍸","🍹","🥤","☕","🍵","🍼","🥛","🍶","🍾","🥂","🥃",
-                
-                // 表情：动物/自然类
-                "🐶","🐱","🐭","🐹","🐰","🦊","🐻","🐼","🐨","🐯","🦁","🐮","🐷","🐸","🐵","🐔","🐧","🐦","🐤","🦆",
-                "🦉","🦅","🦇","🐺","🐗","🐴","🦄","🐝","🐛","🦋","🐌","🐞","🐜","🪲","🕷️","🦂","🐢","🐍","🦎","🦖",
-                
-                // 表情：交通/地点类
-                "🚗","🚕","🚙","🚌","🚎","🏎️","🚓","🚑","🚒","🚐","🛻","🚚","🚛","🚜","🛵","🏍️","🛺","🚲","🛴","🚨",
-                "🚦","🚧","🛣️","🗺️","🗽","🏰","🏯","⛪","🕌","🛕","🕍","🏠","🏡","🏘️","🏢","🏬","🏣","🏤","🏦","🏨",
-                
-                // 表情：天气/自然元素
-                "☀️","🌤","⛅","🌥","☁️","🌦","🌧","⛈","🌩","🌨","❄️","🌬","💨","🌪","🌫","🌈","🌊","🔥","💧","💦",
-                
-                // 表情：符号/活动
-                "⭐","🌟","✨","⚡","🎉","🎊","🎈","🎁","🏆","🥇","🥈","🥉","⚽","🏀","🏈","⚾","🎾","🏐","🏉","🎱",
-                "🎮","🎲","🃏","🀄","🎯","🎳","🎤","🎧","🎼","🎹","🥁","🎷","🎺","🪗","🎸","🪕","🖌️","🎨","🧵","🪡",
-                
-                // 表情：时间/日常
-                "🕐","🕑","🕒","🕓","🕔","🕕","🕖","🕗","🕘","🕙","🕚","🕛","⏰","⏱️","⏲️","🗓️","📅","📆","📌","📍",
-                
-                // 表情：手势/互动
-                "👋","🤚","🖐️","✋","🖖","👌","✌️","🤞","🤟","🤘","🤙","👈","👉","👆","🖕","👇","☝️","✋","🤲","👐",
-                
-                // 表情：爱情/心情
-                "❤️","🧡","💛","💚","💙","💜","🖤","🤍","🤎","💔","💕","💞","💓","💗","💖","💘","💝","💟","❣️","💌",
-                
-                // 表情：庆祝/节日
-                "🎃","👻","🎄","🎅","🤶","🕎","🪔","🎁","🧧","🎉","🎊","🎈","🏮","🎆","🎇","🧨","✨","🎵","🎶","🎤",
-                
-                // 表情：办公/学习
-                "💼","📁","📂","🗂️","📅","📝","📊","📈","📉","📌","📎","🖇️","✂️","📏","📐","🖊️","🖋️","✒️","🖌️","🖍️"
-                  
-                ];
-
-
 				
-
+				
+				
+				// =============================
+				// 🔥 从API加载候选词
+				// =============================
+				let commonPhrases = [];
+				
+				// 加载候选词列表
+				async function loadCandidateWords() {
+					try {
+						const resp = await fetch('/api/candidate_word', {
+							credentials: 'include'
+						});
+						if (resp.ok) {
+							const words = await resp.json();
+							if (words && words.length > 0) {
+								commonPhrases = words;
+								return;
+							}
+						}
+					} catch (e) {
+						console.error('加载候选词失败', e);
+					}
+					// 加载失败时使用默认候选词
+					commonPhrases = [
+						"请自行添加"
+					];
+				}
+				
+				// 使用候选词后更新频率
+				async function useCandidateWord(word) {
+					try {
+						await fetch('/api/candidate_word/use', {
+							method: 'POST',
+							headers: {'Content-Type': 'application/json'},
+							body: JSON.stringify({word}),
+							credentials: 'include'
+						});
+					} catch (e) {
+						console.error('更新使用频率失败', e);
+					}
+				}
+				
+				// 初始加载候选词
+				loadCandidateWords();
+				
 				// =============================
 				// 🔥 半屏候选词渲染
 				// =============================
@@ -10006,6 +10390,7 @@
 						div.addEventListener("click", () => {
 							this.add_new_textarea_element(text);
 							this.send_msg_text();
+							useCandidateWord(text);
 							this.e_candidate_panel.classList.add("hidden");
 						});
 
@@ -10092,6 +10477,9 @@
                     this.add_new_textarea_element(item.textContent);
 
                     this.send_msg_text();
+                    
+                    // 更新候选词使用频率
+                    useCandidateWord(item.textContent);
 
                     // 隐藏候选词
                     this.e_inputarea_candidates.classList.add("hidden");
@@ -10106,12 +10494,15 @@
                     // 插入文本并发送
                     this.add_new_textarea_element(item.textContent);
                     this.send_msg_text();
+                    
+                    // 更新候选词使用频率
+                    useCandidateWord(item.textContent);
 
                     // 隐藏候选词
                     this.e_inputarea_candidates.classList.add("hidden");
                 });
 
-
+                
 
                 // =============================
                 // 🔥 横向滚动按钮
@@ -14482,6 +14873,545 @@
                 }
             },
 
+            candidate_words: class extends _ {
+                constructor(client, panel, li) {
+                    super(client, panel, li);
+                }
+
+                close_page() {
+                    if (this.tree1) this.tree1.remove()
+                    super.close_page();
+                }
+
+                open_page() {
+                    super.open_page();
+
+                    let html = `
+<button class="btn-back-to-left-aside">⮌</button>
+<div class="candidate-words-toolbar">
+    <button class="btn-add-candidate">➕ 添加候选词</button>
+    <button class="btn-import-candidates">📥 批量导入</button>
+    <button class="btn-reset-counts">🔄 重置频率</button>
+    <button class="btn-delete-selected" style="display:none">🗑️ 批量删除</button>
+</div>
+<div class="candidate-words-filter">
+    <label class="select-all-label" style="display:none">
+        <input type="checkbox" class="select-all-checkbox"> 全选
+    </label>
+    <input type="text" class="filter-input" placeholder="筛选候选词...">
+</div>
+<div class="candidate-words-list"></div>
+`;
+                    this.container.insertAdjacentHTML("beforeend", html);
+
+                    this.e_btn_back_to_left_aside = this.container.querySelector(":scope button.btn-back-to-left-aside");
+                    this.e_btn_back_to_left_aside.addEventListener("click", (event) => {
+                        this.client.close_content_page();
+                    });
+
+                    this.e_btn_add = this.container.querySelector(":scope button.btn-add-candidate");
+                    this.e_btn_add.addEventListener("click", (event) => this.add_candidate());
+
+                    this.e_btn_import = this.container.querySelector(":scope button.btn-import-candidates");
+                    this.e_btn_import.addEventListener("click", (event) => this.import_candidates());
+
+                    this.e_btn_reset = this.container.querySelector(":scope button.btn-reset-counts");
+                    this.e_btn_reset.addEventListener("click", (event) => this.reset_counts());
+
+                    this.e_btn_delete_selected = this.container.querySelector(":scope button.btn-delete-selected");
+                    this.e_btn_delete_selected.addEventListener("click", (event) => this.delete_selected());
+
+                    this.e_select_all_label = this.container.querySelector(":scope label.select-all-label");
+                    this.e_select_all_checkbox = this.container.querySelector(":scope input.select-all-checkbox");
+                    this.e_select_all_checkbox.addEventListener("change", (event) => this.toggle_select_all());
+
+                    this.e_filter_input = this.container.querySelector(":scope input.filter-input");
+                    this.e_filter_input.addEventListener("input", (event) => this.filter_list());
+
+                    this.e_list = this.container.querySelector(":scope div.candidate-words-list");
+
+                    this.fetch_list();
+                }
+
+                filter_list() {
+                    const v = this.e_filter_input.value.trim().toLowerCase();
+                    const items = this.e_list.querySelectorAll(".candidate-word-item");
+                    items.forEach(item => {
+                        const word = item.dataset.word.toLowerCase();
+                        if (v === "" || word.includes(v)) {
+                            item.style.display = "";
+                        } else {
+                            item.style.display = "none";
+                        }
+                    });
+                }
+
+                add_candidate() {
+                    const word = prompt("请输入候选词：");
+                    if (!word || !word.trim()) return;
+                    
+                    this.loading_mark.show();
+                    this.client.subviews.admin.add_candidate_word(word.trim())
+                        .then(result => {
+                            this.remove_loading_mark();
+                            this.fetch_list();
+                        }).catch(error => {
+                            this.remove_loading_mark();
+                            MessageMark.report(error);
+                        });
+                }
+
+                import_candidates() {
+                    const words = prompt("请输入候选词（多个用空格或|分隔）：");
+                    if (!words || !words.trim()) return;
+                    
+                    const word_list = words.split(/[\n |]/).map(w => w.trim()).filter(w => w);
+                    if (word_list.length === 0) return;
+
+                    this.loading_mark.show();
+                    this.client.subviews.admin.add_candidate_words(word_list)
+                        .then(result => {
+                            this.remove_loading_mark();
+                            this.fetch_list();
+                        }).catch(error => {
+                            this.remove_loading_mark();
+                            MessageMark.report(error);
+                        });
+                }
+
+                edit_candidate(item, word) {
+                    const new_word = prompt("请输入新的候选词：", word);
+                    if (!new_word || !new_word.trim()) return;
+                    if (new_word.trim() === word) return;
+
+                    this.loading_mark.show();
+                    this.client.subviews.admin.edit_candidate_word(word, new_word.trim())
+                        .then(result => {
+                            this.remove_loading_mark();
+                            this.fetch_list();
+                        }).catch(error => {
+                            this.remove_loading_mark();
+                            MessageMark.report(error);
+                        });
+                }
+
+                delete_candidate(item, word) {
+                    if (!confirm(`确定要删除候选词"${word}"吗？`)) return;
+
+                    this.loading_mark.show();
+                    this.client.subviews.admin.delete_candidate_word(word)
+                        .then(result => {
+                            this.remove_loading_mark();
+                            item.remove();
+                        }).catch(error => {
+                            this.remove_loading_mark();
+                            MessageMark.report(error);
+                        });
+                }
+
+                reset_counts() {
+                    if (!confirm("确定要重置所有候选词的使用频率吗？")) return;
+
+                    this.loading_mark.show();
+                    this.client.subviews.admin.reset_candidate_word_counts()
+                        .then(result => {
+                            this.remove_loading_mark();
+                            this.fetch_list();
+                        }).catch(error => {
+                            this.remove_loading_mark();
+                            MessageMark.report(error);
+                        });
+                }
+
+                fetch_list() {
+                    this.loading_mark.show();
+                    this.client.subviews.admin.fetch_candidate_word_list()
+                        .then(result => {
+                            if (this.closed) return;
+                            this.render_list(result);
+                            this.remove_loading_mark();
+                        }).catch(error => {
+                            if (this.closed) return;
+                            this.remove_loading_mark()
+                            MessageMark.report(error);
+                        });
+                }
+
+                render_list(list) {
+                    this.e_list.innerHTML = "";
+                    this.selected_words = new Set();
+                    
+                    if (list.length > 0) {
+                        this.e_btn_delete_selected.style.display = "";
+                        this.e_select_all_label.style.display = "";
+                    } else {
+                        this.e_btn_delete_selected.style.display = "none";
+                        this.e_select_all_label.style.display = "none";
+                    }
+                    
+                    list.forEach((item, index) => {
+                        const div = document.createElement("div");
+                        div.className = "candidate-word-item";
+                        div.dataset.word = item.word;
+                        div.innerHTML = `
+                            <input type="checkbox" class="candidate-checkbox">
+                            <span class="candidate-index">${index + 1}</span>
+                            <span class="candidate-word">${item.word}</span>
+                            <span class="candidate-count">${item.use_count || 0}</span>
+                            <span class="candidate-actions">
+                                <button class="btn-edit">编辑</button>
+                                <button class="btn-delete">删除</button>
+                            </span>
+                        `;
+                        
+                        const checkbox = div.querySelector(".candidate-checkbox");
+                        checkbox.addEventListener("change", (event) => {
+                            if (checkbox.checked) {
+                                this.selected_words.add(item.word);
+                            } else {
+                                this.selected_words.delete(item.word);
+                            }
+                            this.update_delete_button();
+                        });
+                        
+                        div.querySelector(".btn-edit").addEventListener("click", () => {
+                            this.edit_candidate(div, item.word);
+                        });
+                        div.querySelector(".btn-delete").addEventListener("click", () => {
+                            this.delete_candidate(div, item.word);
+                        });
+                        
+                        this.e_list.appendChild(div);
+                    });
+                }
+
+                toggle_select_all() {
+                    const checked = this.e_select_all_checkbox.checked;
+                    const checkboxes = this.e_list.querySelectorAll(".candidate-checkbox");
+                    checkboxes.forEach(cb => {
+                        cb.checked = checked;
+                    });
+                    
+                    if (checked) {
+                        const items = this.e_list.querySelectorAll(".candidate-word-item");
+                        items.forEach(item => {
+                            this.selected_words.add(item.dataset.word);
+                        });
+                    } else {
+                        this.selected_words.clear();
+                    }
+                    this.update_delete_button();
+                }
+
+                update_delete_button() {
+                    if (this.selected_words.size > 0) {
+                        this.e_btn_delete_selected.textContent = `🗑️ 批量删除 (${this.selected_words.size})`;
+                    } else {
+                        this.e_btn_delete_selected.textContent = `🗑️ 批量删除`;
+                    }
+                }
+
+                delete_selected() {
+                    if (this.selected_words.size === 0) {
+                        alert("请先选择要删除的候选词");
+                        return;
+                    }
+                    
+                    if (!confirm(`确定要删除选中的 ${this.selected_words.size} 个候选词吗？`)) return;
+
+                    const words = Array.from(this.selected_words);
+                    this.loading_mark.show();
+                    
+                    const deletePromises = words.map(word => 
+                        this.client.subviews.admin.delete_candidate_word(word)
+                    );
+                    
+                    Promise.all(deletePromises)
+                        .then(() => {
+                            this.remove_loading_mark();
+                            this.fetch_list();
+                        })
+                        .catch(error => {
+                            this.remove_loading_mark();
+                            MessageMark.report(error);
+                        });
+                }
+            },
+
+            all_people_notice: class extends _ {
+                constructor(client, panel, li) {
+                    super(client, panel, li);
+                }
+
+                close_page() {
+                    if (this.e_list) this.e_list.remove();
+                    if (this.e_editor) this.e_editor.remove();
+                    super.close_page();
+                }
+
+                open_page() {
+                    super.open_page();
+
+                    let html = `
+<button class="btn-back-to-left-aside">⮌</button>
+<div class="all-people-notice-toolbar">
+    <button class="btn-add-notice">➕ 添加通知</button>
+</div>
+<div class="all-people-notice-filter">
+    <input type="text" class="filter-input" placeholder="筛选通知...">
+</div>
+<div class="all-people-notice-list"></div>
+<div class="all-people-notice-editor">
+    <h3 class="editor-title">添加通知</h3>
+    <textarea class="editor-content" placeholder="请输入通知内容"></textarea>
+    <label class="editor-enabled">
+        <input type="checkbox" class="editor-enabled-checkbox"> 启用此通知
+    </label>
+    <div class="editor-buttons">
+        <button class="btn-cancel">取消</button>
+        <button class="btn-save">保存</button>
+    </div>
+</div>
+`;
+                    this.container.insertAdjacentHTML("beforeend", html);
+
+                    this.e_btn_back = this.container.querySelector(":scope button.btn-back-to-left-aside");
+                    if (this.e_btn_back) {
+                        this.e_btn_back.addEventListener("click", (event) => {
+                            this.client.close_content_page();
+                        });
+                    }
+
+                    this.e_btn_add = this.container.querySelector(":scope button.btn-add-notice");
+                    if (this.e_btn_add) {
+                        this.e_btn_add.addEventListener("click", (event) => this.show_editor());
+                    }
+
+                    this.e_list = this.container.querySelector(":scope div.all-people-notice-list");
+                    this.e_editor = this.container.querySelector(":scope div.all-people-notice-editor");
+                    this.e_editor_content = this.container.querySelector(":scope textarea.editor-content");
+                    this.e_editor_enabled = this.container.querySelector(":scope input.editor-enabled-checkbox");
+                    this.e_editor_title = this.container.querySelector(":scope h3.editor-title");
+                    this.e_btn_save = this.container.querySelector(":scope button.btn-save");
+                    this.e_btn_cancel = this.container.querySelector(":scope button.btn-cancel");
+
+                    this.e_filter_input = this.container.querySelector(":scope input.filter-input");
+                    if (this.e_filter_input) {
+                        this.e_filter_input.addEventListener("input", (event) => this.filter_list());
+                    }
+
+                    if (this.e_btn_save) {
+                        this.e_btn_save.addEventListener("click", (event) => this.save_notice());
+                    }
+                    if (this.e_btn_cancel) {
+                        this.e_btn_cancel.addEventListener("click", (event) => this.hide_editor());
+                    }
+
+                    this.editing_id = null;
+                    this.fetch_list();
+                }
+
+                filter_list() {
+                    if (!this.e_filter_input || !this.e_list) return;
+                    const v = this.e_filter_input.value.trim().toLowerCase();
+                    const items = this.e_list.querySelectorAll(".all-people-notice-item");
+                    items.forEach(item => {
+                        const content = item.dataset.content.toLowerCase();
+                        if (v === "" || content.includes(v)) {
+                            item.style.display = "";
+                        } else {
+                            item.style.display = "none";
+                        }
+                    });
+                }
+
+                show_editor(item = null) {
+                    if (!this.e_editor || !this.e_editor_title || !this.e_editor_content || !this.e_editor_enabled) {
+                        console.error("编辑器元素未初始化");
+                        return;
+                    }
+                    this.editing_id = item ? item.id : null;
+                    if (item) {
+                        this.e_editor_title.textContent = "编辑通知";
+                        this.e_editor_content.value = item.content;
+                        this.e_editor_enabled.checked = item.enabled === 1;
+                    } else {
+                        this.e_editor_title.textContent = "添加通知";
+                        this.e_editor_content.value = "";
+                        this.e_editor_enabled.checked = false;
+                    }
+                    this.e_editor.classList.add("active");
+                }
+
+                hide_editor() {
+                    if (!this.e_editor) return;
+                    this.e_editor.classList.remove("active");
+                    this.editing_id = null;
+                }
+
+                save_notice() {
+                    if (!this.e_editor_content || !this.e_editor_enabled) {
+                        alert("编辑器未初始化");
+                        return;
+                    }
+                    const content = this.e_editor_content.value.trim();
+                    if (!content) {
+                        alert("通知内容不能为空");
+                        return;
+                    }
+
+                    const enabled = this.e_editor_enabled.checked;
+                    this.loading_mark.show();
+
+                    const doSave = async () => {
+                        if (enabled && this.list && this.list.length > 0) {
+                            const disablePromises = this.list
+                                .filter(i => i.enabled === 1)
+                                .map(i => this.client.subviews.admin.edit_all_people_notice(i.id, i.content, false));
+                            await Promise.all(disablePromises);
+                        }
+
+                        const promise = this.editing_id
+                            ? this.client.subviews.admin.edit_all_people_notice(this.editing_id, content, enabled)
+                            : this.client.subviews.admin.add_all_people_notice(content, enabled);
+
+                        promise.then(result => {
+                            this.remove_loading_mark();
+                            this.hide_editor();
+                            this.fetch_list();
+                        }).catch(error => {
+                            this.remove_loading_mark();
+                            MessageMark.report(error);
+                        });
+                    };
+
+                    doSave();
+                }
+
+                delete_notice(item, id) {
+                    if (!confirm("确定要删除这条通知吗？")) return;
+
+                    this.loading_mark.show();
+                    this.client.subviews.admin.delete_all_people_notice(id)
+                        .then(result => {
+                            this.remove_loading_mark();
+                            item.remove();
+                        }).catch(error => {
+                            this.remove_loading_mark();
+                            MessageMark.report(error);
+                        });
+                }
+
+                async toggle_enabled(item, id, current_enabled) {
+                    this.loading_mark.show();
+                    
+                    const newEnabled = !current_enabled;
+                    
+                    if (newEnabled && this.list && this.list.length > 1) {
+                        const disablePromises = this.list
+                            .filter(i => i.id !== id && i.enabled === 1)
+                            .map(i => this.client.subviews.admin.edit_all_people_notice(i.id, i.content, false));
+                        await Promise.all(disablePromises);
+                    }
+                    
+                    this.client.subviews.admin.edit_all_people_notice(id, item.dataset.content, newEnabled)
+                        .then(result => {
+                            this.remove_loading_mark();
+                            // 更新本地数据
+                            if (this.list) {
+                                if (newEnabled && this.list.length > 1) {
+                                    this.list.forEach(i => {
+                                        if (i.id !== id) {
+                                            i.enabled = 0;
+                                        }
+                                    });
+                                }
+                                const idx = this.list.findIndex(i => i.id === id);
+                                if (idx !== -1) {
+                                    this.list[idx].enabled = newEnabled ? 1 : 0;
+                                }
+                            }
+                            this.render_list(this.list);
+                        }).catch(error => {
+                            this.remove_loading_mark();
+                            MessageMark.report(error);
+                        });
+                }
+
+                fetch_list() {
+                    this.loading_mark.show();
+                    this.client.subviews.admin.fetch_all_people_notice_list()
+                        .then(result => {
+                            if (this.closed) return;
+                            this.list = result;
+                            this.render_list(result);
+                            this.remove_loading_mark();
+                        }).catch(error => {
+                            if (this.closed) return;
+                            this.remove_loading_mark();
+                            MessageMark.report(error);
+                        });
+                }
+
+                render_list(list) {
+                    this.e_list.innerHTML = "";
+
+                    if (list.length === 0) {
+                        this.e_list.innerHTML = '<div class="all-people-notice-empty">暂无通知，点击"添加通知"创建</div>';
+                        return;
+                    }
+
+                    list.forEach((item, index) => {
+                        const div = document.createElement("div");
+                        div.className = `all-people-notice-item ${item.enabled ? 'enabled' : ''}`;
+                        div.dataset.content = item.content;
+                        div.dataset.id = item.id;
+                        div.dataset.enabled = item.enabled;
+                        
+                        const date = new Date(item.create_time);
+                        const date_str = date.toLocaleString();
+
+                        div.innerHTML = `
+                            <div class="all-people-notice-content">${item.content}</div>
+                            <div class="all-people-notice-meta">
+                                <span>创建时间: ${date_str}</span>
+                                <div class="all-people-notice-actions">
+                                    ${item.enabled 
+                                        ? '<button class="btn-disable">禁用</button>' 
+                                        : '<button class="btn-enable">启用</button>'}
+                                    <button class="btn-edit">编辑</button>
+                                    <button class="btn-delete">删除</button>
+                                </div>
+                            </div>
+                        `;
+
+                        const btn_enable = div.querySelector(".btn-enable");
+                        if (btn_enable) {
+                            btn_enable.addEventListener("click", () => {
+                                this.toggle_enabled(div, item.id, false);
+                            });
+                        }
+
+                        const btn_disable = div.querySelector(".btn-disable");
+                        if (btn_disable) {
+                            btn_disable.addEventListener("click", () => {
+                                this.toggle_enabled(div, item.id, true);
+                            });
+                        }
+
+                        div.querySelector(".btn-edit").addEventListener("click", () => {
+                            this.show_editor(item);
+                        });
+
+                        div.querySelector(".btn-delete").addEventListener("click", () => {
+                            this.delete_notice(div, item.id);
+                        });
+
+                        this.e_list.appendChild(div);
+                    });
+                }
+            },
+
             disk: class extends _ {
                 constructor(client, panel, li) {
                     super(client, panel, li);
@@ -16193,6 +17123,8 @@
                 {text: "上线情况", pagetype: contentpages.backend_panel.activity,},
                 {text: "用户列表", pagetype: contentpages.backend_panel.users,},
                 {text: "组列表", pagetype: contentpages.backend_panel.groups,},
+                {text: "候选词管理", pagetype: contentpages.backend_panel.candidate_words,},
+                {text: "全体通知", pagetype: contentpages.backend_panel.all_people_notice,},
                 {text: "储存空间", pagetype: contentpages.backend_panel.disk,},
                 {text: "服务状态", pagetype: contentpages.backend_panel.status,},
                 {text: "备份恢复", pagetype: contentpages.backend_panel.backup,},
