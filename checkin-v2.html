@@ -15247,18 +15247,29 @@
                     const enabled = this.e_editor_enabled.checked;
                     this.loading_mark.show();
 
-                    const promise = this.editing_id
-                        ? this.client.subviews.admin.edit_all_people_notice(this.editing_id, content, enabled)
-                        : this.client.subviews.admin.add_all_people_notice(content, enabled);
+                    const doSave = async () => {
+                        if (enabled && this.list && this.list.length > 0) {
+                            const disablePromises = this.list
+                                .filter(i => i.enabled === 1)
+                                .map(i => this.client.subviews.admin.edit_all_people_notice(i.id, i.content, false));
+                            await Promise.all(disablePromises);
+                        }
 
-                    promise.then(result => {
-                        this.remove_loading_mark();
-                        this.hide_editor();
-                        this.fetch_list();
-                    }).catch(error => {
-                        this.remove_loading_mark();
-                        MessageMark.report(error);
-                    });
+                        const promise = this.editing_id
+                            ? this.client.subviews.admin.edit_all_people_notice(this.editing_id, content, enabled)
+                            : this.client.subviews.admin.add_all_people_notice(content, enabled);
+
+                        promise.then(result => {
+                            this.remove_loading_mark();
+                            this.hide_editor();
+                            this.fetch_list();
+                        }).catch(error => {
+                            this.remove_loading_mark();
+                            MessageMark.report(error);
+                        });
+                    };
+
+                    doSave();
                 }
 
                 delete_notice(item, id) {
@@ -15275,16 +15286,33 @@
                         });
                 }
 
-                toggle_enabled(item, id, current_enabled) {
+                async toggle_enabled(item, id, current_enabled) {
                     this.loading_mark.show();
-                    this.client.subviews.admin.edit_all_people_notice(id, item.dataset.content, !current_enabled)
+                    
+                    const newEnabled = !current_enabled;
+                    
+                    if (newEnabled && this.list && this.list.length > 1) {
+                        const disablePromises = this.list
+                            .filter(i => i.id !== id && i.enabled === 1)
+                            .map(i => this.client.subviews.admin.edit_all_people_notice(i.id, i.content, false));
+                        await Promise.all(disablePromises);
+                    }
+                    
+                    this.client.subviews.admin.edit_all_people_notice(id, item.dataset.content, newEnabled)
                         .then(result => {
                             this.remove_loading_mark();
                             // 更新本地数据
                             if (this.list) {
+                                if (newEnabled && this.list.length > 1) {
+                                    this.list.forEach(i => {
+                                        if (i.id !== id) {
+                                            i.enabled = 0;
+                                        }
+                                    });
+                                }
                                 const idx = this.list.findIndex(i => i.id === id);
                                 if (idx !== -1) {
-                                    this.list[idx].enabled = !current_enabled ? 1 : 0;
+                                    this.list[idx].enabled = newEnabled ? 1 : 0;
                                 }
                             }
                             this.render_list(this.list);
