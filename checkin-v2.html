@@ -2719,16 +2719,24 @@
 
     </style>
 
-    <!--通知管理-->
+    <!--全体通知管理-->
     <style>
-        .notices-toolbar {
+        .all-people-notice-rect {
+            display: flex;
+            flex-direction: column;
+            flex-grow: 1;
+            gap: 8px;
+            padding: 8px;
+        }
+
+        .all-people-notice-toolbar {
             display: flex;
             gap: 8px;
             padding: 8px;
             border-bottom: 1px solid #ddd;
         }
 
-        .notices-toolbar button {
+        .all-people-notice-toolbar button {
             padding: 6px 12px;
             border: 1px solid #ccc;
             border-radius: 4px;
@@ -2736,11 +2744,11 @@
             cursor: pointer;
         }
 
-        .notices-toolbar button:hover {
+        .all-people-notice-toolbar button:hover {
             background: #e8e8e8;
         }
 
-        .notices-list {
+        .all-people-notice-list {
             display: flex;
             flex-direction: column;
             flex-grow: 1;
@@ -2749,86 +2757,43 @@
             gap: 8px;
         }
 
-        .no-notices {
-            text-align: center;
-            color: #888;
-            padding: 40px;
-        }
-
-        .notice-item {
-            border: 1px solid #e0e0e0;
-            border-radius: 6px;
+        .all-people-notice-item {
+            display: flex;
+            flex-direction: column;
             padding: 12px;
+            border: 1px solid #e0e0e0;
+            border-radius: 4px;
+            gap: 8px;
             background: #fafafa;
         }
 
-        .notice-item.enabled {
+        .all-people-notice-item.enabled {
             border-color: #4caf50;
-            background: #f1f8e9;
+            background: #f1f8f1;
         }
 
-        .notice-header {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            margin-bottom: 8px;
-        }
-
-        .notice-index {
-            width: 24px;
-            color: #888;
-            font-size: 12px;
-        }
-
-        .notice-title {
+        .all-people-notice-content {
             flex: 1;
-            font-weight: bold;
-            font-size: 14px;
+            word-break: break-all;
+            white-space: pre-wrap;
         }
 
-        .notice-badge {
-            padding: 2px 8px;
-            border-radius: 10px;
-            font-size: 11px;
-            background: #e0e0e0;
-            color: #666;
-        }
-
-        .notice-badge.enabled {
-            background: #4caf50;
-            color: white;
-        }
-
-        .notice-content-preview {
-            font-size: 13px;
-            color: #666;
-            margin-bottom: 8px;
-            max-height: 60px;
-            overflow: hidden;
-            line-height: 1.5;
-        }
-
-        .notice-content-preview h1,
-        .notice-content-preview h2,
-        .notice-content-preview h3 {
-            margin: 4px 0;
-            font-size: 14px;
-        }
-
-        .notice-content-preview code {
-            background: #e8e8e8;
-            padding: 1px 4px;
-            border-radius: 3px;
+        .all-people-notice-meta {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
             font-size: 12px;
+            color: #888;
         }
 
-        .notice-actions {
+        .all-people-notice-actions {
             display: flex;
             gap: 8px;
+            align-items: center;
         }
 
-        .notice-actions button {
-            padding: 4px 10px;
+        .all-people-notice-actions button {
+            padding: 4px 8px;
             border: 1px solid #ccc;
             border-radius: 3px;
             background: #fff;
@@ -2836,144 +2801,97 @@
             font-size: 12px;
         }
 
-        .notice-actions button:hover {
+        .all-people-notice-actions button:hover {
             background: #f0f0f0;
         }
 
-        .notice-actions .btn-enable {
+        .all-people-notice-actions .btn-enable {
             color: #4caf50;
             border-color: #4caf50;
         }
 
-        .notice-actions .btn-enable:hover {
+        .all-people-notice-actions .btn-enable:hover {
             background: #e8f5e9;
         }
 
-        .notice-actions .btn-disable {
+        .all-people-notice-actions .btn-disable {
             color: #ff9800;
             border-color: #ff9800;
         }
 
-        .notice-actions .btn-disable:hover {
+        .all-people-notice-actions .btn-disable:hover {
             background: #fff3e0;
         }
 
-        .notice-actions .btn-delete {
+        .all-people-notice-actions .btn-delete {
             color: #d32f2f;
             border-color: #d32f2f;
         }
 
-        .notice-actions .btn-delete:hover {
+        .all-people-notice-actions .btn-delete:hover {
             background: #ffebee;
         }
 
-        .notice-editor-modal {
-            position: fixed;
-            inset: 0;
-            z-index: 10000;
+        .all-people-notice-empty {
+            text-align: center;
+            color: #888;
+            padding: 40px;
+        }
+
+        .all-people-notice-editor {
+            display: none;
+            flex-direction: column;
+            gap: 12px;
+            padding: 16px;
+            background: #f9f9f9;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+
+        .all-people-notice-editor.active {
             display: flex;
-            align-items: center;
-            justify-content: center;
         }
 
-        .notice-editor-overlay {
-            position: absolute;
-            inset: 0;
-            background: rgba(0,0,0,0.5);
-        }
-
-        .notice-editor-content {
-            position: relative;
-            background: white;
-            padding: 20px;
-            border-radius: 8px;
-            width: 90%;
-            max-width: 600px;
-            max-height: 90vh;
-            overflow-y: auto;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.3);
-        }
-
-        .notice-editor-content h3 {
-            margin: 0 0 16px 0;
-        }
-
-        .notice-editor-field {
-            margin-bottom: 12px;
-        }
-
-        .notice-editor-field label {
-            display: block;
-            margin-bottom: 4px;
-            font-weight: 500;
-        }
-
-        .notice-editor-field input,
-        .notice-editor-field textarea {
+        .all-people-notice-editor textarea {
             width: 100%;
+            min-height: 100px;
             padding: 8px;
             border: 1px solid #ccc;
             border-radius: 4px;
-            box-sizing: border-box;
             font-family: inherit;
-        }
-
-        .notice-editor-field textarea {
             resize: vertical;
+            box-sizing: border-box;
         }
 
-        .notice-editor-preview {
-            margin-bottom: 12px;
-        }
-
-        .notice-editor-preview label {
-            display: block;
-            margin-bottom: 4px;
-            font-weight: 500;
-        }
-
-        .notice-preview-content {
-            padding: 12px;
-            border: 1px solid #e0e0e0;
-            border-radius: 4px;
-            background: #fafafa;
-            min-height: 60px;
-            font-size: 13px;
-            line-height: 1.6;
-        }
-
-        .notice-preview-content h1 { font-size: 18px; }
-        .notice-preview-content h2 { font-size: 16px; }
-        .notice-preview-content h3 { font-size: 14px; }
-
-        .notice-editor-buttons {
+        .all-people-notice-editor label {
             display: flex;
-            justify-content: flex-end;
+            align-items: center;
             gap: 8px;
-            margin-top: 16px;
+            font-size: 14px;
         }
 
-        .notice-editor-buttons button {
-            padding: 8px 16px;
+        .all-people-notice-editor .editor-buttons {
+            display: flex;
+            gap: 8px;
+            justify-content: flex-end;
+        }
+
+        .all-people-notice-editor button {
+            padding: 6px 12px;
             border: 1px solid #ccc;
             border-radius: 4px;
             cursor: pointer;
         }
 
-        .notice-editor-buttons .btn-cancel {
-            background: #f5f5f5;
-        }
-
-        .notice-editor-buttons .btn-save {
+        .all-people-notice-editor button.btn-save {
             background: #4caf50;
             color: white;
             border-color: #4caf50;
         }
 
-        .notice-editor-buttons .btn-save:hover {
-            background: #45a049;
+        .all-people-notice-editor button.btn-cancel {
+            background: #f5f5f5;
         }
-
     </style>
 
     <!--管理页面 服务状态-->
@@ -5178,9 +5096,7 @@
                 }
             }
             return await fetch(_url, {
-                method: "GET",
-                credentials: "include",
-                headers: {
+                method: "GET", headers: {
                     ...headers,
                 },
             });
@@ -5188,9 +5104,7 @@
 
         nf_delete: async (url, headers) => {
             return await fetch(url, {
-                method: "DELETE",
-                credentials: "include",
-                headers: {
+                method: "DELETE", headers: {
                     ...headers,
                 },
             });
@@ -5198,9 +5112,7 @@
 
         nf_post_json: async (url, json, headers) => {
             return await fetch(url, {
-                method: "POST",
-                credentials: "include",
-                headers: {
+                method: "POST", headers: {
                     ...headers,
                     "Content-Type": "application/json",
                 },
@@ -5210,9 +5122,7 @@
 
         nf_put_json: async (url, json, headers) => {
             return await fetch(url, {
-                method: "PUT",
-                credentials: "include",
-                headers: {
+                method: "PUT", headers: {
                     ...headers,
                     "Content-Type": "application/json",
                 },
@@ -7662,9 +7572,9 @@
                 throw new Error(await format_error_response(r));
             }
 
-            async fetch_notice_list() {
-                let url = join_path(this.api_url(), "notice", "list");
-                let r = await net_fetcher.nf_get(url);
+            async fetch_all_people_notice_list() {
+                let url = join_path(this.api_url(), "all_people_notice", "list");
+                let r = await net_fetcher.nf_get(url,);
                 if (r.status === 200) {
                     let d = await r.json();
                     return d;
@@ -7672,9 +7582,9 @@
                 throw new Error(await format_error_response(r));
             }
 
-            async add_notice(title, content) {
-                let url = join_path(this.api_url(), "notice");
-                let body = {title, content};
+            async add_all_people_notice(content, enabled) {
+                let url = join_path(this.api_url(), "all_people_notice",);
+                let body = {content: content, enabled: enabled};
                 let r = await net_fetcher.nf_post_json(url, body);
                 if (r.status === 200) {
                     let d = await r.json();
@@ -7683,9 +7593,9 @@
                 throw new Error(await format_error_response(r));
             }
 
-            async edit_notice(id, title, content) {
-                let url = join_path(this.api_url(), "notice", id);
-                let body = {title, content};
+            async edit_all_people_notice(id, content, enabled) {
+                let url = join_path(this.api_url(), "all_people_notice", id);
+                let body = {content: content, enabled: enabled};
                 let r = await net_fetcher.nf_put_json(url, body);
                 if (r.status === 200) {
                     let d = await r.json();
@@ -7694,21 +7604,11 @@
                 throw new Error(await format_error_response(r));
             }
 
-            async delete_notice(id) {
-                let url = join_path(this.api_url(), "notice", id);
-                let r = await net_fetcher.nf_delete(url);
+            async delete_all_people_notice(id) {
+                let url = join_path(this.api_url(), "all_people_notice", id);
+                let r = await net_fetcher.nf_delete(url,);
                 if (r.status === 200) {
                     return;
-                }
-                throw new Error(await format_error_response(r));
-            }
-
-            async enable_notice(id, enabled) {
-                let url = join_path(this.api_url(), "notice", "enable");
-                let body = {id, enabled};
-                let r = await net_fetcher.nf_post_json(url, body);
-                if (r.status === 200) {
-                    return true;
                 }
                 throw new Error(await format_error_response(r));
             }
@@ -15209,12 +15109,14 @@
                 }
             },
 
-            notices: class extends _ {
+            all_people_notice: class extends _ {
                 constructor(client, panel, li) {
                     super(client, panel, li);
                 }
 
                 close_page() {
+                    if (this.e_list) this.e_list.remove();
+                    if (this.e_editor) this.e_editor.remove();
                     super.close_page();
                 }
 
@@ -15223,224 +15125,111 @@
 
                     let html = `
 <button class="btn-back-to-left-aside">⮌</button>
-<div class="notices-toolbar">
+<div class="all-people-notice-toolbar">
     <button class="btn-add-notice">➕ 添加通知</button>
 </div>
-<div class="notices-list"></div>
+<div class="all-people-notice-list"></div>
+<div class="all-people-notice-editor">
+    <h3 class="editor-title">添加通知</h3>
+    <textarea class="editor-content" placeholder="请输入通知内容（支持Markdown）"></textarea>
+    <label class="editor-enabled">
+        <input type="checkbox" class="editor-enabled-checkbox"> 启用此通知
+    </label>
+    <div class="editor-buttons">
+        <button class="btn-cancel">取消</button>
+        <button class="btn-save">保存</button>
+    </div>
+</div>
 `;
                     this.container.insertAdjacentHTML("beforeend", html);
 
-                    this.e_btn_back_to_left_aside = this.container.querySelector(":scope button.btn-back-to-left-aside");
-                    this.e_btn_back_to_left_aside.addEventListener("click", (event) => {
+                    this.e_btn_back = this.container.querySelector(":scope button.btn-back-to-left-aside");
+                    this.e_btn_back.addEventListener("click", (event) => {
                         this.client.close_content_page();
                     });
 
                     this.e_btn_add = this.container.querySelector(":scope button.btn-add-notice");
-                    this.e_btn_add.addEventListener("click", (event) => this.add_notice());
+                    this.e_btn_add.addEventListener("click", (event) => this.show_editor());
 
-                    this.e_list = this.container.querySelector(":scope div.notices-list");
+                    this.e_list = this.container.querySelector(":scope div.all-people-notice-list");
+                    this.e_editor = this.container.querySelector(":scope div.all-people-notice-editor");
+                    this.e_editor_content = this.container.querySelector(":scope textarea.editor-content");
+                    this.e_editor_enabled = this.container.querySelector(":scope input.editor-enabled-checkbox");
+                    this.e_editor_title = this.container.querySelector(":scope h3.editor-title");
+                    this.e_btn_save = this.container.querySelector(":scope button.btn-save");
+                    this.e_btn_cancel = this.container.querySelector(":scope button.btn-cancel");
 
+                    this.e_btn_save.addEventListener("click", (event) => this.save_notice());
+                    this.e_btn_cancel.addEventListener("click", (event) => this.hide_editor());
+
+                    this.editing_id = null;
                     this.fetch_list();
                 }
 
-                add_notice() {
-                    const html = `
-<div class="notice-editor-modal">
-    <div class="notice-editor-overlay"></div>
-    <div class="notice-editor-content">
-        <h3>添加通知</h3>
-        <div class="notice-editor-field">
-            <label>标题：</label>
-            <input type="text" class="notice-title-input" placeholder="通知标题">
-        </div>
-        <div class="notice-editor-field">
-            <label>内容（支持Markdown）：</label>
-            <textarea class="notice-content-input" rows="8" placeholder="通知内容，支持Markdown语法"></textarea>
-        </div>
-        <div class="notice-editor-preview">
-            <label>预览：</label>
-            <div class="notice-preview-content"></div>
-        </div>
-        <div class="notice-editor-buttons">
-            <button class="btn-cancel">取消</button>
-            <button class="btn-save">保存</button>
-        </div>
-    </div>
-</div>`;
-                    
-                    this.container.insertAdjacentHTML("beforeend", html);
-                    
-                    const modal = this.container.querySelector(".notice-editor-modal");
-                    const overlay = modal.querySelector(".notice-editor-overlay");
-                    const titleInput = modal.querySelector(".notice-title-input");
-                    const contentInput = modal.querySelector(".notice-content-input");
-                    const previewContent = modal.querySelector(".notice-preview-content");
-                    const btnCancel = modal.querySelector(".btn-cancel");
-                    const btnSave = modal.querySelector(".btn-save");
-                    
-                    const closeModal = () => modal.remove();
-                    
-                    overlay.addEventListener("click", closeModal);
-                    btnCancel.addEventListener("click", closeModal);
-                    
-                    contentInput.addEventListener("input", () => {
-                        previewContent.innerHTML = this.parseMarkdown(contentInput.value);
-                    });
-                    
-                    btnSave.addEventListener("click", () => {
-                        const title = titleInput.value.trim();
-                        const content = contentInput.value;
-                        
-                        if (!title) {
-                            alert("请输入标题");
-                            return;
-                        }
-                        
-                        this.loading_mark.show();
-                        this.client.subviews.admin.add_notice(title, content)
-                            .then(result => {
-                                this.remove_loading_mark();
-                                closeModal();
-                                this.fetch_list();
-                            })
-                            .catch(error => {
-                                this.remove_loading_mark();
-                                MessageMark.report(error);
-                            });
+                show_editor(item = null) {
+                    this.editing_id = item ? item.id : null;
+                    if (item) {
+                        this.e_editor_title.textContent = "编辑通知";
+                        this.e_editor_content.value = item.content;
+                        this.e_editor_enabled.checked = item.enabled === 1;
+                    } else {
+                        this.e_editor_title.textContent = "添加通知";
+                        this.e_editor_content.value = "";
+                        this.e_editor_enabled.checked = false;
+                    }
+                    this.e_editor.classList.add("active");
+                }
+
+                hide_editor() {
+                    this.e_editor.classList.remove("active");
+                    this.editing_id = null;
+                }
+
+                save_notice() {
+                    const content = this.e_editor_content.value.trim();
+                    if (!content) {
+                        alert("通知内容不能为空");
+                        return;
+                    }
+
+                    const enabled = this.e_editor_enabled.checked;
+                    this.loading_mark.show();
+
+                    const promise = this.editing_id
+                        ? this.client.subviews.admin.edit_all_people_notice(this.editing_id, content, enabled)
+                        : this.client.subviews.admin.add_all_people_notice(content, enabled);
+
+                    promise.then(result => {
+                        this.remove_loading_mark();
+                        this.hide_editor();
+                        this.fetch_list();
+                    }).catch(error => {
+                        this.remove_loading_mark();
+                        MessageMark.report(error);
                     });
                 }
 
-                edit_notice(notice) {
-                    const html = `
-<div class="notice-editor-modal">
-    <div class="notice-editor-overlay"></div>
-    <div class="notice-editor-content">
-        <h3>编辑通知</h3>
-        <div class="notice-editor-field">
-            <label>标题：</label>
-            <input type="text" class="notice-title-input" value="${this.escapeHtml(notice.title)}">
-        </div>
-        <div class="notice-editor-field">
-            <label>内容（支持Markdown）：</label>
-            <textarea class="notice-content-input" rows="8">${this.escapeHtml(notice.content || "")}</textarea>
-        </div>
-        <div class="notice-editor-preview">
-            <label>预览：</label>
-            <div class="notice-preview-content">${this.parseMarkdown(notice.content || "")}</div>
-        </div>
-        <div class="notice-editor-buttons">
-            <button class="btn-cancel">取消</button>
-            <button class="btn-save">保存</button>
-        </div>
-    </div>
-</div>`;
-                    
-                    this.container.insertAdjacentHTML("beforeend", html);
-                    
-                    const modal = this.container.querySelector(".notice-editor-modal");
-                    const overlay = modal.querySelector(".notice-editor-overlay");
-                    const titleInput = modal.querySelector(".notice-title-input");
-                    const contentInput = modal.querySelector(".notice-content-input");
-                    const previewContent = modal.querySelector(".notice-preview-content");
-                    const btnCancel = modal.querySelector(".btn-cancel");
-                    const btnSave = modal.querySelector(".btn-save");
-                    
-                    const closeModal = () => modal.remove();
-                    
-                    overlay.addEventListener("click", closeModal);
-                    btnCancel.addEventListener("click", closeModal);
-                    
-                    contentInput.addEventListener("input", () => {
-                        previewContent.innerHTML = this.parseMarkdown(contentInput.value);
-                    });
-                    
-                    btnSave.addEventListener("click", () => {
-                        const title = titleInput.value.trim();
-                        const content = contentInput.value;
-                        
-                        if (!title) {
-                            alert("请输入标题");
-                            return;
-                        }
-                        
-                        this.loading_mark.show();
-                        this.client.subviews.admin.edit_notice(notice.id, title, content)
-                            .then(result => {
-                                this.remove_loading_mark();
-                                closeModal();
-                                this.fetch_list();
-                            })
-                            .catch(error => {
-                                this.remove_loading_mark();
-                                MessageMark.report(error);
-                            });
-                    });
-                }
-
-                escapeHtml(text) {
-                    const div = document.createElement("div");
-                    div.textContent = text;
-                    return div.innerHTML;
-                }
-
-                parseMarkdown(text) {
-                    if (!text) return "";
-                    let html = text;
-                    
-                    html = html.replace(/^### (.*$)/gm, '<h3>$1</h3>');
-                    html = html.replace(/^## (.*$)/gm, '<h2>$1</h2>');
-                    html = html.replace(/^# (.*$)/gm, '<h1>$1</h1>');
-                    
-                    html = html.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
-                    html = html.replace(/\*(.*?)\*/g, '<em>$1</em>');
-                    html = html.replace(/~~(.*?)~~/g, '<del>$1</del>');
-                    
-                    html = html.replace(/`([^`]+)`/g, '<code>$1</code>');
-                    
-                    html = html.replace(/^\* (.*$)/gm, '<li>$1</li>');
-                    html = html.replace(/(<li>.*<\/li>)/s, '<ul>$1</ul>');
-                    
-                    html = html.replace(/\n/g, '<br>');
-                    
-                    return html;
-                }
-
-                delete_notice(item, notice) {
-                    if (!confirm(`确定要删除通知"${notice.title}"吗？`)) return;
+                delete_notice(item, id) {
+                    if (!confirm("确定要删除这条通知吗？")) return;
 
                     this.loading_mark.show();
-                    this.client.subviews.admin.delete_notice(notice.id)
+                    this.client.subviews.admin.delete_all_people_notice(id)
                         .then(result => {
                             this.remove_loading_mark();
                             item.remove();
-                        })
-                        .catch(error => {
+                        }).catch(error => {
                             this.remove_loading_mark();
                             MessageMark.report(error);
                         });
                 }
 
-                enable_notice(item, notice) {
+                toggle_enabled(item, id, current_enabled) {
                     this.loading_mark.show();
-                    this.client.subviews.admin.enable_notice(notice.id, true)
+                    this.client.subviews.admin.edit_all_people_notice(id, item.dataset.content, !current_enabled)
                         .then(result => {
                             this.remove_loading_mark();
-                            this.fetch_list();
-                        })
-                        .catch(error => {
-                            this.remove_loading_mark();
-                            MessageMark.report(error);
-                        });
-                }
-
-                disable_notice(item, notice) {
-                    this.loading_mark.show();
-                    this.client.subviews.admin.enable_notice(notice.id, false)
-                        .then(result => {
-                            this.remove_loading_mark();
-                            this.fetch_list();
-                        })
-                        .catch(error => {
+                            this.render_list(this.list);
+                        }).catch(error => {
                             this.remove_loading_mark();
                             MessageMark.report(error);
                         });
@@ -15448,13 +15237,13 @@
 
                 fetch_list() {
                     this.loading_mark.show();
-                    this.client.subviews.admin.fetch_notice_list()
+                    this.client.subviews.admin.fetch_all_people_notice_list()
                         .then(result => {
                             if (this.closed) return;
+                            this.list = result;
                             this.render_list(result);
                             this.remove_loading_mark();
-                        })
-                        .catch(error => {
+                        }).catch(error => {
                             if (this.closed) return;
                             this.remove_loading_mark();
                             MessageMark.report(error);
@@ -15463,36 +15252,52 @@
 
                 render_list(list) {
                     this.e_list.innerHTML = "";
-                    
+
                     if (list.length === 0) {
-                        this.e_list.innerHTML = '<div class="no-notices">暂无通知，点击"添加通知"创建</div>';
+                        this.e_list.innerHTML = '<div class="all-people-notice-empty">暂无通知，点击"添加通知"创建</div>';
                         return;
                     }
-                    
-                    list.forEach((notice, index) => {
+
+                    list.forEach((item, index) => {
                         const div = document.createElement("div");
-                        div.className = "notice-item" + (notice.enabled ? " enabled" : "");
+                        div.className = `all-people-notice-item ${item.enabled ? 'enabled' : ''}`;
+                        div.dataset.content = item.content;
+                        div.dataset.id = item.id;
+                        div.dataset.enabled = item.enabled;
+                        
+                        const date = new Date(item.create_time);
+                        const date_str = date.toLocaleString();
+
                         div.innerHTML = `
-                            <div class="notice-header">
-                                <span class="notice-index">${index + 1}</span>
-                                <span class="notice-title">${this.escapeHtml(notice.title)}</span>
-                                <span class="notice-badge ${notice.enabled ? 'enabled' : ''}">${notice.enabled ? '已启用' : '未启用'}</span>
-                            </div>
-                            <div class="notice-content-preview">${this.parseMarkdown(notice.content || "")}</div>
-                            <div class="notice-actions">
-                                ${notice.enabled ? 
-                                    '<button class="btn-disable">禁用</button>' : 
-                                    '<button class="btn-enable">启用</button>'}
-                                <button class="btn-edit">编辑</button>
-                                <button class="btn-delete">删除</button>
+                            <div class="all-people-notice-content">${item.content}</div>
+                            <div class="all-people-notice-meta">
+                                <span>创建时间: ${date_str}</span>
+                                <div class="all-people-notice-actions">
+                                    ${item.enabled 
+                                        ? '<button class="btn-disable">禁用</button>' 
+                                        : '<button class="btn-enable">启用</button>'}
+                                    <button class="btn-edit">编辑</button>
+                                    <button class="btn-delete">删除</button>
+                                </div>
                             </div>
                         `;
-                        
-                        div.querySelector(".btn-enable")?.addEventListener("click", () => this.enable_notice(div, notice));
-                        div.querySelector(".btn-disable")?.addEventListener("click", () => this.disable_notice(div, notice));
-                        div.querySelector(".btn-edit").addEventListener("click", () => this.edit_notice(notice));
-                        div.querySelector(".btn-delete").addEventListener("click", () => this.delete_notice(div, notice));
-                        
+
+                        div.querySelector(".btn-enable").addEventListener("click", () => {
+                            this.toggle_enabled(div, item.id, false);
+                        });
+
+                        div.querySelector(".btn-disable").addEventListener("click", () => {
+                            this.toggle_enabled(div, item.id, true);
+                        });
+
+                        div.querySelector(".btn-edit").addEventListener("click", () => {
+                            this.show_editor(item);
+                        });
+
+                        div.querySelector(".btn-delete").addEventListener("click", () => {
+                            this.delete_notice(div, item.id);
+                        });
+
                         this.e_list.appendChild(div);
                     });
                 }
@@ -17210,7 +17015,7 @@
                 {text: "用户列表", pagetype: contentpages.backend_panel.users,},
                 {text: "组列表", pagetype: contentpages.backend_panel.groups,},
                 {text: "候选词管理", pagetype: contentpages.backend_panel.candidate_words,},
-                {text: "通知管理", pagetype: contentpages.backend_panel.notices,},
+                {text: "全体通知", pagetype: contentpages.backend_panel.all_people_notice,},
                 {text: "储存空间", pagetype: contentpages.backend_panel.disk,},
                 {text: "服务状态", pagetype: contentpages.backend_panel.status,},
                 {text: "备份恢复", pagetype: contentpages.backend_panel.backup,},
