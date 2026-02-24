@@ -14374,7 +14374,7 @@
                 toggle_select_all() {
                     const checked = this.e_select_all_checkbox.checked;
                     this.tree1.tree_items.forEach(item => {
-                        const checkbox = item.element.querySelector("input[type='checkbox']");
+                        const checkbox = item.querySelector("input[type='checkbox']");
                         if (checkbox) {
                             checkbox.checked = checked;
                             const uid = item.attr.columns[3].text;
@@ -14501,8 +14501,8 @@
                     if (addedItem) {
                         const checkbox = addedItem.querySelector("input[type='checkbox']");
                         if (checkbox) {
+                            const uid = attr.uid;
                             checkbox.addEventListener("change", (event) => {
-                                const uid = tree_item.attr.columns[3].text;
                                 if (checkbox.checked) {
                                     this.selected_uids.add(uid);
                                 } else {
@@ -14909,8 +14909,8 @@
                     if (addedItem) {
                         const checkbox = addedItem.querySelector("input[type='checkbox']");
                         if (checkbox) {
+                            const gid = attr.gid;
                             checkbox.addEventListener("change", (event) => {
-                                const gid = tree_item.attr.columns[2].text;
                                 if (checkbox.checked) {
                                     this.selected_gids.add(gid);
                                 } else {
