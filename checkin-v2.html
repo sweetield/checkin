@@ -2736,6 +2736,15 @@
             border-bottom: 1px solid #ddd;
         }
 
+        .all-people-notice-toolbar .btn-delete-selected {
+            color: #d32f2f;
+            border-color: #d32f2f;
+        }
+
+        .all-people-notice-toolbar .btn-delete-selected:hover {
+            background: #ffebee;
+        }
+
         .all-people-notice-toolbar button {
             padding: 6px 12px;
             border: 1px solid #ccc;
@@ -2751,6 +2760,9 @@
         .all-people-notice-filter {
             padding: 8px;
             border-bottom: 1px solid #ddd;
+            display: flex;
+            align-items: center;
+            gap: 8px;
         }
 
         .all-people-notice-filter input {
@@ -2772,12 +2784,24 @@
 
         .all-people-notice-item {
             display: flex;
-            flex-direction: column;
+            flex-direction: row;
+            align-items: flex-start;
             padding: 12px;
             border: 1px solid #e0e0e0;
             border-radius: 4px;
-            gap: 8px;
+            gap: 12px;
             background: #fafafa;
+        }
+
+        .all-people-notice-item .notice-checkbox {
+            margin-top: 4px;
+        }
+
+        .all-people-notice-item > .notice-item-body {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
         }
 
         .all-people-notice-item.enabled {
@@ -6289,7 +6313,7 @@
         }
 
         update_item(tree_item) {
-            const item_columns = tree_item.querySelectorAll(":scope > span.tree-item-column");
+            const item_columns = tree_item.querySelectorAll(":scope > span.tree-item-column, :scope > label.tree-item-column");
             for (const itemColumn of item_columns) itemColumn.remove();
 
             const attr = tree_item.attr;
@@ -6297,9 +6321,16 @@
             for (const column of attr.columns) {
                 let header = this.headers[c];
                 c++;
-                let html = `<span class="tree-item-column">${column.text}</span>`;
-                tree_item.insertAdjacentHTML("beforeend", html);
-                let item_column = tree_item.querySelector(":scope > span.tree-item-column:last-of-type");
+                let item_column;
+                if (column.checkbox) {
+                    let html = `<label class="tree-item-column"><input type="checkbox"></label>`;
+                    tree_item.insertAdjacentHTML("beforeend", html);
+                    item_column = tree_item.querySelector(":scope > label.tree-item-column:last-of-type");
+                } else {
+                    let html = `<span class="tree-item-column">${column.text}</span>`;
+                    tree_item.insertAdjacentHTML("beforeend", html);
+                    item_column = tree_item.querySelector(":scope > span.tree-item-column:last-of-type");
+                }
                 if (header.width === -1) {
                     item_column.style.flexGrow = "1";
                 } else {
@@ -7619,6 +7650,24 @@
 
             async delete_all_people_notice(id) {
                 let url = join_path(this.api_url(), "all_people_notice", id);
+                let r = await net_fetcher.nf_delete(url,);
+                if (r.status === 200) {
+                    return;
+                }
+                throw new Error(await format_error_response(r));
+            }
+
+            async delete_user(uid) {
+                let url = join_path(this.api_url(), "user", uid);
+                let r = await net_fetcher.nf_delete(url,);
+                if (r.status === 200) {
+                    return;
+                }
+                throw new Error(await format_error_response(r));
+            }
+
+            async delete_group(gid) {
+                let url = join_path(this.api_url(), "group", gid);
                 let r = await net_fetcher.nf_delete(url,);
                 if (r.status === 200) {
                     return;
@@ -14284,6 +14333,12 @@
 
                     let html = `
 <button class="btn-back-to-left-aside">⮌</button>
+<div class="users-toolbar">
+    <button class="btn-delete-selected" style="display:none">🗑️ 批量删除</button>
+    <label class="select-all-label" style="display:none">
+        <input type="checkbox" class="select-all-checkbox"> 全选
+    </label>
+</div>
 `;
                     this.container.insertAdjacentHTML("beforeend", html);
 
@@ -14292,8 +14347,18 @@
                         this.client.close_content_page();
                     });
 
+                    this.e_btn_delete_selected = this.container.querySelector(":scope button.btn-delete-selected");
+                    this.e_btn_delete_selected.addEventListener("click", (event) => this.delete_selected());
+
+                    this.e_select_all_label = this.container.querySelector(":scope label.select-all-label");
+                    this.e_select_all_checkbox = this.container.querySelector(":scope input.select-all-checkbox");
+                    this.e_select_all_checkbox.addEventListener("change", (event) => this.toggle_select_all());
+
+                    this.selected_uids = new Set();
+
                     const tree_headers = [
                         {text: "", width: 40,},
+                        {text: "☑", width: 30,},
                         {text: "状态", width: 60,},
                         {text: "名称", width: 120,},
                         {text: "上次在线", width: 210,},
@@ -14304,6 +14369,57 @@
 
 
                     this.fetch_list();
+                }
+
+                toggle_select_all() {
+                    const checked = this.e_select_all_checkbox.checked;
+                    this.tree1.tree_items.forEach(item => {
+                        const checkbox = item.element.querySelector("input[type='checkbox']");
+                        if (checkbox) {
+                            checkbox.checked = checked;
+                            const uid = item.attr.columns[3].text;
+                            if (checked) {
+                                this.selected_uids.add(uid);
+                            } else {
+                                this.selected_uids.delete(uid);
+                            }
+                        }
+                    });
+                    this.update_delete_button();
+                }
+
+                update_delete_button() {
+                    if (this.selected_uids.size > 0) {
+                        this.e_btn_delete_selected.textContent = `🗑️ 批量删除 (${this.selected_uids.size})`;
+                    } else {
+                        this.e_btn_delete_selected.textContent = `🗑️ 批量删除`;
+                    }
+                }
+
+                delete_selected() {
+                    if (this.selected_uids.size === 0) {
+                        alert("请先选择要删除的用户");
+                        return;
+                    }
+                    
+                    if (!confirm(`确定要删除选中的 ${this.selected_uids.size} 个用户吗？`)) return;
+
+                    const uids = Array.from(this.selected_uids);
+                    this.loading_mark.show();
+                    
+                    const deletePromises = uids.map(uid => 
+                        this.client.subviews.admin.delete_user(uid)
+                    );
+
+                    Promise.all(deletePromises)
+                        .then(() => {
+                            this.remove_loading_mark();
+                            this.fetch_list();
+                        })
+                        .catch(error => {
+                            this.remove_loading_mark();
+                            MessageMark.report(error);
+                        });
                 }
 
                 fill_tree_menu(clicking_info) {
@@ -14352,6 +14468,7 @@
                     if (left_for_day) text_last_login_time += "（>1天）";
                     return [
                         {text: this.tree1.tree_items.length + 1, selectable: false,},
+                        {text: "", selectable: false, checkbox: true,},
                         {
                             text: attr.disabled ? "暂停" : "正常",
                             selectable: false,
@@ -14367,11 +14484,34 @@
                 }
 
                 add_item(attr) {
+                    const itemCount = this.tree1.tree_items.length;
+                    
                     let tree_item = {
                         clickable: false,
                         columns: this._attrs2columns(attr),
                     };
                     this.tree1.add_item(tree_item);
+                    
+                    if (itemCount === 0) {
+                        this.e_btn_delete_selected.style.display = "";
+                        this.e_select_all_label.style.display = "";
+                    }
+                    
+                    const addedItem = this.tree1.tree_items[this.tree1.tree_items.length - 1];
+                    if (addedItem) {
+                        const checkbox = addedItem.querySelector("input[type='checkbox']");
+                        if (checkbox) {
+                            checkbox.addEventListener("change", (event) => {
+                                const uid = tree_item.attr.columns[3].text;
+                                if (checkbox.checked) {
+                                    this.selected_uids.add(uid);
+                                } else {
+                                    this.selected_uids.delete(uid);
+                                }
+                                this.update_delete_button();
+                            });
+                        }
+                    }
                 }
 
                 update_item(tree_item, user_attr) {
@@ -14382,10 +14522,15 @@
                 }
 
                 fetch_list() {
+                    this.selected_uids.clear();
+                    this.e_select_all_checkbox.checked = false;
+                    this.update_delete_button();
                     this.loading_mark.show();
                     this.client.subviews.admin.fetch_user_list()
                         .then(result => {
                             if (this.closed) return;
+                            this.e_btn_delete_selected.style.display = "none";
+                            this.e_select_all_label.style.display = "none";
                             for (const resultElement of result) {
                                 this.add_item(resultElement);
                             }
@@ -14613,6 +14758,12 @@
 
                     let html = `
 <button class="btn-back-to-left-aside">⮌</button>
+<div class="groups-toolbar">
+    <button class="btn-delete-selected" style="display:none">🗑️ 批量删除</button>
+    <label class="select-all-label" style="display:none">
+        <input type="checkbox" class="select-all-checkbox"> 全选
+    </label>
+</div>
 `;
                     this.container.insertAdjacentHTML("beforeend", html);
 
@@ -14621,8 +14772,18 @@
                         this.client.close_content_page();
                     });
 
+                    this.e_btn_delete_selected = this.container.querySelector(":scope button.btn-delete-selected");
+                    this.e_btn_delete_selected.addEventListener("click", (event) => this.delete_selected());
+
+                    this.e_select_all_label = this.container.querySelector(":scope label.select-all-label");
+                    this.e_select_all_checkbox = this.container.querySelector(":scope input.select-all-checkbox");
+                    this.e_select_all_checkbox.addEventListener("change", (event) => this.toggle_select_all());
+
+                    this.selected_gids = new Set();
+
                     const tree_headers = [
                         {text: "", width: 40,},
+                        {text: "☑", width: 30,},
                         {text: "名称", width: 120,},
                         {text: "成员", width: -1,},
                     ];
@@ -14630,6 +14791,57 @@
                     this.tree1.show();
 
                     this.fetch_list();
+                }
+
+                toggle_select_all() {
+                    const checked = this.e_select_all_checkbox.checked;
+                    this.tree1.tree_items.forEach(item => {
+                        const checkbox = item.querySelector("input[type='checkbox']");
+                        if (checkbox) {
+                            checkbox.checked = checked;
+                            const gid = item.attr.columns[2].text;
+                            if (checked) {
+                                this.selected_gids.add(gid);
+                            } else {
+                                this.selected_gids.delete(gid);
+                            }
+                        }
+                    });
+                    this.update_delete_button();
+                }
+
+                update_delete_button() {
+                    if (this.selected_gids.size > 0) {
+                        this.e_btn_delete_selected.textContent = `🗑️ 批量删除 (${this.selected_gids.size})`;
+                    } else {
+                        this.e_btn_delete_selected.textContent = `🗑️ 批量删除`;
+                    }
+                }
+
+                delete_selected() {
+                    if (this.selected_gids.size === 0) {
+                        alert("请先选择要删除的用户组");
+                        return;
+                    }
+                    
+                    if (!confirm(`确定要删除选中的 ${this.selected_gids.size} 个用户组吗？`)) return;
+
+                    const gids = Array.from(this.selected_gids);
+                    this.loading_mark.show();
+                    
+                    const deletePromises = gids.map(gid => 
+                        this.client.subviews.admin.delete_group(gid)
+                    );
+
+                    Promise.all(deletePromises)
+                        .then(() => {
+                            this.remove_loading_mark();
+                            this.fetch_list();
+                        })
+                        .catch(error => {
+                            this.remove_loading_mark();
+                            MessageMark.report(error);
+                        });
                 }
 
                 fill_tree_menu(clicking_info) {
@@ -14673,17 +14885,41 @@
                 _attrs2columns(attr) {
                     return [
                         {text: this.tree1.tree_items.length + 1, selectable: false,},
+                        {text: "", selectable: false, checkbox: true,},
                         {text: attr.gid, selectable: true,},
                         {text: `${attr.users.length}人；${attr.users.join("、")}`, selectable: true,},
                     ];
                 }
 
                 add_item(attr) {
+                    const itemCount = this.tree1.tree_items.length;
+                    
                     let tree_item = {
                         clickable: false,
                         columns: this._attrs2columns(attr),
                     };
                     this.tree1.add_item(tree_item);
+                    
+                    if (itemCount === 0) {
+                        this.e_btn_delete_selected.style.display = "";
+                        this.e_select_all_label.style.display = "";
+                    }
+                    
+                    const addedItem = this.tree1.tree_items[this.tree1.tree_items.length - 1];
+                    if (addedItem) {
+                        const checkbox = addedItem.querySelector("input[type='checkbox']");
+                        if (checkbox) {
+                            checkbox.addEventListener("change", (event) => {
+                                const gid = tree_item.attr.columns[2].text;
+                                if (checkbox.checked) {
+                                    this.selected_gids.add(gid);
+                                } else {
+                                    this.selected_gids.delete(gid);
+                                }
+                                this.update_delete_button();
+                            });
+                        }
+                    }
                 }
 
                 update_item(tree_item, group_attr) {
@@ -14694,10 +14930,15 @@
                 }
 
                 fetch_list() {
+                    this.selected_gids.clear();
+                    this.e_select_all_checkbox.checked = false;
+                    this.update_delete_button();
                     this.loading_mark.show();
                     this.client.subviews.admin.fetch_group_list()
                         .then(result => {
                             if (this.closed) return;
+                            this.e_btn_delete_selected.style.display = "none";
+                            this.e_select_all_label.style.display = "none";
                             for (const resultElement of result) {
                                 this.add_item(resultElement);
                             }
@@ -14865,276 +15106,14 @@
 
                     let html = `
 <button class="btn-back-to-left-aside">⮌</button>
-<div class="candidate-words-toolbar">
-    <button class="btn-add-candidate">➕ 添加候选词</button>
-    <button class="btn-import-candidates">📥 批量导入</button>
-    <button class="btn-reset-counts">🔄 重置频率</button>
+<div class="all-people-notice-toolbar">
+    <button class="btn-add-notice">➕ 添加通知</button>
     <button class="btn-delete-selected" style="display:none">🗑️ 批量删除</button>
 </div>
-<div class="candidate-words-filter">
+<div class="all-people-notice-filter">
     <label class="select-all-label" style="display:none">
         <input type="checkbox" class="select-all-checkbox"> 全选
     </label>
-    <input type="text" class="filter-input" placeholder="筛选候选词...">
-</div>
-<div class="candidate-words-list"></div>
-`;
-                    this.container.insertAdjacentHTML("beforeend", html);
-
-                    this.e_btn_back_to_left_aside = this.container.querySelector(":scope button.btn-back-to-left-aside");
-                    this.e_btn_back_to_left_aside.addEventListener("click", (event) => {
-                        this.client.close_content_page();
-                    });
-
-                    this.e_btn_add = this.container.querySelector(":scope button.btn-add-candidate");
-                    this.e_btn_add.addEventListener("click", (event) => this.add_candidate());
-
-                    this.e_btn_import = this.container.querySelector(":scope button.btn-import-candidates");
-                    this.e_btn_import.addEventListener("click", (event) => this.import_candidates());
-
-                    this.e_btn_reset = this.container.querySelector(":scope button.btn-reset-counts");
-                    this.e_btn_reset.addEventListener("click", (event) => this.reset_counts());
-
-                    this.e_btn_delete_selected = this.container.querySelector(":scope button.btn-delete-selected");
-                    this.e_btn_delete_selected.addEventListener("click", (event) => this.delete_selected());
-
-                    this.e_select_all_label = this.container.querySelector(":scope label.select-all-label");
-                    this.e_select_all_checkbox = this.container.querySelector(":scope input.select-all-checkbox");
-                    this.e_select_all_checkbox.addEventListener("change", (event) => this.toggle_select_all());
-
-                    this.e_filter_input = this.container.querySelector(":scope input.filter-input");
-                    this.e_filter_input.addEventListener("input", (event) => this.filter_list());
-
-                    this.e_list = this.container.querySelector(":scope div.candidate-words-list");
-
-                    this.fetch_list();
-                }
-
-                filter_list() {
-                    const v = this.e_filter_input.value.trim().toLowerCase();
-                    const items = this.e_list.querySelectorAll(".candidate-word-item");
-                    items.forEach(item => {
-                        const word = item.dataset.word.toLowerCase();
-                        if (v === "" || word.includes(v)) {
-                            item.style.display = "";
-                        } else {
-                            item.style.display = "none";
-                        }
-                    });
-                }
-
-                add_candidate() {
-                    const word = prompt("请输入候选词：");
-                    if (!word || !word.trim()) return;
-                    
-                    this.loading_mark.show();
-                    this.client.subviews.admin.add_candidate_word(word.trim())
-                        .then(result => {
-                            this.remove_loading_mark();
-                            this.fetch_list();
-                        }).catch(error => {
-                            this.remove_loading_mark();
-                            MessageMark.report(error);
-                        });
-                }
-
-                import_candidates() {
-                    const words = prompt("请输入候选词（多个用空格或|分隔）：");
-                    if (!words || !words.trim()) return;
-                    
-                    const word_list = words.split(/[\n |]/).map(w => w.trim()).filter(w => w);
-                    if (word_list.length === 0) return;
-
-                    this.loading_mark.show();
-                    this.client.subviews.admin.add_candidate_words(word_list)
-                        .then(result => {
-                            this.remove_loading_mark();
-                            this.fetch_list();
-                        }).catch(error => {
-                            this.remove_loading_mark();
-                            MessageMark.report(error);
-                        });
-                }
-
-                edit_candidate(item, word) {
-                    const new_word = prompt("请输入新的候选词：", word);
-                    if (!new_word || !new_word.trim()) return;
-                    if (new_word.trim() === word) return;
-
-                    this.loading_mark.show();
-                    this.client.subviews.admin.edit_candidate_word(word, new_word.trim())
-                        .then(result => {
-                            this.remove_loading_mark();
-                            this.fetch_list();
-                        }).catch(error => {
-                            this.remove_loading_mark();
-                            MessageMark.report(error);
-                        });
-                }
-
-                delete_candidate(item, word) {
-                    if (!confirm(`确定要删除候选词"${word}"吗？`)) return;
-
-                    this.loading_mark.show();
-                    this.client.subviews.admin.delete_candidate_word(word)
-                        .then(result => {
-                            this.remove_loading_mark();
-                            item.remove();
-                        }).catch(error => {
-                            this.remove_loading_mark();
-                            MessageMark.report(error);
-                        });
-                }
-
-                reset_counts() {
-                    if (!confirm("确定要重置所有候选词的使用频率吗？")) return;
-
-                    this.loading_mark.show();
-                    this.client.subviews.admin.reset_candidate_word_counts()
-                        .then(result => {
-                            this.remove_loading_mark();
-                            this.fetch_list();
-                        }).catch(error => {
-                            this.remove_loading_mark();
-                            MessageMark.report(error);
-                        });
-                }
-
-                fetch_list() {
-                    this.loading_mark.show();
-                    this.client.subviews.admin.fetch_candidate_word_list()
-                        .then(result => {
-                            if (this.closed) return;
-                            this.render_list(result);
-                            this.remove_loading_mark();
-                        }).catch(error => {
-                            if (this.closed) return;
-                            this.remove_loading_mark()
-                            MessageMark.report(error);
-                        });
-                }
-
-                render_list(list) {
-                    this.e_list.innerHTML = "";
-                    this.selected_words = new Set();
-                    
-                    if (list.length > 0) {
-                        this.e_btn_delete_selected.style.display = "";
-                        this.e_select_all_label.style.display = "";
-                    } else {
-                        this.e_btn_delete_selected.style.display = "none";
-                        this.e_select_all_label.style.display = "none";
-                    }
-                    
-                    list.forEach((item, index) => {
-                        const div = document.createElement("div");
-                        div.className = "candidate-word-item";
-                        div.dataset.word = item.word;
-                        div.innerHTML = `
-                            <input type="checkbox" class="candidate-checkbox">
-                            <span class="candidate-index">${index + 1}</span>
-                            <span class="candidate-word">${item.word}</span>
-                            <span class="candidate-count">${item.use_count || 0}</span>
-                            <span class="candidate-actions">
-                                <button class="btn-edit">编辑</button>
-                                <button class="btn-delete">删除</button>
-                            </span>
-                        `;
-                        
-                        const checkbox = div.querySelector(".candidate-checkbox");
-                        checkbox.addEventListener("change", (event) => {
-                            if (checkbox.checked) {
-                                this.selected_words.add(item.word);
-                            } else {
-                                this.selected_words.delete(item.word);
-                            }
-                            this.update_delete_button();
-                        });
-                        
-                        div.querySelector(".btn-edit").addEventListener("click", () => {
-                            this.edit_candidate(div, item.word);
-                        });
-                        div.querySelector(".btn-delete").addEventListener("click", () => {
-                            this.delete_candidate(div, item.word);
-                        });
-                        
-                        this.e_list.appendChild(div);
-                    });
-                }
-
-                toggle_select_all() {
-                    const checked = this.e_select_all_checkbox.checked;
-                    const checkboxes = this.e_list.querySelectorAll(".candidate-checkbox");
-                    checkboxes.forEach(cb => {
-                        cb.checked = checked;
-                    });
-                    
-                    if (checked) {
-                        const items = this.e_list.querySelectorAll(".candidate-word-item");
-                        items.forEach(item => {
-                            this.selected_words.add(item.dataset.word);
-                        });
-                    } else {
-                        this.selected_words.clear();
-                    }
-                    this.update_delete_button();
-                }
-
-                update_delete_button() {
-                    if (this.selected_words.size > 0) {
-                        this.e_btn_delete_selected.textContent = `🗑️ 批量删除 (${this.selected_words.size})`;
-                    } else {
-                        this.e_btn_delete_selected.textContent = `🗑️ 批量删除`;
-                    }
-                }
-
-                delete_selected() {
-                    if (this.selected_words.size === 0) {
-                        alert("请先选择要删除的候选词");
-                        return;
-                    }
-                    
-                    if (!confirm(`确定要删除选中的 ${this.selected_words.size} 个候选词吗？`)) return;
-
-                    const words = Array.from(this.selected_words);
-                    this.loading_mark.show();
-                    
-                    const deletePromises = words.map(word => 
-                        this.client.subviews.admin.delete_candidate_word(word)
-                    );
-                    
-                    Promise.all(deletePromises)
-                        .then(() => {
-                            this.remove_loading_mark();
-                            this.fetch_list();
-                        })
-                        .catch(error => {
-                            this.remove_loading_mark();
-                            MessageMark.report(error);
-                        });
-                }
-            },
-
-            all_people_notice: class extends _ {
-                constructor(client, panel, li) {
-                    super(client, panel, li);
-                }
-
-                close_page() {
-                    if (this.e_list) this.e_list.remove();
-                    if (this.e_editor) this.e_editor.remove();
-                    super.close_page();
-                }
-
-                open_page() {
-                    super.open_page();
-
-                    let html = `
-<button class="btn-back-to-left-aside">⮌</button>
-<div class="all-people-notice-toolbar">
-    <button class="btn-add-notice">➕ 添加通知</button>
-</div>
-<div class="all-people-notice-filter">
     <input type="text" class="filter-input" placeholder="筛选通知...">
 </div>
 <div class="all-people-notice-list"></div>
@@ -15163,6 +15142,19 @@
                     if (this.e_btn_add) {
                         this.e_btn_add.addEventListener("click", (event) => this.show_editor());
                     }
+
+                    this.e_btn_delete_selected = this.container.querySelector(":scope button.btn-delete-selected");
+                    if (this.e_btn_delete_selected) {
+                        this.e_btn_delete_selected.addEventListener("click", (event) => this.delete_selected());
+                    }
+
+                    this.e_select_all_label = this.container.querySelector(":scope label.select-all-label");
+                    this.e_select_all_checkbox = this.container.querySelector(":scope input.select-all-checkbox");
+                    if (this.e_select_all_checkbox) {
+                        this.e_select_all_checkbox.addEventListener("change", (event) => this.toggle_select_all());
+                    }
+
+                    this.selected_ids = new Set();
 
                     this.e_list = this.container.querySelector(":scope div.all-people-notice-list");
                     this.e_editor = this.container.querySelector(":scope div.all-people-notice-editor");
@@ -15332,11 +15324,17 @@
 
                 render_list(list) {
                     this.e_list.innerHTML = "";
+                    this.selected_ids = new Set();
 
                     if (list.length === 0) {
                         this.e_list.innerHTML = '<div class="all-people-notice-empty">暂无通知，点击"添加通知"创建</div>';
+                        this.e_btn_delete_selected.style.display = "none";
+                        this.e_select_all_label.style.display = "none";
                         return;
                     }
+
+                    this.e_btn_delete_selected.style.display = "";
+                    this.e_select_all_label.style.display = "";
 
                     list.forEach((item, index) => {
                         const div = document.createElement("div");
@@ -15349,18 +15347,31 @@
                         const date_str = date.toLocaleString();
 
                         div.innerHTML = `
-                            <div class="all-people-notice-content">${item.content}</div>
-                            <div class="all-people-notice-meta">
-                                <span>创建时间: ${date_str}</span>
-                                <div class="all-people-notice-actions">
-                                    ${item.enabled 
-                                        ? '<button class="btn-disable">禁用</button>' 
-                                        : '<button class="btn-enable">启用</button>'}
-                                    <button class="btn-edit">编辑</button>
-                                    <button class="btn-delete">删除</button>
+                            <input type="checkbox" class="notice-checkbox">
+                            <div class="notice-item-body">
+                                <div class="all-people-notice-content">${item.content}</div>
+                                <div class="all-people-notice-meta">
+                                    <span>创建时间: ${date_str}</span>
+                                    <div class="all-people-notice-actions">
+                                        ${item.enabled 
+                                            ? '<button class="btn-disable">禁用</button>' 
+                                            : '<button class="btn-enable">启用</button>'}
+                                        <button class="btn-edit">编辑</button>
+                                        <button class="btn-delete">删除</button>
+                                    </div>
                                 </div>
                             </div>
                         `;
+
+                        const checkbox = div.querySelector(".notice-checkbox");
+                        checkbox.addEventListener("change", (event) => {
+                            if (checkbox.checked) {
+                                this.selected_ids.add(item.id);
+                            } else {
+                                this.selected_ids.delete(item.id);
+                            }
+                            this.update_delete_button();
+                        });
 
                         const btn_enable = div.querySelector(".btn-enable");
                         if (btn_enable) {
@@ -15386,6 +15397,58 @@
 
                         this.e_list.appendChild(div);
                     });
+                }
+
+                toggle_select_all() {
+                    const checked = this.e_select_all_checkbox.checked;
+                    const checkboxes = this.e_list.querySelectorAll(".notice-checkbox");
+                    checkboxes.forEach(cb => {
+                        cb.checked = checked;
+                    });
+                    
+                    if (checked) {
+                        const items = this.e_list.querySelectorAll(".all-people-notice-item");
+                        items.forEach(item => {
+                            this.selected_ids.add(parseInt(item.dataset.id));
+                        });
+                    } else {
+                        this.selected_ids.clear();
+                    }
+                    this.update_delete_button();
+                }
+
+                update_delete_button() {
+                    if (this.selected_ids.size > 0) {
+                        this.e_btn_delete_selected.textContent = `🗑️ 批量删除 (${this.selected_ids.size})`;
+                    } else {
+                        this.e_btn_delete_selected.textContent = `🗑️ 批量删除`;
+                    }
+                }
+
+                delete_selected() {
+                    if (this.selected_ids.size === 0) {
+                        alert("请先选择要删除的通知");
+                        return;
+                    }
+                    
+                    if (!confirm(`确定要删除选中的 ${this.selected_ids.size} 条通知吗？`)) return;
+
+                    const ids = Array.from(this.selected_ids);
+                    this.loading_mark.show();
+                    
+                    const deletePromises = ids.map(id => 
+                        this.client.subviews.admin.delete_all_people_notice(id)
+                    );
+
+                    Promise.all(deletePromises)
+                        .then(() => {
+                            this.remove_loading_mark();
+                            this.fetch_list();
+                        })
+                        .catch(error => {
+                            this.remove_loading_mark();
+                            MessageMark.report(error);
+                        });
                 }
             },
 
