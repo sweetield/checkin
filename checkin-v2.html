@@ -2748,6 +2748,19 @@
             background: #e8e8e8;
         }
 
+        .all-people-notice-filter {
+            padding: 8px;
+            border-bottom: 1px solid #ddd;
+        }
+
+        .all-people-notice-filter input {
+            width: 100%;
+            padding: 6px 10px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+
         .all-people-notice-list {
             display: flex;
             flex-direction: column;
@@ -15128,6 +15141,9 @@
 <div class="all-people-notice-toolbar">
     <button class="btn-add-notice">➕ 添加通知</button>
 </div>
+<div class="all-people-notice-filter">
+    <input type="text" class="filter-input" placeholder="筛选通知...">
+</div>
 <div class="all-people-notice-list"></div>
 <div class="all-people-notice-editor">
     <h3 class="editor-title">添加通知</h3>
@@ -15163,6 +15179,11 @@
                     this.e_btn_save = this.container.querySelector(":scope button.btn-save");
                     this.e_btn_cancel = this.container.querySelector(":scope button.btn-cancel");
 
+                    this.e_filter_input = this.container.querySelector(":scope input.filter-input");
+                    if (this.e_filter_input) {
+                        this.e_filter_input.addEventListener("input", (event) => this.filter_list());
+                    }
+
                     if (this.e_btn_save) {
                         this.e_btn_save.addEventListener("click", (event) => this.save_notice());
                     }
@@ -15172,6 +15193,20 @@
 
                     this.editing_id = null;
                     this.fetch_list();
+                }
+
+                filter_list() {
+                    if (!this.e_filter_input || !this.e_list) return;
+                    const v = this.e_filter_input.value.trim().toLowerCase();
+                    const items = this.e_list.querySelectorAll(".all-people-notice-item");
+                    items.forEach(item => {
+                        const content = item.dataset.content.toLowerCase();
+                        if (v === "" || content.includes(v)) {
+                            item.style.display = "";
+                        } else {
+                            item.style.display = "none";
+                        }
+                    });
                 }
 
                 show_editor(item = null) {
@@ -15245,6 +15280,13 @@
                     this.client.subviews.admin.edit_all_people_notice(id, item.dataset.content, !current_enabled)
                         .then(result => {
                             this.remove_loading_mark();
+                            // 更新本地数据
+                            if (this.list) {
+                                const idx = this.list.findIndex(i => i.id === id);
+                                if (idx !== -1) {
+                                    this.list[idx].enabled = !current_enabled ? 1 : 0;
+                                }
+                            }
                             this.render_list(this.list);
                         }).catch(error => {
                             this.remove_loading_mark();
