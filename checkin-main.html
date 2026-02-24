@@ -10307,51 +10307,53 @@
 				
 				
 				// =============================
-				// 🔥 从API加载候选词
-				// =============================
-				let commonPhrases = [];
-				
-				// 加载候选词列表
-				async function loadCandidateWords() {
-					try {
-						const resp = await fetch('/api/candidate_word', {
-							credentials: 'include'
-						});
-						if (resp.ok) {
-							const words = await resp.json();
-							if (words && words.length > 0) {
-								commonPhrases = words;
-								return;
-							}
+			// 🔥 从API加载候选词
+			// =============================
+			let commonPhrases = [];
+			
+			// 加载候选词列表
+			async function loadCandidateWords() {
+				try {
+					const url = join_path(root_url(), "api", "candidate_word");
+					const resp = await fetch(url, {
+						credentials: 'include'
+					});
+					if (resp.ok) {
+						const words = await resp.json();
+						if (words && words.length > 0) {
+							commonPhrases = words;
+							return;
 						}
-					} catch (e) {
-						console.error('加载候选词失败', e);
 					}
-					// 加载失败时使用默认候选词
-					commonPhrases = [
-						"请自行添加"
-					];
+				} catch (e) {
+					console.error('加载候选词失败', e);
 				}
+				// 加载失败时使用默认候选词
+				commonPhrases = [
+					"请自行添加"
+				];
+			}
 				
-				// 使用候选词后更新频率
-				async function useCandidateWord(word) {
-					try {
-						await fetch('/api/candidate_word/use', {
-							method: 'POST',
-							headers: {'Content-Type': 'application/json'},
-							body: JSON.stringify({word}),
-							credentials: 'include'
-						});
-					} catch (e) {
-						console.error('更新使用频率失败', e);
-					}
+			// 使用候选词后更新频率
+			async function useCandidateWord(word) {
+				try {
+					const url = join_path(root_url(), "api", "candidate_word", "use");
+					await fetch(url, {
+						method: 'POST',
+						headers: {'Content-Type': 'application/json'},
+						body: JSON.stringify({word}),
+						credentials: 'include'
+					});
+				} catch (e) {
+					console.error('更新使用频率失败', e);
 				}
+			}
 				
-				// 初始加载候选词
-				loadCandidateWords();
-				
-				// =============================
-				// 🔥 半屏候选词渲染
+			// 初始加载候选词
+			loadCandidateWords();
+			
+			// =============================
+			// 🔥 半屏候选词渲染
 				// =============================
 				this.render_candidate_panel = (list) => {
 					const body = this.e_candidate_panel_body;
