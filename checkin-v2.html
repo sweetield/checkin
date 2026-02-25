@@ -14368,48 +14368,45 @@
                 };
 
                 this.li.bindmap.msgs.forEach(msgattr => {
+                    if (dashboardwrappers.ChatDashboardWrapper.message_type_checker.is_sys(msgattr.type)) {
+                        return;
+                    }
+
                     let s = `[未知消息类型]`;
 
-                    if (dashboardwrappers.ChatDashboardWrapper.message_type_checker.is_sys(msgattr.type)) {
-                        s = `[${format_timestamp_utc8(msgattr.sent_time)}] ${msgattr.formated_sys_msg}`;
-                    } else {
-                        if (dashboardwrappers.ChatDashboardWrapper.message_type_checker.is_text(msgattr.type)) {
-                            s = `[${format_timestamp_utc8(msgattr.sent_time)} ${msgattr.sender}]\n${msgattr.plain_data_text}`;
-                        } else if (dashboardwrappers.ChatDashboardWrapper.message_type_checker.is_drive_item(msgattr.type)) {
-                            if (dashboardwrappers.ChatDashboardWrapper.message_type_checker.is_image(msgattr.type)) {
-                                const filename = msgattr.plain_file_name || 'image';
-                                if (msgattr.plain_file_data && msgattr.plain_file_data instanceof Uint8Array) {
+                    if (dashboardwrappers.ChatDashboardWrapper.message_type_checker.is_text(msgattr.type)) {
+                        s = `[${format_timestamp_utc8(msgattr.sent_time)} ${msgattr.sender}]\n${msgattr.plain_data_text}`;
+                    } else if (dashboardwrappers.ChatDashboardWrapper.message_type_checker.is_drive_item(msgattr.type)) {
+                        if (dashboardwrappers.ChatDashboardWrapper.message_type_checker.is_image(msgattr.type)) {
+                            const filename = msgattr.plain_file_name || 'image';
+                            if (msgattr.plain_file_data && msgattr.plain_file_data instanceof Uint8Array) {
+                                if (exportZip) {
                                     try {
                                         const mimeType = getMimeType(filename);
-                                        const base64 = uint8ArrayToBase64(msgattr.plain_file_data);
-                                        
-                                        if (exportZip) {
-                                            let uniqueFilename = filename;
-                                            let counter = 1;
-                                            while (imageFiles[uniqueFilename]) {
-                                                const ext = filename.split('.').pop();
-                                                const base = filename.replace(`.${ext}`, '');
-                                                uniqueFilename = `${base}_${counter}.${ext}`;
-                                                counter++;
-                                            }
-                                            imageFiles[uniqueFilename] = {
-                                                data: msgattr.plain_file_data,
-                                                mime: mimeType
-                                            };
-                                            s = `[${format_timestamp_utc8(msgattr.sent_time)} ${msgattr.sender}]\n![${uniqueFilename}](images/${uniqueFilename})`;
-                                        } else {
-                                            const dataUrl = `data:${mimeType};base64,${base64}`;
-                                            s = `[${format_timestamp_utc8(msgattr.sent_time)} ${msgattr.sender}]\n![${filename}](${dataUrl})`;
+                                        let uniqueFilename = filename;
+                                        let counter = 1;
+                                        while (imageFiles[uniqueFilename]) {
+                                            const ext = filename.split('.').pop();
+                                            const base = filename.replace(`.${ext}`, '');
+                                            uniqueFilename = `${base}_${counter}.${ext}`;
+                                            counter++;
                                         }
+                                        imageFiles[uniqueFilename] = {
+                                            data: msgattr.plain_file_data,
+                                            mime: mimeType
+                                        };
+                                        s = `[${format_timestamp_utc8(msgattr.sent_time)} ${msgattr.sender}]\n![${uniqueFilename}](images/${uniqueFilename})`;
                                     } catch (e) {
                                         s = `[${format_timestamp_utc8(msgattr.sent_time)} ${msgattr.sender}] [🖼️图片] ${filename} (导出失败: ${e.message})`;
                                     }
                                 } else {
-                                    s = `[${format_timestamp_utc8(msgattr.sent_time)} ${msgattr.sender}] [🖼️图片] ${filename} (请先下载图片后再导出)`;
+                                    s = `[${format_timestamp_utc8(msgattr.sent_time)} ${msgattr.sender}] [🖼️图片] ${filename}`;
                                 }
-                            } else if (dashboardwrappers.ChatDashboardWrapper.message_type_checker.is_file(msgattr.type)) {
-                                s = `[${format_timestamp_utc8(msgattr.sent_time)} ${msgattr.sender}] [文件] ${msgattr.plain_file_name}`;
+                            } else {
+                                s = `[${format_timestamp_utc8(msgattr.sent_time)} ${msgattr.sender}] [🖼️图片] ${filename}`;
                             }
+                        } else if (dashboardwrappers.ChatDashboardWrapper.message_type_checker.is_file(msgattr.type)) {
+                            s = `[${format_timestamp_utc8(msgattr.sent_time)} ${msgattr.sender}] [文件] ${msgattr.plain_file_name}`;
                         }
                     }
 
