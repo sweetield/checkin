@@ -14525,6 +14525,7 @@
                     this.selected_uids.clear();
                     this.e_select_all_checkbox.checked = false;
                     this.update_delete_button();
+                    this.tree1.remove_all_items();
                     this.loading_mark.show();
                     this.client.subviews.admin.fetch_user_list()
                         .then(result => {
@@ -14933,6 +14934,7 @@
                     this.selected_gids.clear();
                     this.e_select_all_checkbox.checked = false;
                     this.update_delete_button();
+                    this.tree1.remove_all_items();
                     this.loading_mark.show();
                     this.client.subviews.admin.fetch_group_list()
                         .then(result => {
