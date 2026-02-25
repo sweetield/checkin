@@ -4547,6 +4547,7 @@
 
     </style>
 
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 </head>
 <body class="">
 
@@ -10293,8 +10294,13 @@
 
                     items.push(
                         {
-                            type: "button", text: "导出聊天记录", callback: event => {
-                                this.output_msgs();
+                            type: "button", text: "导出聊天记录(单文件)", callback: event => {
+                                this.output_msgs(false);
+                            },
+                        },
+                        {
+                            type: "button", text: "导出聊天记录(图片文件夹)", callback: event => {
+                                this.output_msgs(true);
                             },
                         },
                         {type: "section", text: "",},
@@ -14322,14 +14328,17 @@
 
             /*
             * 导出聊天记录
+            * @param {boolean} exportZip - true=导出zip包(含图片文件夹), false=单文件markdown(Base64内嵌)
             * */
-            output_msgs() {
+            output_msgs(exportZip = false) {
                 const contact_name = this.current_contact_name();
                 const data_string = date_string_for_fileName();
                 const folder_name = `01_${contact_name}聊天记录_${data_string}`;
                 const name = `${folder_name}.md`;
 
                 const strings = [];
+                const imageFiles = {};
+                let imageCount = 0;
 
                 strings.push(`# ${contact_name} 聊天记录`);
                 strings.push(`\n导出时间: ${new Date().toLocaleString()}\n`);
@@ -14373,8 +14382,25 @@
                                     try {
                                         const mimeType = getMimeType(filename);
                                         const base64 = uint8ArrayToBase64(msgattr.plain_file_data);
-                                        const dataUrl = `data:${mimeType};base64,${base64}`;
-                                        s = `[${format_timestamp_utc8(msgattr.sent_time)} ${msgattr.sender}]\n![${filename}](${dataUrl})`;
+                                        
+                                        if (exportZip) {
+                                            let uniqueFilename = filename;
+                                            let counter = 1;
+                                            while (imageFiles[uniqueFilename]) {
+                                                const ext = filename.split('.').pop();
+                                                const base = filename.replace(`.${ext}`, '');
+                                                uniqueFilename = `${base}_${counter}.${ext}`;
+                                                counter++;
+                                            }
+                                            imageFiles[uniqueFilename] = {
+                                                data: msgattr.plain_file_data,
+                                                mime: mimeType
+                                            };
+                                            s = `[${format_timestamp_utc8(msgattr.sent_time)} ${msgattr.sender}]\n![${uniqueFilename}](images/${uniqueFilename})`;
+                                        } else {
+                                            const dataUrl = `data:${mimeType};base64,${base64}`;
+                                            s = `[${format_timestamp_utc8(msgattr.sent_time)} ${msgattr.sender}]\n![${filename}](${dataUrl})`;
+                                        }
                                     } catch (e) {
                                         s = `[${format_timestamp_utc8(msgattr.sent_time)} ${msgattr.sender}] [🖼️图片] ${filename} (导出失败: ${e.message})`;
                                     }
@@ -14390,7 +14416,29 @@
                     strings.push(s);
                 });
 
-                saveFile_from_text(strings.join("\n\n"), name);
+                const markdownContent = strings.join("\n\n");
+
+                if (exportZip && Object.keys(imageFiles).length > 0) {
+                    const zip = new JSZip();
+                    zip.file(name, markdownContent);
+                    
+                    const imgFolder = zip.folder("images");
+                    for (const [filename, fileInfo] of Object.entries(imageFiles)) {
+                        imgFolder.file(filename, fileInfo.data);
+                    }
+                    
+                    zip.generateAsync({type: "blob"})
+                        .then(function(content) {
+                            const zipName = `${folder_name}.zip`;
+                            const a = document.createElement("a");
+                            a.href = URL.createObjectURL(content);
+                            a.download = zipName;
+                            a.click();
+                            URL.revokeObjectURL(a.href);
+                        });
+                } else {
+                    saveFile_from_text(markdownContent, name);
+                }
 
             }
 
