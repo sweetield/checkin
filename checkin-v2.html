@@ -14326,11 +14326,37 @@
             output_msgs() {
                 const contact_name = this.current_contact_name();
                 const data_string = date_string_for_fileName();
-                const name = `01_${contact_name}聊天记录_${data_string}.md`;
+                const folder_name = `01_${contact_name}聊天记录_${data_string}`;
+                const name = `${folder_name}.md`;
 
                 const strings = [];
 
-                strings.push(`### ${name}`);
+                strings.push(`# ${contact_name} 聊天记录`);
+                strings.push(`\n导出时间: ${new Date().toLocaleString()}\n`);
+
+                const getMimeType = (filename) => {
+                    const ext = filename.split('.').pop().toLowerCase();
+                    const mimeTypes = {
+                        'jpg': 'image/jpeg',
+                        'jpeg': 'image/jpeg',
+                        'png': 'image/png',
+                        'gif': 'image/gif',
+                        'webp': 'image/webp',
+                        'bmp': 'image/bmp',
+                        'svg': 'image/svg+xml',
+                        'ico': 'image/x-icon'
+                    };
+                    return mimeTypes[ext] || 'image/jpeg';
+                };
+
+                const uint8ArrayToBase64 = (uint8Array) => {
+                    let binary = '';
+                    const len = uint8Array.byteLength;
+                    for (let i = 0; i < len; i++) {
+                        binary += String.fromCharCode(uint8Array[i]);
+                    }
+                    return btoa(binary);
+                };
 
                 this.li.bindmap.msgs.forEach(msgattr => {
                     let s = `[未知消息类型]`;
@@ -14342,7 +14368,19 @@
                             s = `[${format_timestamp_utc8(msgattr.sent_time)} ${msgattr.sender}]\n${msgattr.plain_data_text}`;
                         } else if (dashboardwrappers.ChatDashboardWrapper.message_type_checker.is_drive_item(msgattr.type)) {
                             if (dashboardwrappers.ChatDashboardWrapper.message_type_checker.is_image(msgattr.type)) {
-                                s = `[${format_timestamp_utc8(msgattr.sent_time)} ${msgattr.sender}] [🖼️图片] ${msgattr.plain_file_name}`;
+                                const filename = msgattr.plain_file_name || 'image';
+                                if (msgattr.plain_file_data && msgattr.plain_file_data instanceof Uint8Array) {
+                                    try {
+                                        const mimeType = getMimeType(filename);
+                                        const base64 = uint8ArrayToBase64(msgattr.plain_file_data);
+                                        const dataUrl = `data:${mimeType};base64,${base64}`;
+                                        s = `[${format_timestamp_utc8(msgattr.sent_time)} ${msgattr.sender}]\n![${filename}](${dataUrl})`;
+                                    } catch (e) {
+                                        s = `[${format_timestamp_utc8(msgattr.sent_time)} ${msgattr.sender}] [🖼️图片] ${filename} (导出失败: ${e.message})`;
+                                    }
+                                } else {
+                                    s = `[${format_timestamp_utc8(msgattr.sent_time)} ${msgattr.sender}] [🖼️图片] ${filename} (请先下载图片后再导出)`;
+                                }
                             } else if (dashboardwrappers.ChatDashboardWrapper.message_type_checker.is_file(msgattr.type)) {
                                 s = `[${format_timestamp_utc8(msgattr.sent_time)} ${msgattr.sender}] [文件] ${msgattr.plain_file_name}`;
                             }
