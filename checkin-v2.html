@@ -14668,7 +14668,7 @@
                 }
 
                 edit_user(clicking_info) {
-                    const uid = clicking_info.tree_item.attr.columns[2].text;
+                    const uid = clicking_info.tree_item.attr.columns[3].text;
                     this.loading_mark.show();
                     this.client.subviews.admin.fetch_user_attr(uid)
                         .then(result => {
@@ -14740,7 +14740,7 @@
                 }
 
                 delete_user(clicking_info) {
-                    const uid = clicking_info.tree_item.attr.columns[2].text;
+                    const uid = clicking_info.tree_item.attr.columns[3].text;
                     MessageMark.confirm(`删除用户：${uid}`, null, null, () => {
                         this._delete_user(clicking_info.tree_item, uid);
                     },)
@@ -15026,7 +15026,7 @@
                 }
 
                 edit_group(clicking_info) {
-                    const gid = clicking_info.tree_item.attr.columns[1].text;
+                    const gid = clicking_info.tree_item.attr.columns[2].text;
                     this.loading_mark.show();
                     this.client.subviews.admin.fetch_group_attr(gid)
                         .then(result => {
@@ -15089,7 +15089,7 @@
                 }
 
                 delete_group(clicking_info) {
-                    const gid = clicking_info.tree_item.attr.columns[1].text;
+                    const gid = clicking_info.tree_item.attr.columns[2].text;
                     MessageMark.confirm(`删除分组：${gid}`, null, null, () => {
                         this._delete_group(clicking_info.tree_item, gid);
                     },)
