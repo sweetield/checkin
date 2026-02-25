@@ -10294,7 +10294,7 @@
 
                     items.push(
                         {
-                            type: "button", text: "导出聊天记录(单文件)", callback: event => {
+                            type: "button", text: "导出聊天记录(不带图片)", callback: event => {
                                 this.output_msgs(false);
                             },
                         },
@@ -14341,7 +14341,8 @@
                 let imageCount = 0;
 
                 strings.push(`# ${contact_name} 聊天记录`);
-                strings.push(`\n导出时间: ${new Date().toLocaleString()}\n`);
+                strings.push(`\n> 导出时间: ${new Date().toLocaleString()}\n`);
+                strings.push(`---\n`);
 
                 const getMimeType = (filename) => {
                     const ext = filename.split('.').pop().toLowerCase();
@@ -14367,15 +14368,29 @@
                     return btoa(binary);
                 };
 
+                const isSentByMe = (sender) => {
+                    return logged_user && sender === logged_user.uid;
+                };
+
+                const formatTime = (timestamp) => {
+                    return format_timestamp_utc8(timestamp);
+                };
+
                 this.li.bindmap.msgs.forEach(msgattr => {
                     if (dashboardwrappers.ChatDashboardWrapper.message_type_checker.is_sys(msgattr.type)) {
                         return;
                     }
 
+                    const isMe = isSentByMe(msgattr.sender);
+                    const senderName = isMe ? "**你**" : `**${msgattr.sender}**`;
+                    const timeStr = formatTime(msgattr.sent_time);
+                    const arrow = isMe ? "⬅️" : "➡️";
+
                     let s = `[未知消息类型]`;
 
                     if (dashboardwrappers.ChatDashboardWrapper.message_type_checker.is_text(msgattr.type)) {
-                        s = `[${format_timestamp_utc8(msgattr.sent_time)} ${msgattr.sender}]\n${msgattr.plain_data_text}`;
+                        const content = msgattr.plain_data_text.replace(/\n/g, '\n> ');
+                        s = `> ${senderName} ${arrow} ${timeStr}\n>\n> ${content}`;
                     } else if (dashboardwrappers.ChatDashboardWrapper.message_type_checker.is_drive_item(msgattr.type)) {
                         if (dashboardwrappers.ChatDashboardWrapper.message_type_checker.is_image(msgattr.type)) {
                             const filename = msgattr.plain_file_name || 'image';
@@ -14395,18 +14410,18 @@
                                             data: msgattr.plain_file_data,
                                             mime: mimeType
                                         };
-                                        s = `[${format_timestamp_utc8(msgattr.sent_time)} ${msgattr.sender}]\n![${uniqueFilename}](images/${uniqueFilename})`;
+                                        s = `> ${senderName} ${arrow} ${timeStr}\n>\n> 🖼️ [${uniqueFilename}](images/${uniqueFilename})`;
                                     } catch (e) {
-                                        s = `[${format_timestamp_utc8(msgattr.sent_time)} ${msgattr.sender}] [🖼️图片] ${filename} (导出失败: ${e.message})`;
+                                        s = `> ${senderName} ${arrow} ${timeStr}\n>\n> 🖼️ [${filename}] (导出失败: ${e.message})`;
                                     }
                                 } else {
-                                    s = `[${format_timestamp_utc8(msgattr.sent_time)} ${msgattr.sender}] [🖼️图片] ${filename}`;
+                                    s = `> ${senderName} ${arrow} ${timeStr}\n>\n> 🖼️ [${filename}]`;
                                 }
                             } else {
-                                s = `[${format_timestamp_utc8(msgattr.sent_time)} ${msgattr.sender}] [🖼️图片] ${filename}`;
+                                s = `> ${senderName} ${arrow} ${timeStr}\n>\n> 🖼️ [${filename}] (请先下载图片)`;
                             }
                         } else if (dashboardwrappers.ChatDashboardWrapper.message_type_checker.is_file(msgattr.type)) {
-                            s = `[${format_timestamp_utc8(msgattr.sent_time)} ${msgattr.sender}] [文件] ${msgattr.plain_file_name}`;
+                            s = `> ${senderName} ${arrow} ${timeStr}\n>\n> 📎 [${msgattr.plain_file_name}]`;
                         }
                     }
 
