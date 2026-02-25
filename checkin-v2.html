@@ -3812,6 +3812,143 @@
             bottom: -60px;
         }
 
+        .chat-batch-action-bar {
+            display: none;
+            align-items: center;
+            justify-content: space-between;
+            padding: 8px 12px;
+            background: linear-gradient(135deg, #e6f0ff, #f0f6ff);
+            border-bottom: 1px solid rgba(0, 123, 255, 0.2);
+        }
+
+        .chat-batch-action-bar.show {
+            display: flex;
+        }
+
+        .chat-batch-action-bar-left {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .chat-batch-action-bar-right {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .chat-batch-action-bar label {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            color: #1e3557;
+        }
+
+        .chat-batch-action-bar input[type="checkbox"] {
+            width: 16px;
+            height: 16px;
+            cursor: pointer;
+        }
+
+        .chat-batch-action-bar button {
+            padding: 6px 12px;
+            font-size: 13px;
+            border-radius: 6px;
+            border: none;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .chat-batch-action-bar .btn-select-all {
+            background-color: #e6f0ff;
+            color: #1e3557;
+            border: 1px solid #93c5fd;
+        }
+
+        .chat-batch-action-bar .btn-select-all:hover {
+            background-color: #d6e8ff;
+        }
+
+        .chat-batch-action-bar .btn-select-inverse {
+            background-color: #f0f6ff;
+            color: #1e3557;
+            border: 1px solid #93c5fd;
+        }
+
+        .chat-batch-action-bar .btn-select-inverse:hover {
+            background-color: #e6f0ff;
+        }
+
+        .chat-batch-action-bar .btn-delete-selected {
+            background-color: #ff4d4f;
+            color: white;
+        }
+
+        .chat-batch-action-bar .btn-delete-selected:hover {
+            background-color: #ff7875;
+        }
+
+        .chat-batch-action-bar .btn-cancel-select {
+            background-color: #f0f0f0;
+            color: #333;
+        }
+
+        .chat-batch-action-bar .btn-cancel-select:hover {
+            background-color: #e0e0e0;
+        }
+
+        .theme-dark .chat-batch-action-bar {
+            background: linear-gradient(135deg, #1a3a5c, #2a4a6c);
+            border-bottom-color: rgba(86, 172, 255, 0.3);
+        }
+
+        .theme-dark .chat-batch-action-bar label {
+            color: #e0e0e0;
+        }
+
+        .theme-dark .chat-batch-action-bar .btn-select-all,
+        .theme-dark .chat-batch-action-bar .btn-select-inverse {
+            background-color: rgba(86, 172, 255, 0.2);
+            border-color: rgba(86, 172, 255, 0.4);
+            color: #e0e0e0;
+        }
+
+        .theme-dark .chat-batch-action-bar .btn-select-all:hover,
+        .theme-dark .chat-batch-action-bar .btn-select-inverse:hover {
+            background-color: rgba(86, 172, 255, 0.3);
+        }
+
+        .theme-dark .chat-batch-action-bar .btn-cancel-select {
+            background-color: rgba(255, 255, 255, 0.1);
+            color: #e0e0e0;
+        }
+
+        .chat-message-checkbox {
+            display: none;
+            align-items: center;
+            justify-content: center;
+            width: 24px;
+            height: 24px;
+            margin-right: 8px;
+            flex-shrink: 0;
+        }
+
+        .chat-message-checkbox input {
+            width: 18px;
+            height: 18px;
+            cursor: pointer;
+        }
+
+        .chat-batch-mode .chat-message-checkbox {
+            display: flex;
+        }
+
+        .chat-message-checkbox-disabled {
+            display: none !important;
+        }
+
     </style>
 
     <!--聊天页面 消息-->
@@ -8206,6 +8343,32 @@
                 throw new Error(await format_error_response(r));
             }
 
+            async batch_revoke(ws_send, contact_type, xxid, ceid, message_ids,) {
+                let url = join_path(this.api_url(), "batch_revoke");
+                let body = {
+                    contact_type, ceid,
+
+                    message_ids,
+                };
+                if (contact_type === subviews.Chat.receiver_type.group) {
+                    body.gid = xxid;
+                } else if (contact_type === subviews.Chat.receiver_type.user) {
+                    body.uid = xxid;
+                }
+
+                if (ws_send) {
+                    body.action = dashboardwrappers.ChatDashboardWrapper.ws_action_type.batch_revoke;
+                    return ws_send({url, body});
+                }
+
+                let r = await net_fetcher.nf_post_json(url, body,);
+                if (r.status === 200) {
+                    let d = await r.json();
+                    return d;
+                }
+                throw new Error(await format_error_response(r));
+            }
+
             async mark_read(ws_send, contact_type, xxid, ceid, message_ids,) {
                 let url = join_path(this.api_url(), "mark_read");
                 let body = {
@@ -9961,6 +10124,21 @@
     </div>
 </div>
 
+<div class="chat-batch-action-bar">
+    <div class="chat-batch-action-bar-left">
+        <label>
+            <input type="checkbox" class="chat-batch-select-all">
+            全选
+        </label>
+        <button class="btn-select-inverse">反选</button>
+    </div>
+    <div class="chat-batch-action-bar-right">
+        <span class="chat-batch-count">已选0条</span>
+        <button class="btn-delete-selected">删除选中</button>
+        <button class="btn-cancel-select">取消</button>
+    </div>
+</div>
+
 <div class="chat-session-msgflow-wrap">
     <div class="chat-session-msgflow"></div>
     <div class="chat-session-msgflow-mark-currentday"><div class="chat-session-msgflow-mark-currentday-layout"><p></p></div></div>
@@ -10071,6 +10249,15 @@
 
                 this.e_header_actions = this.container.querySelector(":scope div.chat-session-header-actions");
 
+                this.e_batch_action_bar = this.container.querySelector(":scope div.chat-batch-action-bar");
+                this.e_batch_select_all = this.container.querySelector(":scope input.chat-batch-select-all");
+                this.e_batch_count = this.container.querySelector(":scope span.chat-batch-count");
+                this.e_batch_btn_select_inverse = this.container.querySelector(":scope button.btn-select-inverse");
+                this.e_batch_btn_delete = this.container.querySelector(":scope button.btn-delete-selected");
+                this.e_batch_btn_cancel = this.container.querySelector(":scope button.btn-cancel-select");
+
+                this.init_batch_action_bar();
+
                 this.e_msgflow = this.container.querySelector(":scope div.chat-session-msgflow");
                 this.e_msgflow_wrap = this.container.querySelector(":scope div.chat-session-msgflow-wrap");
 
@@ -10107,6 +10294,11 @@
                             },
                         },
                         {type: "section", text: "",},
+                        {
+                            type: "button", text: "多选", callback: event => {
+                                this.enter_batch_mode();
+                            },
+                        },
                         {
                             type: "button", text: "清理消息", callback: event => {
                                 this.clear_msgs();
@@ -11602,6 +11794,135 @@
                 });
             }
 
+            init_batch_action_bar() {
+                this.e_batch_select_all.addEventListener("change", (event) => {
+                    this.batch_select_all(event.target.checked);
+                });
+
+                this.e_batch_btn_select_inverse.addEventListener("click", (event) => {
+                    this.batch_select_inverse();
+                });
+
+                this.e_batch_btn_delete.addEventListener("click", (event) => {
+                    this.batch_delete_selected();
+                });
+
+                this.e_batch_btn_cancel.addEventListener("click", (event) => {
+                    this.exit_batch_mode();
+                });
+            }
+
+            enter_batch_mode() {
+                this.e_batch_action_bar.classList.add("show");
+                this.chat_rect.classList.add("chat-batch-mode");
+                this.e_header_actions.classList.add("hidden");
+            }
+
+            exit_batch_mode() {
+                this.e_batch_action_bar.classList.remove("show");
+                this.chat_rect.classList.remove("chat-batch-mode");
+                this.e_header_actions.classList.remove("hidden");
+                this.e_batch_select_all.checked = false;
+                this.e_batch_count.textContent = "已选0条";
+                const checkboxes = this.e_msgflow.querySelectorAll(".chat-message-checkbox input");
+                checkboxes.forEach(cb => {
+                    cb.checked = false;
+                });
+            }
+
+            batch_select_all(select) {
+                const checkboxes = this.e_msgflow.querySelectorAll(".chat-message-checkbox input:not(:disabled)");
+                checkboxes.forEach(cb => {
+                    cb.checked = select;
+                });
+                this.update_batch_count();
+            }
+
+            batch_select_inverse() {
+                const checkboxes = this.e_msgflow.querySelectorAll(".chat-message-checkbox input:not(:disabled)");
+                checkboxes.forEach(cb => {
+                    cb.checked = !cb.checked;
+                });
+                this.update_batch_count();
+            }
+
+            update_batch_count() {
+                const checkboxes = this.e_msgflow.querySelectorAll(".chat-message-checkbox input:checked");
+                this.e_batch_count.textContent = `已选${checkboxes.length}条`;
+                this.e_batch_select_all.checked = checkboxes.length > 0 && this.e_msgflow.querySelectorAll(".chat-message-checkbox input:not(:disabled)").length === checkboxes.length;
+            }
+
+            batch_delete_selected() {
+                const checkboxes = this.e_msgflow.querySelectorAll(".chat-message-checkbox input:checked");
+                const message_ids = [];
+                checkboxes.forEach(cb => {
+                    const msgattr = cb.closest(".chat-message-content-container")?.bindmap;
+                    if (msgattr && msgattr.id) {
+                        message_ids.push(msgattr.id);
+                    }
+                });
+
+                if (message_ids.length === 0) {
+                    MessageMark.report(new Error("请先选择要删除的消息"));
+                    return;
+                }
+
+                const is_admin = logged_user && logged_user.contact_any;
+                const tip = is_admin 
+                    ? `确定删除选中的${message_ids.length}条消息吗？`
+                    : `确定删除选中的${message_ids.length}条消息吗？（非管理员只能删除自己的消息）`;
+
+                MessageMark.confirm(tip, null, null, () => {
+                    this.do_batch_delete(message_ids);
+                });
+            }
+
+            do_batch_delete(message_ids) {
+                const {xxid, contact_type, ceid} = this.current_contact_xxid();
+
+                const onfetchload = (result) => {
+                    this.exit_batch_mode();
+                    this.client.dashboard_chat.wrapper.update_contact_item_status(result.sync);
+                    for (const msgid of message_ids) {
+                        const msgattr = this.li.bindmap.msgs.find(m => m.id === msgid);
+                        if (msgattr) {
+                            const new_message_attr = {...msgattr};
+                            new_message_attr.type = dashboardwrappers.ChatDashboardWrapper.message_type.sys;
+                            new_message_attr.status = msgattr.status | dashboardwrappers.ChatDashboardWrapper.message_status.revoked;
+                            this.msgflow_manage.update_msg(msgattr, new_message_attr);
+                        }
+                    }
+                };
+                const onfetcherror = (error) => {
+                    MessageMark.report(error);
+                };
+
+                const ws_isopen = false;
+                checkin.subviews.chat.batch_revoke(ws_isopen ? (args) => {
+                    this.panel.wrapper.ws_send(args.body, {onfetchload, onfetcherror});
+                } : null, contact_type, xxid, ceid, message_ids)
+                    .then(result => {
+                        if (ws_isopen) return;
+                        onfetchload(result);
+                    }).catch(error => {
+                    onfetcherror(error);
+                });
+            }
+
+            get_selectable_messages() {
+                const is_admin = logged_user && logged_user.contact_any;
+                const selectable = [];
+                for (const msgattr of this.li.bindmap.msgs) {
+                    if (dashboardwrappers.ChatDashboardWrapper.message_type_checker.is_sys(msgattr.type)) {
+                        continue;
+                    }
+                    if (is_admin || msgattr.sender === logged_user.uid) {
+                        selectable.push(msgattr);
+                    }
+                }
+                return selectable;
+            }
+
             /*
             * 标记已读
             * */
@@ -12203,12 +12524,30 @@
                             const temp_parent_element = document.createElement('template');
                             let html = `
 <div class="chat-message-content-container">
+    <div class="chat-message-checkbox">
+        <input type="checkbox">
+    </div>
 </div>
 `;
                             temp_parent_element.insertAdjacentHTML("beforeend", html);
                             this.e_container = temp_parent_element.querySelector(":scope .chat-message-content-container");
+                            this.e_msg_checkbox = this.e_container.querySelector(":scope .chat-message-checkbox input");
                             temp_parent_element.remove();
                             this.e_container.msgobj = this;
+
+                            // 复选框事件
+                            this.e_msg_checkbox.addEventListener("click", (e) => {
+                                e.stopPropagation();
+                                if (this.contentpage && typeof this.contentpage.update_batch_count === "function") {
+                                    this.contentpage.update_batch_count();
+                                }
+                            });
+
+                            // 判断是否可选中（系统消息和没有权限的消息禁用）
+                            this.update_checkbox_state();
+
+                            // 绑定msgattr到元素上，方便批量操作时获取消息ID
+                            this.e_container.bindmap = this.msgattr;
 
                             // =========================
                             // 点击消息 → 选中
@@ -12879,6 +13218,24 @@
 
                     is_sys_msg() {
                         return dashboardwrappers.ChatDashboardWrapper.message_type_checker.is_sys(this.msgattr.type);
+                    }
+
+                    update_checkbox_state() {
+                        if (!this.e_msg_checkbox) return;
+                        
+                        const is_sys = this.is_sys_msg();
+                        const is_admin = logged_user && logged_user.contact_any;
+                        const is_own_message = this.msgattr.sender === logged_user.uid;
+
+                        if (is_sys) {
+                            this.e_msg_checkbox.disabled = true;
+                            this.e_msg_checkbox.closest(".chat-message-checkbox").classList.add("chat-message-checkbox-disabled");
+                        } else if (!is_admin && !is_own_message) {
+                            this.e_msg_checkbox.disabled = true;
+                        } else {
+                            this.e_msg_checkbox.disabled = false;
+                            this.e_msg_checkbox.closest(".chat-message-checkbox").classList.remove("chat-message-checkbox-disabled");
+                        }
                     }
 
                     is_header() {
