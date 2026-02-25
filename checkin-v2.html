@@ -11893,6 +11893,12 @@
                             const new_message_attr = {...msgattr};
                             new_message_attr.type = dashboardwrappers.ChatDashboardWrapper.message_type.sys;
                             new_message_attr.status = msgattr.status | dashboardwrappers.ChatDashboardWrapper.message_status.revoked;
+                            new_message_attr.sys_attr = {
+                                type: dashboardwrappers.ChatDashboardWrapper.data_spec_action_type.revoke_message,
+                                a1_uid: logged_user.uid,
+                                a3_number: 0,
+                                a4_number: 0,
+                            };
                             this.msgflow_manage.update_msg(msgattr, new_message_attr);
                         }
                     }
