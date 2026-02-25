@@ -3890,19 +3890,6 @@
             justify-content: center;
         }
 
-        .chat-msg-checkbox {
-            width: 18px;
-            height: 18px;
-            margin: auto 8px auto 0;
-            cursor: pointer;
-            flex-shrink: 0;
-        }
-
-        .sent-by-me .chat-msg-checkbox {
-            order: 1;
-            margin: auto 0 auto 8px;
-        }
-
         .chat-message-group-header {
             flex-grow: 1;
             display: flex;
@@ -8219,32 +8206,6 @@
                 throw new Error(await format_error_response(r));
             }
 
-            async batch_delete(ws_send, contact_type, xxid, ceid, message_ids,) {
-                let url = join_path(this.api_url(), "batch_delete");
-                let body = {
-                    contact_type, ceid,
-
-                    message_ids,
-                };
-                if (contact_type === subviews.Chat.receiver_type.group) {
-                    body.gid = xxid;
-                } else if (contact_type === subviews.Chat.receiver_type.user) {
-                    body.uid = xxid;
-                }
-
-                if (ws_send) {
-                    body.action = dashboardwrappers.ChatDashboardWrapper.ws_action_type.batch_delete;
-                    return ws_send({url, body});
-                }
-
-                let r = await net_fetcher.nf_post_json(url, body,);
-                if (r.status === 200) {
-                    let d = await r.json();
-                    return d;
-                }
-                throw new Error(await format_error_response(r));
-            }
-
             async mark_read(ws_send, contact_type, xxid, ceid, message_ids,) {
                 let url = join_path(this.api_url(), "mark_read");
                 let body = {
@@ -9996,8 +9957,6 @@
         <div class="chat-session-header-info-clickmark"></div>
     </div>
     <div class="chat-session-header-actions">
-        <button class="chat-session-header-action-batch-delete hidden" title="批量删除">🗑️</button>
-        <button class="chat-session-header-action-select-all" title="全选">☑️</button>
         <button class="chat-session-header-action-more">⋯</button>
     </div>
 </div>
@@ -10157,29 +10116,6 @@
 
                     MenuMark.exec({x: rect.left, y: rect.top + rect.height,}, items, () => {
                     });
-                });
-
-                // 批量删除按钮
-                this.e_header_action_batch_delete = this.e_header_actions.querySelector(":scope button.chat-session-header-action-batch-delete");
-                this.e_header_action_batch_delete.addEventListener("click", (event) => {
-                    this.batch_delete_selected_msgs();
-                });
-
-                // 全选按钮
-                this.e_header_action_select_all = this.e_header_actions.querySelector(":scope button.chat-session-header-action-select-all");
-                this.is_select_mode = false;
-                this.is_all_selected = false;
-                this.selected_msg_ids = new Set();
-                this.e_header_action_select_all.addEventListener("click", (event) => {
-                    if (!this.is_select_mode) {
-                        this.enter_select_mode();
-                    } else {
-                        if (this.is_all_selected) {
-                            this.deselect_all_msgs();
-                        } else {
-                            this.select_all_msgs();
-                        }
-                    }
                 });
 
                 // 视口首条消息日期
@@ -12274,33 +12210,6 @@
                             temp_parent_element.remove();
                             this.e_container.msgobj = this;
 
-                            // 消息复选框 - 系统消息不显示
-                            if (!this.is_sys_msg()) {
-                                const temp_parent_element2 = document.createElement('template');
-                                let html2 = `
-<input type="checkbox" class="chat-msg-checkbox hidden" data-msg-id="${this.msgattr.id}">
-`;
-                                temp_parent_element2.insertAdjacentHTML("beforeend", html2);
-                                this.e_checkbox = temp_parent_element2.querySelector(":scope .chat-msg-checkbox");
-                                temp_parent_element2.remove();
-                                this.e_checkbox.msgobj = this;
-
-                                this.e_checkbox.addEventListener("click", (e) => {
-                                    e.stopPropagation();
-                                    if (this.contentpage && typeof this.contentpage.toggle_msg_select === "function") {
-                                        this.contentpage.toggle_msg_select(this.msgattr.id, this.e_checkbox);
-                                    }
-                                });
-
-                                this.e_container.appendChild(this.e_checkbox);
-                            } else {
-                                this.e_checkbox = null;
-                            }
-                                });
-
-                                this.e_container.appendChild(this.e_checkbox);
-                            }
-
                             // =========================
                             // 点击消息 → 选中
                             // =========================
@@ -12384,11 +12293,6 @@
                     // =========================
                     build_context_menu_items() {
                         const items = [];
-
-                        // 系统消息不显示右键菜单
-                        if (this.is_sys_msg()) {
-                            return items;
-                        }
 
                         if (this.msgattr.is_sent && (!this.blur_mark || !this.blur_mark.is_visible())) {
                                     if (dashboardwrappers.ChatDashboardWrapper.message_type_checker.is_text(this.msgattr.type) ||
@@ -12772,8 +12676,9 @@
                             }
                         });
 
-                        // 自己的消息才可编辑/撤回/删除
-                        if (this.sent_by_me) {
+                        // 自己的消息才可编辑/撤回/删除，管理员可删除任何消息
+                        const is_admin = logged_user && logged_user.contact_any;
+                        if (this.sent_by_me || is_admin) {
                             const delText = Date.now() / 1000 - this.msgattr.sent_time > seconds_of_minutes(10) ? "删除" : "撤回";
                             items.push({
                                 text: delText,
@@ -12786,14 +12691,16 @@
                                 }
                             });
 
-                            items.push({
-                                text: "编辑",
-                                callback: () => {
-                                    if (this.contentpage && typeof this.contentpage.edit_msg === "function") {
-                                        this.contentpage.edit_msg(this.msgattr);
+                            if (this.sent_by_me) {
+                                items.push({
+                                    text: "编辑",
+                                    callback: () => {
+                                        if (this.contentpage && typeof this.contentpage.edit_msg === "function") {
+                                            this.contentpage.edit_msg(this.msgattr);
+                                        }
                                     }
-                                }
-                            });
+                                });
+                            }
                         }
 
                         // 更多菜单
@@ -12889,10 +12796,13 @@
 
                             case "delete":
                                 // 删除逻辑
-                                if (this.sent_by_me) {
-                                    this.contentpage.delete_msg(this.msgattr);
+                                const can_delete = this.sent_by_me || (logged_user && logged_user.contact_any);
+                                if (can_delete) {
+                                    if (this.contentpage && typeof this.contentpage.revoke_msg === "function") {
+                                        this.contentpage.revoke_msg(this.msgattr);
+                                    }
                                 } else {
-                                    alert("只能删除自己的消息");
+                                    alert("权限不足，只能删除自己的消息或管理员删除");
                                 }
                                 break;
 
@@ -14129,152 +14039,6 @@
                     }).catch(error => {
                     onfetcherror(error);
                 });
-            }
-
-
-            /*
-            * 进入选择模式
-            * */
-            enter_select_mode() {
-                this.is_select_mode = true;
-                this.selected_msg_ids.clear();
-                this.e_header_action_batch_delete.classList.remove("hidden");
-                this.e_header_action_batch_delete.textContent = "🗑️";
-                this.e_header_action_select_all.textContent = "☐";
-                this.show_msg_checkboxes(true);
-            }
-
-            /*
-            * 退出选择模式
-            * */
-            exit_select_mode() {
-                this.is_select_mode = false;
-                this.selected_msg_ids.clear();
-                this.e_header_action_batch_delete.classList.add("hidden");
-                this.e_header_action_select_all.textContent = "☑️";
-                this.show_msg_checkboxes(false);
-            }
-
-            /*
-            * 显示/隐藏消息复选框
-            * */
-            show_msg_checkboxes(show) {
-                const checkboxes = this.e_msgflow.querySelectorAll(".chat-msg-checkbox");
-                checkboxes.forEach(cb => {
-                    if (show) {
-                        cb.classList.remove("hidden");
-                    } else {
-                        cb.classList.add("hidden");
-                    }
-                });
-            }
-
-            /*
-            * 批量删除选中的消息
-            * */
-            batch_delete_selected_msgs() {
-                if (this.selected_msg_ids.size === 0) {
-                    alert("请先选择要删除的消息");
-                    return;
-                }
-
-                const count = this.selected_msg_ids.size;
-                if (!confirm(`确定要删除选中的 ${count} 条消息吗？`)) return;
-
-                const {xxid, contact_type, ceid} = this.current_contact_xxid();
-
-                const message_ids = Array.from(this.selected_msg_ids);
-
-                const onfetchload = (result) => {
-                    this.exit_select_mode();
-                    this.load_contact_chat();
-                };
-                const onfetcherror = (error) => {
-                    MessageMark.report(error);
-                };
-
-                checkin.subviews.chat.batch_delete(null, contact_type, xxid, ceid, message_ids)
-                    .then(result => {
-                        onfetchload(result);
-                    }).catch(error => {
-                    onfetcherror(error);
-                });
-            }
-
-            load_contact_chat() {
-                const {xxid, contact_type, ceid} = this.current_contact_xxid();
-                const last_msgattr = this.li.bindmap.msgs.length > 0 ? this.li.bindmap.msgs[0] : null;
-
-                const onfetchload = (result) => {
-                    this.msgflow_manage.clear_msgs();
-                    const new_msgattrs = this.msgflow_manage.store_msgs(null, result.messages);
-                    if (new_msgattrs.length > 0) {
-                        const msg = new_msgattrs.find(i => i.sender !== logged_user.uid);
-                        if (msg) {
-                            msg.msgobj.scroll_to_view(true);
-                        }
-                    }
-                };
-                const onfetcherror = (error) => {
-                    MessageMark.report(error);
-                };
-
-                checkin.subviews.chat.load(null, contact_type, xxid, ceid, last_msgattr)
-                    .then(result => {
-                        onfetchload(result);
-                    }).catch(error => {
-                    onfetcherror(error);
-                });
-            }
-
-            /*
-            * 切换消息选中状态
-            * */
-            toggle_msg_select(msg_id, checkbox) {
-                if (this.selected_msg_ids.has(msg_id)) {
-                    this.selected_msg_ids.delete(msg_id);
-                    checkbox.checked = false;
-                } else {
-                    this.selected_msg_ids.add(msg_id);
-                    checkbox.checked = true;
-                }
-
-                if (this.selected_msg_ids.size > 0) {
-                    this.e_header_action_batch_delete.textContent = `🗑️ (${this.selected_msg_ids.size})`;
-                } else {
-                    this.e_header_action_batch_delete.textContent = "🗑️";
-                }
-            }
-
-            /*
-            * 全选当前可见消息
-            * */
-            select_all_msgs() {
-                const checkboxes = this.e_msgflow.querySelectorAll(".chat-msg-checkbox:not(.hidden)");
-                checkboxes.forEach(cb => {
-                    const msg_id = parseInt(cb.dataset.msgId);
-                    this.selected_msg_ids.add(msg_id);
-                    cb.checked = true;
-                });
-                this.is_all_selected = true;
-                this.e_header_action_select_all.textContent = "☑️";
-                if (this.selected_msg_ids.size > 0) {
-                    this.e_header_action_batch_delete.textContent = `🗑️ (${this.selected_msg_ids.size})`;
-                }
-            }
-
-            /*
-            * 取消全选当前可见消息
-            * */
-            deselect_all_msgs() {
-                const checkboxes = this.e_msgflow.querySelectorAll(".chat-msg-checkbox:not(.hidden)");
-                checkboxes.forEach(cb => {
-                    cb.checked = false;
-                });
-                this.selected_msg_ids.clear();
-                this.is_all_selected = false;
-                this.e_header_action_select_all.textContent = "☐";
-                this.e_header_action_batch_delete.textContent = "🗑️";
             }
 
         }
