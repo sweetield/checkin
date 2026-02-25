@@ -10316,6 +10316,13 @@
 				// 🔹 滚动事件
 				this.e_candidate_panel_body.addEventListener("scroll", updateCandidateButtons);
 
+				// 🔹 滚轮翻页
+				this.e_candidate_panel_body.addEventListener("wheel", (e) => {
+					e.preventDefault();
+					const delta = e.deltaY > 0 ? scrollStep : -scrollStep;
+					this.e_candidate_panel_body.scrollBy({ top: delta, behavior: 'smooth' });
+				});
+
 				// 🔹 打开面板按钮
 				this.e_candidate_btn.addEventListener("click", () => {
 					this.render_candidate_panel(this.commonPhrases);
