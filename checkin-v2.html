@@ -11871,7 +11871,7 @@
                     return;
                 }
 
-                const is_admin = logged_user && logged_user.contact_any;
+                const is_admin = logged_user && (logged_user.contact_any === 1 || logged_user.contact_any === true);
                 const tip = is_admin 
                     ? `确定删除选中的${message_ids.length}条消息吗？`
                     : `确定删除选中的${message_ids.length}条消息吗？（非管理员只能删除自己的消息）`;
@@ -11920,7 +11920,7 @@
             }
 
             get_selectable_messages() {
-                const is_admin = logged_user && logged_user.contact_any;
+                const is_admin = logged_user && (logged_user.contact_any === 1 || logged_user.contact_any === true);
                 const selectable = [];
                 for (const msgattr of this.li.bindmap.msgs) {
                     if (dashboardwrappers.ChatDashboardWrapper.message_type_checker.is_sys(msgattr.type)) {
@@ -13235,8 +13235,8 @@
                         if (!this.e_msg_checkbox) return;
                         
                         const is_sys = this.is_sys_msg();
-                        const is_admin = logged_user && logged_user.contact_any;
-                        const is_own_message = this.msgattr.sender === logged_user.uid;
+                        const is_admin = logged_user && (logged_user.contact_any === 1 || logged_user.contact_any === true);
+                        const is_own_message = logged_user && this.msgattr.sender === logged_user.uid;
 
                         if (is_sys) {
                             this.e_msg_checkbox.disabled = true;
