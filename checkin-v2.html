@@ -765,7 +765,8 @@
             
             padding: 10px;          /* 内边距增加，滚动条不遮挡 */
             max-height: 120px;      /* 增高一些，更舒服 */
-            overflow-y: auto;
+            overflow-x: auto;
+            overflow-y: hidden;
             scroll-behavior: smooth;
 
             z-index: 9999;
@@ -10550,12 +10551,12 @@
                     this.e_inputarea_candidates.scrollBy({ left: 100, behavior: "smooth" });
                 });
 
-                // 🔹 滚轮翻页
+                // 🔹 滚轮翻页（水平滚动）
                 const scrollStep = 100;
                 this.e_inputarea_candidates.addEventListener("wheel", (e) => {
                     e.preventDefault();
                     const delta = e.deltaY > 0 ? scrollStep : -scrollStep;
-                    this.e_inputarea_candidates.scrollBy({ top: delta, behavior: 'smooth' });
+                    this.e_inputarea_candidates.scrollBy({ left: delta, behavior: 'smooth' });
                 });
 
 
