@@ -10550,6 +10550,14 @@
                     this.e_inputarea_candidates.scrollBy({ left: 100, behavior: "smooth" });
                 });
 
+                // 🔹 滚轮翻页
+                const scrollStep = 100;
+                this.e_inputarea_candidates.addEventListener("wheel", (e) => {
+                    e.preventDefault();
+                    const delta = e.deltaY > 0 ? scrollStep : -scrollStep;
+                    this.e_inputarea_candidates.scrollBy({ top: delta, behavior: 'smooth' });
+                });
+
 
 
                 // 🔥 回车发送（原逻辑，保留）
