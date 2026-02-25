@@ -10358,7 +10358,7 @@
                     this.e_inputarea_candidates.addEventListener('wheel', (event) => {
                         if (this.e_inputarea_candidates.scrollWidth > this.e_inputarea_candidates.clientWidth) {
                             event.preventDefault();
-                            this.e_inputarea_candidates.scrollLeft += event.deltaY;
+                            this.e_inputarea_candidates.scrollLeft += event.deltaY * 2;
                         }
                     }, { passive: false });
                 }
