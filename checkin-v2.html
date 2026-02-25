@@ -14393,7 +14393,10 @@
                         s = `> ${senderName} ${arrow} ${timeStr}\n>\n> ${content}`;
                     } else if (dashboardwrappers.ChatDashboardWrapper.message_type_checker.is_drive_item(msgattr.type)) {
                         if (dashboardwrappers.ChatDashboardWrapper.message_type_checker.is_image(msgattr.type)) {
-                            const filename = msgattr.plain_file_name || 'image';
+                            let filename = msgattr.plain_file_name || 'image';
+                            if (!filename.includes('.')) {
+                                filename = filename + '.jpg';
+                            }
                             if (msgattr.plain_file_data && msgattr.plain_file_data instanceof Uint8Array) {
                                 if (exportZip) {
                                     try {
@@ -14410,7 +14413,22 @@
                                             data: msgattr.plain_file_data,
                                             mime: mimeType
                                         };
-                                        s = `> ${senderName} ${arrow} ${timeStr}\n>\n> 🖼️ [${uniqueFilename}](images/${uniqueFilename})`;
+                                        s = `> ${senderName} ${arrow} ${timeStr}\n>\n> ![${uniqueFilename}](images/${uniqueFilename})`;
+                                    } catch (e) {
+                                        s = `> ${senderName} ${arrow} ${timeStr}\n>\n> 🖼️ [${filename}] (导出失败: ${e.message})`;
+                                    }
+                                } else {
+                                    s = `> ${senderName} ${arrow} ${timeStr}\n>\n> 🖼️ [${filename}]`;
+                                }
+                            } else {
+                                s = `> ${senderName} ${arrow} ${timeStr}\n>\n> 🖼️ [${filename}] (请先下载图片)`;
+                            }
+                        }
+                                        imageFiles[uniqueFilename] = {
+                                            data: msgattr.plain_file_data,
+                                            mime: mimeType
+                                        };
+                                        s = `> ${senderName} ${arrow} ${timeStr}\n>\n> ![${uniqueFilename}](images/${uniqueFilename})`;
                                     } catch (e) {
                                         s = `> ${senderName} ${arrow} ${timeStr}\n>\n> 🖼️ [${filename}] (导出失败: ${e.message})`;
                                     }
