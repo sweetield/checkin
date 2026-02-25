@@ -11902,6 +11902,7 @@
                             this.msgflow_manage.update_msg(msgattr, new_message_attr);
                         }
                     }
+                    this.client.dashboard_chat.wrapper.sync();
                 };
                 const onfetcherror = (error) => {
                     MessageMark.report(error);
