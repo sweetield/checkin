@@ -3942,10 +3942,14 @@
         }
 
         .chat-batch-mode .chat-message-checkbox {
-            display: flex;
+            display: flex !important;
         }
 
         .chat-message-checkbox-disabled {
+            display: none !important;
+        }
+
+        .chat-batch-mode .chat-message-checkbox.chat-message-checkbox-disabled {
             display: none !important;
         }
 
@@ -10241,7 +10245,7 @@
 `;
 
                 this.container.insertAdjacentHTML("beforeend", html);
-                this.chat_rect = this.container.querySelector(":scope div.chat-rect");
+                this.chat_rect = this.container.querySelector(":scope div.chat-session-rect");
                 this.e_header_info = this.container.querySelector(":scope div.chat-session-header-info");
                 this.e_header_info_clickmark = this.container.querySelector(":scope div.chat-session-header-info-clickmark");
                 this.e_header_info_name = this.container.querySelector(":scope span.chat-session-header-info-name");
@@ -12538,8 +12542,9 @@
                             // 复选框事件
                             this.e_msg_checkbox.addEventListener("click", (e) => {
                                 e.stopPropagation();
-                                if (this.contentpage && typeof this.contentpage.update_batch_count === "function") {
-                                    this.contentpage.update_batch_count();
+                                const contentpage = this.contentpage || checkin.current_content_page;
+                                if (contentpage && typeof contentpage.update_batch_count === "function") {
+                                    contentpage.update_batch_count();
                                 }
                             });
 
