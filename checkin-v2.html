@@ -10853,12 +10853,18 @@
                     if (newTopic && !this.current_topics.includes(newTopic)) {
                         this.current_topics.push(newTopic);
                         this.refresh_topic_list();
-                        this.e_topic_select.value = newTopic;
+                        this.e_topic_filter_select.value = newTopic;
                     }
                     this.e_topic_new_input.value = '';
                     this.e_topic_new_input.classList.add("hidden");
                     this.e_topic_new_btn.classList.remove("hidden");
                     this.e_topic_select.classList.remove("hidden");
+                    
+                    // 恢复 "+ 新话题" 按钮
+                    const addTopicBtn = this.container.querySelector(".chat-topic-add-btn");
+                    if (addTopicBtn) {
+                        addTopicBtn.classList.remove("hidden");
+                    }
                 };
                 
                 // 点击"新话题"按钮
@@ -12190,7 +12196,7 @@
 
             // 🔥 话题筛选功能
             update_topic_filter_visibility() {
-                if (this.is_group() && this.current_topics.length > 1) {
+                if (this.is_group()) {
                     this.e_topic_filter_bar.classList.remove("hidden");
                 } else {
                     this.e_topic_filter_bar.classList.add("hidden");
@@ -13036,6 +13042,7 @@
                             this.e_tree_item = new TreeWidget(this.e_group, tree_headers, null, 0, false, false, this.sent_by_me, 6)
                             // 🔥 添加话题标签
                             const topic = this.msgattr.topic || '';
+                            console.log("渲染消息 - is_header:", this.is_header(), "topic:", topic);
                             const topicHtml = topic ? `<span class="chat-message-topic" title="点击筛选此话题"># ${topic}</span>` : '';
                             const html2 = `
 <div class="chat-message-group-header">
