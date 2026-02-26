@@ -10796,11 +10796,16 @@
                 
                 // 显示话题选择器（仅群聊时显示）
                 this.update_topic_selector_visibility = () => {
-                    const {contact_type} = this.current_contact_xxid();
-                    if (contact_type === subviews.Chat.receiver_type.group) {
-                        this.e_topic_selector.classList.remove("hidden");
-                    } else {
-                        this.e_topic_selector.classList.add("hidden");
+                    if (!this.e_topic_selector) return;
+                    try {
+                        const {contact_type} = this.current_contact_xxid();
+                        if (contact_type === subviews.Chat.receiver_type.group) {
+                            this.e_topic_selector.classList.remove("hidden");
+                        } else {
+                            this.e_topic_selector.classList.add("hidden");
+                        }
+                    } catch (e) {
+                        console.error("话题选择器初始化错误:", e);
                     }
                 };
                 
@@ -11300,6 +11305,24 @@
                 this.refresh();
                 this.start_timer__fetch_unread_msgs(false);
                 this.start_timer__update_read_progress(false);
+                
+                // 🔥 更新话题选择器显示状态
+                if (this.update_topic_selector_visibility) {
+                    this.update_topic_selector_visibility();
+                }
+                
+                // 🔥 初始化话题下拉列表
+                if (this.refresh_topic_list) {
+                    this.refresh_topic_list();
+                }
+                
+                // 🔥 初始化话题筛选栏
+                if (this.refresh_topic_filter_list) {
+                    this.refresh_topic_filter_list();
+                }
+                if (this.update_topic_filter_visibility) {
+                    this.update_topic_filter_visibility();
+                }
 
                 // ⚡ 新增写字功能 DOM
                 this.e_writeboard = this.container.querySelector(".chat-writeboard");
