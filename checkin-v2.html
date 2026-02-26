@@ -3491,6 +3491,54 @@
             background: rgba(0, 0, 0, 0.24);
         }
 
+        /* 🔥 话题筛选栏 */
+        .chat-topic-filter-bar {
+            display: flex;
+            flex-direction: row;
+            align-items: center;
+            gap: 8px;
+            padding: 6px 12px;
+            background: rgba(0, 123, 255, 0.08);
+            border-bottom: 1px solid rgba(0, 123, 255, 0.15);
+        }
+
+        .chat-topic-filter-label {
+            font-size: 12px;
+            color: #1e90ff;
+            font-weight: 500;
+            white-space: nowrap;
+        }
+
+        .chat-topic-filter-select {
+            flex: 1;
+            padding: 4px 8px;
+            font-size: 12px;
+            border: 1px solid rgba(0, 123, 255, 0.3);
+            border-radius: 4px;
+            background: white;
+            color: #333;
+            cursor: pointer;
+        }
+
+        .chat-topic-filter-select:focus {
+            outline: none;
+            border-color: #1e90ff;
+        }
+
+        .chat-topic-filter-clear {
+            padding: 4px 8px;
+            font-size: 12px;
+            background: #6c757d;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        .chat-topic-filter-clear:hover {
+            background: #5a6268;
+        }
+
         .chat-session-onlineusers-item:first-child {
             margin-top: 6px;
         }
@@ -3567,6 +3615,68 @@
 
         .chat-session-inputarea-othertypes button {
             padding: 6px;
+        }
+
+        /* 🔥 话题选择器样式 */
+        .chat-topic-selector {
+            display: flex;
+            flex-direction: row;
+            align-items: center;
+            gap: 6px;
+            padding: 4px 8px;
+            background: rgba(0, 123, 255, 0.08);
+            border-radius: 6px;
+            margin-bottom: 6px;
+        }
+
+        .chat-topic-selector label {
+            font-size: 13px;
+            color: #1e90ff;
+            font-weight: 500;
+            white-space: nowrap;
+        }
+
+        .chat-topic-selector select {
+            padding: 4px 8px;
+            font-size: 13px;
+            border: 1px solid rgba(0, 123, 255, 0.3);
+            border-radius: 4px;
+            background: white;
+            color: #333;
+            cursor: pointer;
+            min-width: 100px;
+        }
+
+        .chat-topic-selector select:focus {
+            outline: none;
+            border-color: #1e90ff;
+        }
+
+        .chat-topic-selector input {
+            padding: 4px 8px;
+            font-size: 13px;
+            border: 1px solid rgba(0, 123, 255, 0.3);
+            border-radius: 4px;
+            width: 100px;
+        }
+
+        .chat-topic-selector input:focus {
+            outline: none;
+            border-color: #1e90ff;
+        }
+
+        .chat-topic-selector .chat-topic-new-btn {
+            padding: 4px 8px;
+            font-size: 12px;
+            background: #1e90ff;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        .chat-topic-selector .chat-topic-new-btn:hover {
+            background: #0d6efd;
         }
 
         .chat-session-inputarea-textarea-row {
@@ -4073,6 +4183,65 @@
             margin: 8px 0;
             padding: 4px 8px;
             text-align: center;
+        }
+
+        /* 🔥 消息话题标签 */
+        .chat-message-topic {
+            display: inline-block;
+            font-size: 11px;
+            padding: 2px 8px;
+            margin: 2px 4px;
+            border-radius: 10px;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .chat-message-topic:hover {
+            transform: scale(1.05);
+            box-shadow: 0 2px 8px rgba(102, 126, 234, 0.4);
+        }
+
+        .chat-message-topic.empty {
+            background: #9e9e9e;
+            cursor: default;
+        }
+
+        .chat-message-topic.empty:hover {
+            transform: none;
+            box-shadow: none;
+        }
+
+        /* 话题分隔条 */
+        .chat-topic-divider {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 12px 0;
+            padding: 8px 0;
+        }
+
+        .chat-topic-divider-line {
+            flex: 1;
+            height: 1px;
+            background: linear-gradient(to right, transparent, rgba(0, 123, 255, 0.3), transparent);
+            margin: 0 12px;
+        }
+
+        .chat-topic-divider-text {
+            font-size: 12px;
+            color: #1e90ff;
+            font-weight: 500;
+            white-space: nowrap;
+            background: white;
+            padding: 2px 10px;
+            border-radius: 10px;
+        }
+
+        .theme-dark .chat-topic-divider-text {
+            background: #3f3f3f;
         }
 
     </style>
@@ -8267,7 +8436,7 @@
                 throw new Error(await format_error_response(r));
             }
 
-            async send_text(ws_send, contact_type, xxid, ceid, sender_rand, plain_text,) {
+            async send_text(ws_send, contact_type, xxid, ceid, sender_rand, plain_text, topic = '') {
                 let url = join_path(this.api_url(), "send");
                 let body = {
                     contact_type, ceid,
@@ -8275,6 +8444,7 @@
                     sender_rand,
                     type: dashboardwrappers.ChatDashboardWrapper.message_type.text,
                     data_text: await encryptors.encrypt2base64(plain_text),
+                    topic: topic,
                 };
                 if (contact_type === subviews.Chat.receiver_type.group) {
                     body.gid = xxid;
@@ -10129,6 +10299,15 @@
     </div>
 </div>
 
+<!-- 🔥 话题筛选栏 -->
+<div class="chat-topic-filter-bar hidden">
+    <span class="chat-topic-filter-label">话题筛选:</span>
+    <select class="chat-topic-filter-select">
+        <option value="">全部消息</option>
+    </select>
+    <button class="chat-topic-filter-clear" title="清除筛选">✕</button>
+</div>
+
 <div class="chat-batch-action-bar">
     <div class="chat-batch-action-bar-left">
         <label>
@@ -10178,6 +10357,17 @@
             🤖 AI咨询
         </button>
 
+    </div>
+
+    <!-- 🔥 话题选择器 -->
+    <div class="chat-topic-selector hidden">
+        <label>📁 话题:</label>
+        <select class="chat-topic-select">
+            <option value="">闲聊</option>
+        </select>
+        <input type="text" class="chat-topic-new-input hidden" placeholder="新话题...">
+        <button class="chat-topic-new-btn hidden">创建</button>
+        <button class="chat-topic-add-btn" title="创建新话题">+ 新话题</button>
     </div>
 
     <!-- 编辑消息提示 -->
@@ -10262,6 +10452,32 @@
                 this.e_batch_btn_cancel = this.container.querySelector(":scope button.btn-cancel-select");
 
                 this.init_batch_action_bar();
+
+                // 🔥 话题筛选栏
+                this.e_topic_filter_bar = this.container.querySelector(":scope div.chat-topic-filter-bar");
+                this.e_topic_filter_select = this.container.querySelector(":scope select.chat-topic-filter-select");
+                this.e_topic_filter_clear = this.container.querySelector(":scope button.chat-topic-filter-clear");
+                // 当前筛选的话题
+                this.current_topic_filter = '';
+
+                // 话题筛选事件
+                if (this.e_topic_filter_select) {
+                    this.e_topic_filter_select.addEventListener("change", (e) => {
+                        this.current_topic_filter = e.target.value;
+                        this.apply_topic_filter();
+                    });
+                }
+
+                // 清除筛选
+                if (this.e_topic_filter_clear) {
+                    this.e_topic_filter_clear.addEventListener("click", () => {
+                        this.current_topic_filter = '';
+                        if (this.e_topic_filter_select) {
+                            this.e_topic_filter_select.value = '';
+                        }
+                        this.apply_topic_filter();
+                    });
+                }
 
                 this.e_msgflow = this.container.querySelector(":scope div.chat-session-msgflow");
                 this.e_msgflow_wrap = this.container.querySelector(":scope div.chat-session-msgflow-wrap");
@@ -10565,10 +10781,109 @@
                     }, { passive: false });
                 }
 
+
+                
+                // =============================
+                // 🔥 话题选择器逻辑
+                // =============================
+                this.e_topic_selector = this.container.querySelector(".chat-topic-selector");
+                this.e_topic_select = this.container.querySelector(".chat-topic-select");
+                this.e_topic_new_input = this.container.querySelector(".chat-topic-new-input");
+                this.e_topic_new_btn = this.container.querySelector(".chat-topic-new-btn");
+                
+                // 收集当前会话中的话题
+                this.current_topics = [''];  // 默认为空（闲聊）
+                
+                // 显示话题选择器（仅群聊时显示）
+                this.update_topic_selector_visibility = () => {
+                    const {contact_type} = this.current_contact_xxid();
+                    if (contact_type === subviews.Chat.receiver_type.group) {
+                        this.e_topic_selector.classList.remove("hidden");
+                    } else {
+                        this.e_topic_selector.classList.add("hidden");
+                    }
+                };
+                
+                // 刷新话题下拉列表
+                this.refresh_topic_list = () => {
+                    if (!this.e_topic_select) return;
+                    const currentVal = this.e_topic_select.value;
+                    this.e_topic_select.innerHTML = '';
+                    
+                    // 添加"闲聊"选项
+                    const defaultOpt = document.createElement('option');
+                    defaultOpt.value = '';
+                    defaultOpt.textContent = '📝 闲聊';
+                    this.e_topic_select.appendChild(defaultOpt);
+                    
+                    // 添加已有话题
+                    this.current_topics.forEach(topic => {
+                        if (topic) {
+                            const opt = document.createElement('option');
+                            opt.value = topic;
+                            opt.textContent = '# ' + topic;
+                            this.e_topic_select.appendChild(opt);
+                        }
+                    });
+                    
+                    // 恢复选中值
+                    if (this.current_topics.includes(currentVal)) {
+                        this.e_topic_select.value = currentVal;
+                    }
+                };
+                
+                // 添加新话题
+                this.add_topic = () => {
+                    const newTopic = this.e_topic_new_input.value.trim();
+                    if (newTopic && !this.current_topics.includes(newTopic)) {
+                        this.current_topics.push(newTopic);
+                        this.refresh_topic_list();
+                        this.e_topic_select.value = newTopic;
+                    }
+                    this.e_topic_new_input.value = '';
+                    this.e_topic_new_input.classList.add("hidden");
+                    this.e_topic_new_btn.classList.remove("hidden");
+                    this.e_topic_select.classList.remove("hidden");
+                };
+                
+                // 点击"新话题"按钮
+                if (this.e_topic_new_btn) {
+                    this.e_topic_new_btn.addEventListener("click", () => {
+                        this.e_topic_select.classList.add("hidden");
+                        this.e_topic_new_btn.classList.add("hidden");
+                        this.e_topic_new_input.classList.remove("hidden");
+                        this.e_topic_new_input.focus();
+                    });
+                }
+                
+                // 输入新话题后按回车创建
+                if (this.e_topic_new_input) {
+                    this.e_topic_new_input.addEventListener("keydown", (e) => {
+                        if (e.key === "Enter") {
+                            this.add_topic();
+                        }
+                    });
+                }
+                
+                // 创建按钮
+                const createTopicBtn = this.container.querySelector(".chat-topic-new-btn");
+                if (createTopicBtn) {
+                    createTopicBtn.addEventListener("click", () => {
+                        this.e_topic_select.classList.add("hidden");
+                        createTopicBtn.classList.add("hidden");
+                        this.e_topic_new_input.classList.remove("hidden");
+                        this.e_topic_new_input.focus();
+                    });
+                }
+
+
+				
 				
 				
 				
 				// =============================
+			// 🔥 从API加载候选词
+			// =============================
 			// 🔥 从API加载候选词
 			// =============================
 			let commonPhrases = [];
@@ -11583,6 +11898,13 @@
                         type: dashboardwrappers.ChatDashboardWrapper.message_type.text,
 
                         plain_text: text,
+                        topic: this.e_topic_select ? this.e_topic_select.value : '',
+                    }
+
+                    // 将话题添加到列表中
+                    if (msg.topic && !this.current_topics.includes(msg.topic)) {
+                        this.current_topics.push(msg.topic);
+                        this.refresh_topic_list();
                     }
 
                     this.msgflow_manage.append_sending_msg(msg);
@@ -11604,9 +11926,10 @@
                     // MessageMark.report(error);
                 };
                 const ws_isopen = false;
+                const topic = msg.topic || '';
                 checkin.subviews.chat.send_text(ws_isopen ? (args) => {
                     this.panel.wrapper.ws_send(args.body, {onfetchload, onfetcherror});
-                } : null, contact_type, xxid, ceid, msg.sender_rand, msg.plain_text,)
+                } : null, contact_type, xxid, ceid, msg.sender_rand, msg.plain_text, topic)
                     .then(result => {
                         if (ws_isopen) return;
                         onfetchload(result);
@@ -11819,6 +12142,62 @@
 
                 this.e_batch_btn_cancel.addEventListener("click", (event) => {
                     this.exit_batch_mode();
+                });
+            }
+
+            // 🔥 话题筛选功能
+            update_topic_filter_visibility() {
+                if (this.is_group() && this.current_topics.length > 1) {
+                    this.e_topic_filter_bar.classList.remove("hidden");
+                } else {
+                    this.e_topic_filter_bar.classList.add("hidden");
+                }
+            }
+
+            refresh_topic_filter_list() {
+                if (!this.e_topic_filter_select) return;
+                const currentVal = this.e_topic_filter_select.value;
+                this.e_topic_filter_select.innerHTML = '';
+                
+                // 添加"全部消息"选项
+                const allOpt = document.createElement('option');
+                allOpt.value = '';
+                allOpt.textContent = '📋 全部消息';
+                this.e_topic_filter_select.appendChild(allOpt);
+                
+                // 添加各话题选项
+                this.current_topics.forEach(topic => {
+                    const opt = document.createElement('option');
+                    opt.value = topic;
+                    opt.textContent = topic ? '# ' + topic : '📝 闲聊';
+                    this.e_topic_filter_select.appendChild(opt);
+                });
+                
+                // 恢复选中值
+                if (this.current_topics.includes(currentVal)) {
+                    this.e_topic_filter_select.value = currentVal;
+                }
+            }
+
+            filter_by_topic(topic) {
+                this.current_topic_filter = topic;
+                if (this.e_topic_filter_select) {
+                    this.e_topic_filter_select.value = topic;
+                }
+                this.apply_topic_filter();
+            }
+
+            apply_topic_filter() {
+                const messages = this.e_msgflow.querySelectorAll(".chat-message");
+                messages.forEach(msgEl => {
+                    const topicEl = msgEl.querySelector(".chat-message-topic");
+                    const msgTopic = topicEl ? topicEl.textContent.replace('# ', '').trim() : '';
+                    
+                    if (!this.current_topic_filter || msgTopic === this.current_topic_filter) {
+                        msgEl.classList.remove("hidden");
+                    } else {
+                        msgEl.classList.add("hidden");
+                    }
                 });
             }
 
@@ -12517,6 +12896,17 @@
                             is_marking: false,
                         };
 
+                        // 🔥 收集话题
+                        if (this.contentpage && this.msgattr.topic) {
+                            const topic = this.msgattr.topic;
+                            if (topic && !this.contentpage.current_topics.includes(topic)) {
+                                this.contentpage.current_topics.push(topic);
+                                this.contentpage.refresh_topic_list();
+                                this.contentpage.refresh_topic_filter_list();
+                                this.contentpage.update_topic_filter_visibility();
+                            }
+                        }
+
                         this.init();
                         this.fill_marks();
                         this.update();
@@ -12601,6 +12991,9 @@
 
                             const tree_headers = [];
                             this.e_tree_item = new TreeWidget(this.e_group, tree_headers, null, 0, false, false, this.sent_by_me, 6)
+                            // 🔥 添加话题标签
+                            const topic = this.msgattr.topic || '';
+                            const topicHtml = topic ? `<span class="chat-message-topic" title="点击筛选此话题"># ${topic}</span>` : '';
                             const html2 = `
 <div class="chat-message-group-header">
 
@@ -12609,6 +13002,7 @@
 </div>
 
 <div class="chat-message-group-header-row2">
+    ${topicHtml}
     <p class="chat-message-group-header-name">${this.msgattr.sender}</p>
 </div>
 
@@ -12624,6 +13018,18 @@
                             const group_header_name = this.e_tree_item.raw_header.querySelector(":scope p.chat-message-group-header-name");
                             group_header_name.style.color = "white";
                             group_header_name.style.background = this.palette.name_bg;
+
+                            // 🔥 点击话题标签筛选消息
+                            const topicEl = this.e_tree_item.raw_header.querySelector(":scope .chat-message-topic");
+                            if (topicEl) {
+                                topicEl.addEventListener("click", (e) => {
+                                    e.stopPropagation();
+                                    // 触发话题筛选
+                                    if (this.contentpage && this.contentpage.filter_by_topic) {
+                                        this.contentpage.filter_by_topic(topic);
+                                    }
+                                });
+                            }
 
                             if (this.is_different_day && form_field_checker.ffc_int(this.msgattr.sent_time)) {
                                 const group_header_date = this.e_tree_item.raw_header.querySelector(":scope p.chat-message-group-header-date");
