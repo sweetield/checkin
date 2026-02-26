@@ -10880,14 +10880,22 @@
                     });
                 }
                 
-                // 创建按钮
+                // 创建按钮 - 点击后显示输入框
+                const addTopicBtn = this.container.querySelector(".chat-topic-add-btn");
+                if (addTopicBtn) {
+                    addTopicBtn.addEventListener("click", () => {
+                        this.e_topic_select.classList.add("hidden");
+                        addTopicBtn.classList.add("hidden");
+                        this.e_topic_new_input.classList.remove("hidden");
+                        this.e_topic_new_input.focus();
+                    });
+                }
+                
+                // 创建按钮 - 点击确认创建
                 const createTopicBtn = this.container.querySelector(".chat-topic-new-btn");
                 if (createTopicBtn) {
                     createTopicBtn.addEventListener("click", () => {
-                        this.e_topic_select.classList.add("hidden");
-                        createTopicBtn.classList.add("hidden");
-                        this.e_topic_new_input.classList.remove("hidden");
-                        this.e_topic_new_input.focus();
+                        this.add_topic();
                     });
                 }
 
