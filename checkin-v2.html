@@ -3491,54 +3491,6 @@
             background: rgba(0, 0, 0, 0.24);
         }
 
-        /* 🔥 话题筛选栏 */
-        .chat-topic-filter-bar {
-            display: flex;
-            flex-direction: row;
-            align-items: center;
-            gap: 8px;
-            padding: 6px 12px;
-            background: rgba(0, 123, 255, 0.08);
-            border-bottom: 1px solid rgba(0, 123, 255, 0.15);
-        }
-
-        .chat-topic-filter-label {
-            font-size: 12px;
-            color: #1e90ff;
-            font-weight: 500;
-            white-space: nowrap;
-        }
-
-        .chat-topic-filter-select {
-            flex: 1;
-            padding: 4px 8px;
-            font-size: 12px;
-            border: 1px solid rgba(0, 123, 255, 0.3);
-            border-radius: 4px;
-            background: white;
-            color: #333;
-            cursor: pointer;
-        }
-
-        .chat-topic-filter-select:focus {
-            outline: none;
-            border-color: #1e90ff;
-        }
-
-        .chat-topic-filter-clear {
-            padding: 4px 8px;
-            font-size: 12px;
-            background: #6c757d;
-            color: white;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-        }
-
-        .chat-topic-filter-clear:hover {
-            background: #5a6268;
-        }
-
         .chat-session-onlineusers-item:first-child {
             margin-top: 6px;
         }
@@ -3615,68 +3567,6 @@
 
         .chat-session-inputarea-othertypes button {
             padding: 6px;
-        }
-
-        /* 🔥 话题选择器样式 */
-        .chat-topic-selector {
-            display: flex;
-            flex-direction: row;
-            align-items: center;
-            gap: 6px;
-            padding: 4px 8px;
-            background: rgba(0, 123, 255, 0.08);
-            border-radius: 6px;
-            margin-bottom: 6px;
-        }
-
-        .chat-topic-selector label {
-            font-size: 13px;
-            color: #1e90ff;
-            font-weight: 500;
-            white-space: nowrap;
-        }
-
-        .chat-topic-selector select {
-            padding: 4px 8px;
-            font-size: 13px;
-            border: 1px solid rgba(0, 123, 255, 0.3);
-            border-radius: 4px;
-            background: white;
-            color: #333;
-            cursor: pointer;
-            min-width: 100px;
-        }
-
-        .chat-topic-selector select:focus {
-            outline: none;
-            border-color: #1e90ff;
-        }
-
-        .chat-topic-selector input {
-            padding: 4px 8px;
-            font-size: 13px;
-            border: 1px solid rgba(0, 123, 255, 0.3);
-            border-radius: 4px;
-            width: 100px;
-        }
-
-        .chat-topic-selector input:focus {
-            outline: none;
-            border-color: #1e90ff;
-        }
-
-        .chat-topic-selector .chat-topic-new-btn {
-            padding: 4px 8px;
-            font-size: 12px;
-            background: #1e90ff;
-            color: white;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-        }
-
-        .chat-topic-selector .chat-topic-new-btn:hover {
-            background: #0d6efd;
         }
 
         .chat-session-inputarea-textarea-row {
@@ -4185,65 +4075,6 @@
             text-align: center;
         }
 
-        /* 🔥 消息话题标签 */
-        .chat-message-topic {
-            display: inline-block;
-            font-size: 11px;
-            padding: 2px 8px;
-            margin: 2px 4px;
-            border-radius: 10px;
-            background: linear-gradient(135deg, #667eea, #764ba2);
-            color: white;
-            font-weight: 500;
-            cursor: pointer;
-            transition: all 0.2s;
-        }
-
-        .chat-message-topic:hover {
-            transform: scale(1.05);
-            box-shadow: 0 2px 8px rgba(102, 126, 234, 0.4);
-        }
-
-        .chat-message-topic.empty {
-            background: #9e9e9e;
-            cursor: default;
-        }
-
-        .chat-message-topic.empty:hover {
-            transform: none;
-            box-shadow: none;
-        }
-
-        /* 话题分隔条 */
-        .chat-topic-divider {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            margin: 12px 0;
-            padding: 8px 0;
-        }
-
-        .chat-topic-divider-line {
-            flex: 1;
-            height: 1px;
-            background: linear-gradient(to right, transparent, rgba(0, 123, 255, 0.3), transparent);
-            margin: 0 12px;
-        }
-
-        .chat-topic-divider-text {
-            font-size: 12px;
-            color: #1e90ff;
-            font-weight: 500;
-            white-space: nowrap;
-            background: white;
-            padding: 2px 10px;
-            border-radius: 10px;
-        }
-
-        .theme-dark .chat-topic-divider-text {
-            background: #3f3f3f;
-        }
-
     </style>
 
     <!--聊天页面 消息内容区域-->
@@ -4389,10 +4220,289 @@
         }
 
         .chat-mcr-sys {
-            padding: 6px;
+            font-size: 14px;
+        }
+
+        .chat-mcr-vote {
+            padding: 12px;
+            min-width: 280px;
+            max-width: 400px;
+        }
+
+        .chat-mcr-vote-title {
+            font-size: 16px;
+            font-weight: bold;
+            margin-bottom: 12px;
+            color: #1a1a1a;
+        }
+
+        .theme-dark .chat-mcr-vote-title {
+            color: #f0f0f0;
+        }
+
+        .chat-mcr-vote-options {
             display: flex;
-            flex-direction: row;
-            align-items: end;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .chat-mcr-vote-option {
+            padding: 10px 14px;
+            background: #f5f5f5;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: all 0.2s;
+        }
+
+        .theme-dark .chat-mcr-vote-option {
+            background: #3a3a3a;
+            border-color: #555;
+        }
+
+        .chat-mcr-vote-option:hover {
+            background: #e6f0ff;
+            border-color: #3399ff;
+        }
+
+        .theme-dark .chat-mcr-vote-option:hover {
+            background: #2d4a6f;
+            border-color: #3399ff;
+        }
+
+        .chat-mcr-vote-stats {
+            margin-top: 12px;
+            padding-top: 12px;
+            border-top: 1px solid #eee;
+        }
+
+        .theme-dark .chat-mcr-vote-stats {
+            border-top-color: #444;
+        }
+
+        .chat-mcr-vote-stat-row {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 8px;
+            padding: 6px 0;
+            font-size: 13px;
+        }
+
+        .chat-mcr-vote-stat-row.my-vote {
+            background: #e6f0ff;
+            padding: 6px 8px;
+            border-radius: 4px;
+        }
+
+        .theme-dark .chat-mcr-vote-stat-row.my-vote {
+            background: #1a3a5c;
+        }
+
+        .vote-stat-text {
+            flex: 0 0 auto;
+            min-width: 60px;
+        }
+
+        .vote-stat-bar-wrap {
+            flex: 1;
+            min-width: 80px;
+            height: 8px;
+            background: #e0e0e0;
+            border-radius: 4px;
+            overflow: hidden;
+        }
+
+        .theme-dark .vote-stat-bar-wrap {
+            background: #555;
+        }
+
+        .vote-stat-bar {
+            display: block;
+            height: 100%;
+            background: #3399ff;
+            border-radius: 4px;
+            transition: width 0.3s;
+        }
+
+        .vote-stat-count {
+            flex: 0 0 auto;
+            min-width: 80px;
+            text-align: right;
+        }
+
+        .vote-stat-voters {
+            width: 100%;
+            font-size: 12px;
+            color: #666;
+            margin-top: 4px;
+        }
+
+        .theme-dark .vote-stat-voters {
+            color: #aaa;
+        }
+
+        .vote-stat-total {
+            margin-top: 8px;
+            font-weight: bold;
+            text-align: right;
+            font-size: 14px;
+        }
+
+        .chat-mcr-vote-footer {
+            margin-top: 10px;
+            font-size: 12px;
+            color: #888;
+        }
+
+        /* 投票对话框 */
+        .chat-vote-dialog {
+            position: fixed;
+            inset: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 10000;
+        }
+
+        .chat-vote-dialog.hidden {
+            display: none;
+        }
+
+        .chat-vote-dialog-mask {
+            position: absolute;
+            inset: 0;
+            background: rgba(0,0,0,0.4);
+        }
+
+        .chat-vote-dialog-panel {
+            position: relative;
+            width: 95%;
+            max-width: 450px;
+            background: #fff;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+        }
+
+        .theme-dark .chat-vote-dialog-panel {
+            background: rgb(53, 53, 53);
+        }
+
+        .chat-vote-dialog-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 14px 16px;
+            border-bottom: 1px solid #eee;
+            background: #f8f8f8;
+        }
+
+        .theme-dark .chat-vote-dialog-header {
+            background: rgb(63, 63, 63);
+            border-bottom-color: #555;
+        }
+
+        .chat-vote-dialog-title {
+            font-size: 16px;
+            font-weight: 600;
+        }
+
+        .chat-vote-dialog-close {
+            background: none;
+            border: none;
+            font-size: 18px;
+            cursor: pointer;
+            color: #666;
+        }
+
+        .chat-vote-dialog-body {
+            padding: 16px;
+            max-height: 60vh;
+            overflow-y: auto;
+        }
+
+        .chat-vote-dialog-field {
+            margin-bottom: 14px;
+        }
+
+        .chat-vote-dialog-field label {
+            display: block;
+            margin-bottom: 6px;
+            font-size: 14px;
+            font-weight: 500;
+            color: #333;
+        }
+
+        .theme-dark .chat-vote-dialog-field label {
+            color: #ddd;
+        }
+
+        .chat-vote-dialog-field input,
+        .chat-vote-dialog-field textarea {
+            width: 100%;
+            padding: 10px;
+            font-size: 14px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            box-sizing: border-box;
+        }
+
+        .theme-dark .chat-vote-dialog-field input,
+        .theme-dark .chat-vote-dialog-field textarea {
+            background: rgb(63, 63, 63);
+            border-color: #555;
+            color: #eee;
+        }
+
+        .chat-vote-dialog-field textarea {
+            min-height: 100px;
+            resize: vertical;
+        }
+
+        .chat-vote-dialog-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+            padding: 14px 16px;
+            border-top: 1px solid #eee;
+            background: #f8f8f8;
+        }
+
+        .theme-dark .chat-vote-dialog-actions {
+            background: rgb(63, 63, 63);
+            border-top-color: #555;
+        }
+
+        .chat-vote-dialog-cancel,
+        .chat-vote-dialog-confirm {
+            padding: 8px 18px;
+            font-size: 14px;
+            border-radius: 6px;
+            cursor: pointer;
+            border: none;
+        }
+
+        .chat-vote-dialog-cancel {
+            background: #e0e0e0;
+            color: #333;
+        }
+
+        .theme-dark .chat-vote-dialog-cancel {
+            background: #555;
+            color: #ddd;
+        }
+
+        .chat-vote-dialog-confirm {
+            background: #3399ff;
+            color: #fff;
+        }
+
+        .chat-vote-dialog-confirm:hover {
+            background: #1a8cff;
         }
 
         .chat-mcr-sys span {
@@ -8436,7 +8546,7 @@
                 throw new Error(await format_error_response(r));
             }
 
-            async send_text(ws_send, contact_type, xxid, ceid, sender_rand, plain_text, topic = '') {
+            async send_text(ws_send, contact_type, xxid, ceid, sender_rand, plain_text,) {
                 let url = join_path(this.api_url(), "send");
                 let body = {
                     contact_type, ceid,
@@ -8444,13 +8554,61 @@
                     sender_rand,
                     type: dashboardwrappers.ChatDashboardWrapper.message_type.text,
                     data_text: await encryptors.encrypt2base64(plain_text),
-                    topic: topic,
                 };
                 if (contact_type === subviews.Chat.receiver_type.group) {
                     body.gid = xxid;
                 } else if (contact_type === subviews.Chat.receiver_type.user) {
                     body.uid = xxid;
                 }
+
+                if (ws_send) {
+                    body.action = dashboardwrappers.ChatDashboardWrapper.ws_action_type.send;
+                    return ws_send({url, body});
+                }
+
+                let r = await net_fetcher.nf_post_json(url, body,);
+                if (r.status === 200) {
+                    let d = await r.json();
+                    return d;
+                }
+                throw new Error(await format_error_response(r));
+            }
+
+            async send_vote(ws_send, contact_type, xxid, ceid, sender_rand, vote_data_json,) {
+                let url = join_path(this.api_url(), "send");
+                let body = {
+                    contact_type, ceid,
+
+                    sender_rand,
+                    type: dashboardwrappers.ChatDashboardWrapper.message_type.vote,
+                    data_text: await encryptors.encrypt2base64(vote_data_json),
+                };
+                if (contact_type === subviews.Chat.receiver_type.group) {
+                    body.gid = xxid;
+                } else if (contact_type === subviews.Chat.receiver_type.user) {
+                    body.uid = xxid;
+                }
+
+                if (ws_send) {
+                    body.action = dashboardwrappers.ChatDashboardWrapper.ws_action_type.send;
+                    return ws_send({url, body});
+                }
+
+                let r = await net_fetcher.nf_post_json(url, body,);
+                if (r.status === 200) {
+                    let d = await r.json();
+                    return d;
+                }
+                throw new Error(await format_error_response(r));
+            }
+
+            async cast_vote(ws_send, contact_type, xxid, ceid, message_id, option_idx,) {
+                let url = join_path(this.api_url(), "vote");
+                let body = {
+                    contact_type, ceid,
+                    message_id,
+                    option_idx,
+                };
 
                 if (ws_send) {
                     body.action = dashboardwrappers.ChatDashboardWrapper.ws_action_type.send;
@@ -10299,15 +10457,6 @@
     </div>
 </div>
 
-<!-- 🔥 话题筛选栏 -->
-<div class="chat-topic-filter-bar hidden">
-    <span class="chat-topic-filter-label">话题筛选:</span>
-    <select class="chat-topic-filter-select">
-        <option value="">全部消息</option>
-    </select>
-    <button class="chat-topic-filter-clear" title="清除筛选">✕</button>
-</div>
-
 <div class="chat-batch-action-bar">
     <div class="chat-batch-action-bar-left">
         <label>
@@ -10344,6 +10493,9 @@
         <button class="chat-session-inputarea-othertypes-file">
             <input type="file" class="hidden">文件
         </button>
+        <button class="chat-session-inputarea-othertypes-vote" title="发起投票">
+            📊 投票
+        </button>
         <!-- 🔥 新增：候选词按钮 -->
 		<button class="chat-session-inputarea-othertypes-candidates">
 		    候选词
@@ -10357,17 +10509,6 @@
             🤖 AI咨询
         </button>
 
-    </div>
-
-    <!-- 🔥 话题选择器 -->
-    <div class="chat-topic-selector hidden">
-        <label>📁 话题:</label>
-        <select class="chat-topic-select">
-            <option value="">闲聊</option>
-        </select>
-        <input type="text" class="chat-topic-new-input hidden" placeholder="新话题...">
-        <button class="chat-topic-new-btn hidden">创建</button>
-        <button class="chat-topic-add-btn" title="创建新话题">+ 新话题</button>
     </div>
 
     <!-- 编辑消息提示 -->
@@ -10423,6 +10564,40 @@
         </div>
     </div>
 </div>
+
+<!-- 📊 投票对话框 -->
+<div class="chat-vote-dialog hidden">
+    <div class="chat-vote-dialog-mask"></div>
+    <div class="chat-vote-dialog-panel">
+        <div class="chat-vote-dialog-header">
+            <span class="chat-vote-dialog-title">📊 发起投票</span>
+            <button class="chat-vote-dialog-close">✕</button>
+        </div>
+        <div class="chat-vote-dialog-body">
+            <div class="chat-vote-dialog-field">
+                <label>投票标题</label>
+                <input type="text" class="chat-vote-dialog-title-input" placeholder="请输入投票标题">
+            </div>
+            <div class="chat-vote-dialog-field">
+                <label>选项（每行一个，以 - 开头）</label>
+                <textarea class="chat-vote-dialog-options" placeholder="- 选项1&#10;- 选项2&#10;- 选项3"></textarea>
+            </div>
+            <div class="chat-vote-dialog-field">
+                <label>截止时间（可选）</label>
+                <input type="datetime-local" class="chat-vote-dialog-deadline">
+            </div>
+            <div class="chat-vote-dialog-field">
+                <label>最大票数（可选，0或不填表示无限制）</label>
+                <input type="number" class="chat-vote-dialog-max" placeholder="0" min="0">
+            </div>
+        </div>
+        <div class="chat-vote-dialog-actions">
+            <button class="chat-vote-dialog-cancel">取消</button>
+            <button class="chat-vote-dialog-confirm">发起投票</button>
+        </div>
+    </div>
+</div>
+
 <!-- AI咨询弹窗 -->
 <div id="ai-alert-modal" class="ai-alert-modal hidden">
     <div class="ai-alert-content">
@@ -10452,32 +10627,6 @@
                 this.e_batch_btn_cancel = this.container.querySelector(":scope button.btn-cancel-select");
 
                 this.init_batch_action_bar();
-
-                // 🔥 话题筛选栏
-                this.e_topic_filter_bar = this.container.querySelector(":scope div.chat-topic-filter-bar");
-                this.e_topic_filter_select = this.container.querySelector(":scope select.chat-topic-filter-select");
-                this.e_topic_filter_clear = this.container.querySelector(":scope button.chat-topic-filter-clear");
-                // 当前筛选的话题
-                this.current_topic_filter = '';
-
-                // 话题筛选事件
-                if (this.e_topic_filter_select) {
-                    this.e_topic_filter_select.addEventListener("change", (e) => {
-                        this.current_topic_filter = e.target.value;
-                        this.apply_topic_filter();
-                    });
-                }
-
-                // 清除筛选
-                if (this.e_topic_filter_clear) {
-                    this.e_topic_filter_clear.addEventListener("click", () => {
-                        this.current_topic_filter = '';
-                        if (this.e_topic_filter_select) {
-                            this.e_topic_filter_select.value = '';
-                        }
-                        this.apply_topic_filter();
-                    });
-                }
 
                 this.e_msgflow = this.container.querySelector(":scope div.chat-session-msgflow");
                 this.e_msgflow_wrap = this.container.querySelector(":scope div.chat-session-msgflow-wrap");
@@ -10781,138 +10930,10 @@
                     }, { passive: false });
                 }
 
-
-                
-                // =============================
-                // 🔥 话题选择器逻辑
-                // =============================
-                this.e_topic_selector = this.container.querySelector(".chat-topic-selector");
-                this.e_topic_select = this.container.querySelector(".chat-topic-select");
-                this.e_topic_new_input = this.container.querySelector(".chat-topic-new-input");
-                this.e_topic_new_btn = this.container.querySelector(".chat-topic-new-btn");
-                
-                console.log("话题选择器元素:", this.e_topic_selector, this.e_topic_select);
-                
-                // 收集当前会话中的话题
-                this.current_topics = [''];  // 默认为空（闲聊）
-                
-                // 显示话题选择器（仅群聊时显示）
-                this.update_topic_selector_visibility = () => {
-                    if (!this.e_topic_selector) {
-                        console.log("话题选择器未找到");
-                        return;
-                    }
-                    try {
-                        const {contact_type} = this.current_contact_xxid();
-                        if (contact_type === subviews.Chat.receiver_type.group) {
-                            this.e_topic_selector.classList.remove("hidden");
-                            console.log("显示话题选择器 - 群聊");
-                        } else {
-                            this.e_topic_selector.classList.add("hidden");
-                            console.log("隐藏话题选择器 - 私聊");
-                        }
-                    } catch (e) {
-                        console.error("话题选择器初始化错误:", e);
-                    }
-                };
-                
-                // 刷新话题下拉列表
-                this.refresh_topic_list = () => {
-                    if (!this.e_topic_select) {
-                        console.log("话题下拉框未找到");
-                        return;
-                    }
-                    const currentVal = this.e_topic_select.value;
-                    this.e_topic_select.innerHTML = '';
-                    
-                    // 添加"闲聊"选项
-                    const defaultOpt = document.createElement('option');
-                    defaultOpt.value = '';
-                    defaultOpt.textContent = '📝 闲聊';
-                    this.e_topic_select.appendChild(defaultOpt);
-                    
-                    // 添加已有话题
-                    this.current_topics.forEach(topic => {
-                        if (topic) {
-                            const opt = document.createElement('option');
-                            opt.value = topic;
-                            opt.textContent = '# ' + topic;
-                            this.e_topic_select.appendChild(opt);
-                        }
-                    });
-                    
-                    // 恢复选中值
-                    if (this.current_topics.includes(currentVal)) {
-                        this.e_topic_select.value = currentVal;
-                    }
-                };
-                
-                // 添加新话题
-                this.add_topic = () => {
-                    const newTopic = this.e_topic_new_input.value.trim();
-                    if (newTopic && !this.current_topics.includes(newTopic)) {
-                        this.current_topics.push(newTopic);
-                        this.refresh_topic_list();
-                        this.e_topic_filter_select.value = newTopic;
-                    }
-                    this.e_topic_new_input.value = '';
-                    this.e_topic_new_input.classList.add("hidden");
-                    this.e_topic_new_btn.classList.remove("hidden");
-                    this.e_topic_select.classList.remove("hidden");
-                    
-                    // 恢复 "+ 新话题" 按钮
-                    const addTopicBtn = this.container.querySelector(".chat-topic-add-btn");
-                    if (addTopicBtn) {
-                        addTopicBtn.classList.remove("hidden");
-                    }
-                };
-                
-                // 点击"新话题"按钮
-                if (this.e_topic_new_btn) {
-                    this.e_topic_new_btn.addEventListener("click", () => {
-                        this.e_topic_select.classList.add("hidden");
-                        this.e_topic_new_btn.classList.add("hidden");
-                        this.e_topic_new_input.classList.remove("hidden");
-                        this.e_topic_new_input.focus();
-                    });
-                }
-                
-                // 输入新话题后按回车创建
-                if (this.e_topic_new_input) {
-                    this.e_topic_new_input.addEventListener("keydown", (e) => {
-                        if (e.key === "Enter") {
-                            this.add_topic();
-                        }
-                    });
-                }
-                
-                // 创建按钮 - 点击后显示输入框
-                const addTopicBtn = this.container.querySelector(".chat-topic-add-btn");
-                if (addTopicBtn) {
-                    addTopicBtn.addEventListener("click", () => {
-                        this.e_topic_select.classList.add("hidden");
-                        addTopicBtn.classList.add("hidden");
-                        this.e_topic_new_input.classList.remove("hidden");
-                        this.e_topic_new_input.focus();
-                    });
-                }
-                
-                // 创建按钮 - 点击确认创建
-                const createTopicBtn = this.container.querySelector(".chat-topic-new-btn");
-                if (createTopicBtn) {
-                    createTopicBtn.addEventListener("click", () => {
-                        this.add_topic();
-                    });
-                }
-
-
-				
 				
 				
 				
 				// =============================
-			// 🔥 从API加载候选词
-			// =============================
 			// 🔥 从API加载候选词
 			// =============================
 			let commonPhrases = [];
@@ -11202,6 +11223,11 @@
                     }
                 });
 
+                this.e_othertypes_vote = this.container.querySelector(":scope button.chat-session-inputarea-othertypes-vote");
+                this.e_othertypes_vote.addEventListener("click", (event) => {
+                    this.show_vote_dialog();
+                });
+
                 // 拖拽上传
                 this.e_msgflow_wrap.addEventListener('dragenter', (event) => {
                     if (!check_if_contains_file_in_drop_event(event)) return;
@@ -11329,24 +11355,6 @@
                 this.refresh();
                 this.start_timer__fetch_unread_msgs(false);
                 this.start_timer__update_read_progress(false);
-                
-                // 🔥 更新话题选择器显示状态
-                if (this.update_topic_selector_visibility) {
-                    this.update_topic_selector_visibility();
-                }
-                
-                // 🔥 初始化话题下拉列表
-                if (this.refresh_topic_list) {
-                    this.refresh_topic_list();
-                }
-                
-                // 🔥 初始化话题筛选栏
-                if (this.refresh_topic_filter_list) {
-                    this.refresh_topic_filter_list();
-                }
-                if (this.update_topic_filter_visibility) {
-                    this.update_topic_filter_visibility();
-                }
 
                 // ⚡ 新增写字功能 DOM
                 this.e_writeboard = this.container.querySelector(".chat-writeboard");
@@ -11652,6 +11660,85 @@
                 });
 
 
+                // 投票对话框
+                this.e_vote_dialog = this.container.querySelector(".chat-vote-dialog");
+                this.e_vote_dialog_mask = this.container.querySelector(".chat-vote-dialog-mask");
+                this.e_vote_dialog_panel = this.container.querySelector(".chat-vote-dialog-panel");
+                this.e_vote_dialog_close = this.container.querySelector(".chat-vote-dialog-close");
+                this.e_vote_dialog_cancel = this.container.querySelector(".chat-vote-dialog-cancel");
+                this.e_vote_dialog_confirm = this.container.querySelector(".chat-vote-dialog-confirm");
+                this.e_vote_dialog_title = this.container.querySelector(".chat-vote-dialog-title-input");
+                this.e_vote_dialog_options = this.container.querySelector(".chat-vote-dialog-options");
+                this.e_vote_dialog_deadline = this.container.querySelector(".chat-vote-dialog-deadline");
+                this.e_vote_dialog_max = this.container.querySelector(".chat-vote-dialog-max");
+
+                this.show_vote_dialog = () => {
+                    this.e_vote_dialog.classList.remove("hidden");
+                    this.e_vote_dialog_title.value = "";
+                    this.e_vote_dialog_options.value = "";
+                    this.e_vote_dialog_deadline.value = "";
+                    this.e_vote_dialog_max.value = "";
+                    this.e_vote_dialog_title.focus();
+                };
+
+                const hide_vote_dialog = () => {
+                    this.e_vote_dialog.classList.add("hidden");
+                };
+
+                this.e_vote_dialog_mask.addEventListener("click", hide_vote_dialog);
+                this.e_vote_dialog_close.addEventListener("click", hide_vote_dialog);
+                this.e_vote_dialog_cancel.addEventListener("click", hide_vote_dialog);
+
+                this.e_vote_dialog_confirm.addEventListener("click", () => {
+                    const title = this.e_vote_dialog_title.value.trim();
+                    const optionsText = this.e_vote_dialog_options.value.trim();
+                    const deadline = this.e_vote_dialog_deadline.value;
+                    const maxVotes = parseInt(this.e_vote_dialog_max.value) || null;
+
+                    if (!title) {
+                        MessageMark.report({message: "请输入投票标题"}, null, null);
+                        return;
+                    }
+
+                    const lines = optionsText.split('\n').filter(l => l.trim());
+                    const options = [];
+                    for (const line of lines) {
+                        const optText = line.replace(/^-\s*/, '').trim();
+                        if (optText) {
+                            options.push({text: optText, votes: 0});
+                        }
+                    }
+
+                    if (options.length === 0) {
+                        MessageMark.report({message: "请至少输入一个选项"}, null, null);
+                        return;
+                    }
+
+                    const voteData = {
+                        title: title,
+                        options: options,
+                        total_votes: 0,
+                        voted_users: {},
+                        end_time: deadline ? new Date(deadline).toISOString() : null,
+                        max_votes: maxVotes,
+                    };
+
+                    const msg = {
+                        sender: logged_user.uid,
+                        sender_rand: generateRandomString(10),
+                        is_sent: false,
+                        type: dashboardwrappers.ChatDashboardWrapper.message_type.vote,
+                        plain_data_text: JSON.stringify(voteData),
+                        data_text: JSON.stringify(voteData),
+                    };
+
+                    this.msgflow_manage.append_sending_msg(msg);
+                    this._send_vote_msg(msg);
+
+                    hide_vote_dialog();
+                });
+
+
 
                 setTimeout(() => {
                     check_scroll_to_end();
@@ -11937,28 +12024,107 @@
                     }
                     this.end_editing_msg();
                 } else {
-                    const msg = {
-                        sender: logged_user.uid,
-                        sender_rand: generateRandomString(10),
-                        is_sent: false,
+                    const voteMatch = text.match(/^\/vote\s+(.+?)(?:\n(- .+))+/);
+                    if (voteMatch) {
+                        this.send_vote_msg(text);
+                    } else {
+                        const msg = {
+                            sender: logged_user.uid,
+                            sender_rand: generateRandomString(10),
+                            is_sent: false,
 
-                        type: dashboardwrappers.ChatDashboardWrapper.message_type.text,
+                            type: dashboardwrappers.ChatDashboardWrapper.message_type.text,
 
-                        plain_text: text,
-                        topic: this.e_topic_select ? this.e_topic_select.value : '',
+                            plain_text: text,
+                        }
+
+                        this.msgflow_manage.append_sending_msg(msg);
+                        this._send_msg_text(msg);
                     }
-
-                    console.log("发送消息，话题:", msg.topic, "下拉框:", this.e_topic_select);
-
-                    // 将话题添加到列表中
-                    if (msg.topic && !this.current_topics.includes(msg.topic)) {
-                        this.current_topics.push(msg.topic);
-                        this.refresh_topic_list();
-                    }
-
-                    this.msgflow_manage.append_sending_msg(msg);
-                    this._send_msg_text(msg);
                 }
+            }
+
+            send_vote_msg(text) {
+                const lines = text.split('\n').filter(l => l.trim());
+                if (lines.length < 2) {
+                    MessageMark.report({message: "投票格式错误，至少需要标题和一个选项"}, null, null);
+                    return;
+                }
+
+                const titleLine = lines[0].replace(/^\/vote\s*/, '').trim();
+                const options = [];
+                let endTime = null;
+                let maxVotes = null;
+
+                for (let i = 1; i < lines.length; i++) {
+                    const line = lines[i].trim();
+                    if (line.startsWith('-time ') || line.startsWith('-t ')) {
+                        const timeStr = line.replace(/^-time\s*/i, '').replace(/^-t\s*/i, '').trim();
+                        endTime = new Date(timeStr).toISOString();
+                        if (isNaN(new Date(endTime))) {
+                            endTime = null;
+                        }
+                    } else if (line.startsWith('-max ') || line.startsWith('-m ')) {
+                        const maxStr = line.replace(/^-max\s*/i, '').replace(/^-m\s*/i, '').trim();
+                        maxVotes = parseInt(maxStr);
+                        if (isNaN(maxVotes)) {
+                            maxVotes = null;
+                        }
+                    } else if (line.startsWith('-')) {
+                        const optionText = line.replace(/^-\s*/, '').trim();
+                        if (optionText) {
+                            options.push({text: optionText, votes: 0});
+                        }
+                    }
+                }
+
+                if (options.length === 0) {
+                    MessageMark.report({message: "投票至少需要一个选项"}, null, null);
+                    return;
+                }
+
+                const voteData = {
+                    title: titleLine,
+                    options: options,
+                    total_votes: 0,
+                    voted_users: {},
+                    end_time: endTime,
+                    max_votes: maxVotes,
+                };
+
+                const msg = {
+                    sender: logged_user.uid,
+                    sender_rand: generateRandomString(10),
+                    is_sent: false,
+                    type: dashboardwrappers.ChatDashboardWrapper.message_type.vote,
+                    plain_data_text: JSON.stringify(voteData),
+                    data_text: JSON.stringify(voteData),
+                };
+
+                this.msgflow_manage.append_sending_msg(msg);
+                this._send_vote_msg(msg);
+            }
+
+            _send_vote_msg(msg) {
+                const {xxid, contact_type, ceid} = this.current_contact_xxid();
+
+                const onfetchload = (result) => {
+                    this.client.dashboard_chat.wrapper.update_contact_item_status(result.sync);
+                    this.msgflow_manage.update_sending_msg(msg.sender_rand, result.message_attr, result.previous_message_id);
+                };
+                const onfetcherror = (error) => {
+                    msg.msgobj.on_send_failed(error);
+                };
+                const ws_isopen = false;
+                checkin.subviews.chat.send_vote(ws_isopen ? (args) => {
+                    this.panel.wrapper.ws_send(args.body, {onfetchload, onfetcherror});
+                } : null, contact_type, xxid, ceid, msg.sender_rand, msg.data_text,)
+                    .then(result => {
+                        if (ws_isopen) return;
+                        onfetchload(result);
+                    }).catch(error => {
+                    onfetcherror(error);
+                });
             }
 
             _send_msg_text(msg) {
@@ -11975,10 +12141,9 @@
                     // MessageMark.report(error);
                 };
                 const ws_isopen = false;
-                const topic = msg.topic || '';
                 checkin.subviews.chat.send_text(ws_isopen ? (args) => {
                     this.panel.wrapper.ws_send(args.body, {onfetchload, onfetcherror});
-                } : null, contact_type, xxid, ceid, msg.sender_rand, msg.plain_text, topic)
+                } : null, contact_type, xxid, ceid, msg.sender_rand, msg.plain_text,)
                     .then(result => {
                         if (ws_isopen) return;
                         onfetchload(result);
@@ -12191,62 +12356,6 @@
 
                 this.e_batch_btn_cancel.addEventListener("click", (event) => {
                     this.exit_batch_mode();
-                });
-            }
-
-            // 🔥 话题筛选功能
-            update_topic_filter_visibility() {
-                if (this.is_group()) {
-                    this.e_topic_filter_bar.classList.remove("hidden");
-                } else {
-                    this.e_topic_filter_bar.classList.add("hidden");
-                }
-            }
-
-            refresh_topic_filter_list() {
-                if (!this.e_topic_filter_select) return;
-                const currentVal = this.e_topic_filter_select.value;
-                this.e_topic_filter_select.innerHTML = '';
-                
-                // 添加"全部消息"选项
-                const allOpt = document.createElement('option');
-                allOpt.value = '';
-                allOpt.textContent = '📋 全部消息';
-                this.e_topic_filter_select.appendChild(allOpt);
-                
-                // 添加各话题选项
-                this.current_topics.forEach(topic => {
-                    const opt = document.createElement('option');
-                    opt.value = topic;
-                    opt.textContent = topic ? '# ' + topic : '📝 闲聊';
-                    this.e_topic_filter_select.appendChild(opt);
-                });
-                
-                // 恢复选中值
-                if (this.current_topics.includes(currentVal)) {
-                    this.e_topic_filter_select.value = currentVal;
-                }
-            }
-
-            filter_by_topic(topic) {
-                this.current_topic_filter = topic;
-                if (this.e_topic_filter_select) {
-                    this.e_topic_filter_select.value = topic;
-                }
-                this.apply_topic_filter();
-            }
-
-            apply_topic_filter() {
-                const messages = this.e_msgflow.querySelectorAll(".chat-message");
-                messages.forEach(msgEl => {
-                    const topicEl = msgEl.querySelector(".chat-message-topic");
-                    const msgTopic = topicEl ? topicEl.textContent.replace('# ', '').trim() : '';
-                    
-                    if (!this.current_topic_filter || msgTopic === this.current_topic_filter) {
-                        msgEl.classList.remove("hidden");
-                    } else {
-                        msgEl.classList.add("hidden");
-                    }
                 });
             }
 
@@ -12945,17 +13054,6 @@
                             is_marking: false,
                         };
 
-                        // 🔥 收集话题
-                        if (this.contentpage && this.msgattr.topic) {
-                            const topic = this.msgattr.topic;
-                            if (topic && !this.contentpage.current_topics.includes(topic)) {
-                                this.contentpage.current_topics.push(topic);
-                                this.contentpage.refresh_topic_list();
-                                this.contentpage.refresh_topic_filter_list();
-                                this.contentpage.update_topic_filter_visibility();
-                            }
-                        }
-
                         this.init();
                         this.fill_marks();
                         this.update();
@@ -13040,10 +13138,6 @@
 
                             const tree_headers = [];
                             this.e_tree_item = new TreeWidget(this.e_group, tree_headers, null, 0, false, false, this.sent_by_me, 6)
-                            // 🔥 添加话题标签
-                            const topic = this.msgattr.topic || '';
-                            console.log("渲染消息 - is_header:", this.is_header(), "topic:", topic);
-                            const topicHtml = topic ? `<span class="chat-message-topic" title="点击筛选此话题"># ${topic}</span>` : '';
                             const html2 = `
 <div class="chat-message-group-header">
 
@@ -13052,7 +13146,6 @@
 </div>
 
 <div class="chat-message-group-header-row2">
-    ${topicHtml}
     <p class="chat-message-group-header-name">${this.msgattr.sender}</p>
 </div>
 
@@ -13068,18 +13161,6 @@
                             const group_header_name = this.e_tree_item.raw_header.querySelector(":scope p.chat-message-group-header-name");
                             group_header_name.style.color = "white";
                             group_header_name.style.background = this.palette.name_bg;
-
-                            // 🔥 点击话题标签筛选消息
-                            const topicEl = this.e_tree_item.raw_header.querySelector(":scope .chat-message-topic");
-                            if (topicEl) {
-                                topicEl.addEventListener("click", (e) => {
-                                    e.stopPropagation();
-                                    // 触发话题筛选
-                                    if (this.contentpage && this.contentpage.filter_by_topic) {
-                                        this.contentpage.filter_by_topic(topic);
-                                    }
-                                });
-                            }
 
                             if (this.is_different_day && form_field_checker.ffc_int(this.msgattr.sent_time)) {
                                 const group_header_date = this.e_tree_item.raw_header.querySelector(":scope p.chat-message-group-header-date");
@@ -14324,7 +14405,166 @@
 
                 }
 
-                return {TextMsg, ImageMsg, FileMsg, SysMsg,};
+                class VoteMsg extends _ {
+                    constructor(panel, contentpage, msgattr, msgattrseniors,) {
+                        super(panel, contentpage, msgattr, msgattrseniors,);
+                        this.vote_data = null;
+                        this.has_voted = false;
+                    }
+
+                    init() {
+                        super.init();
+
+                        let html = `
+<div class="chat-message-content-rect chat-mcr-vote">
+    <div class="chat-mcr-vote-title"></div>
+    <div class="chat-mcr-vote-options"></div>
+    <div class="chat-mcr-vote-stats hidden"></div>
+    <div class="chat-mcr-vote-footer">
+        <span class="chat-mcr-vote-deadline"></span>
+    </div>
+</div>
+`;
+                        this.e_container.insertAdjacentHTML("beforeend", html);
+                        this.e_mcr = this.e_container.querySelector(":scope .chat-message-content-rect");
+                        this.e_mcr.style.background = this.palette.rect_bg;
+
+                        this.e_vote_title = this.e_mcr.querySelector(":scope .chat-mcr-vote-title");
+                        this.e_vote_options = this.e_mcr.querySelector(":scope .chat-mcr-vote-options");
+                        this.e_vote_stats = this.e_mcr.querySelector(":scope .chat-mcr-vote-stats");
+                        this.e_vote_deadline = this.e_mcr.querySelector(":scope .chat-mcr-vote-deadline");
+                    }
+
+                    update() {
+                        super.update();
+
+                        try {
+                            if (!this.msgattr.is_sent) {
+                                this.e_vote_title.textContent = "投票未发送？";
+                                return;
+                            }
+
+                            let voteData;
+                            if (this.msgattr.plain_data_text) {
+                                voteData = JSON.parse(this.msgattr.plain_data_text);
+                            } else if (this.msgattr.data_text) {
+                                if (this.msgattr.status & dashboardwrappers.ChatDashboardWrapper.message_status.encrypted) {
+                                    encryptors.decrypt2string(this.msgattr.data_text).then(result => {
+                                        this.msgattr.plain_data_markup = result;
+                                        this.msgattr.plain_data_text = result;
+                                        try {
+                                            const vd = JSON.parse(result);
+                                            this.vote_data = vd;
+                                            this.render_vote(vd);
+                                        } catch (e) {
+                                            this.e_vote_title.textContent = "投票解析失败";
+                                        }
+                                    }).catch(error => {
+                                        this.e_vote_title.textContent = "投票解密失败";
+                                    });
+                                    return;
+                                } else {
+                                    voteData = JSON.parse(this.msgattr.data_text);
+                                }
+                            } else {
+                                voteData = {};
+                            }
+
+                            this.vote_data = voteData;
+                            this.render_vote(voteData);
+
+                        } catch (e) {
+                            this.e_vote_title.textContent = "投票解析失败";
+                            console.error("Vote parse error:", e);
+                        }
+                    }
+
+                    render_vote(voteData) {
+                        this.e_vote_title.textContent = voteData.title || "投票";
+
+                        this.e_vote_options.innerHTML = '';
+                        const options = voteData.options || [];
+                        const totalVotes = voteData.total_votes || 0;
+
+                        options.forEach((opt, idx) => {
+                            const btn = document.createElement('div');
+                            btn.className = 'chat-mcr-vote-option';
+                            btn.dataset.idx = idx;
+                            btn.innerHTML = `
+                                <span class="vote-option-text">${opt.text}</span>
+                                <span class="vote-option-count hidden">${opt.votes || 0}</span>
+                            `;
+                            btn.addEventListener('click', () => this.handle_vote(idx));
+                            this.e_vote_options.appendChild(btn);
+                        });
+
+                        if (voteData.end_time) {
+                            const endDate = new Date(voteData.end_time);
+                            const now = new Date();
+                            if (now >= endDate) {
+                                this.e_vote_deadline.textContent = "已结束";
+                                this.show_stats();
+                            } else {
+                                this.e_vote_deadline.textContent = `截止: ${endDate.toLocaleString()}`;
+                            }
+                        } else if (voteData.max_votes && totalVotes >= voteData.max_votes) {
+                            this.e_vote_deadline.textContent = "票数已满";
+                            this.show_stats();
+                        } else {
+                            this.e_vote_deadline.textContent = "";
+                        }
+
+                        if (voteData.voted_users && voteData.voted_users[logged_user.uid]) {
+                            this.has_voted = true;
+                            this.show_stats();
+                        }
+                    }
+
+                    handle_vote(optionIdx) {
+                        if (this.has_voted) return;
+                        if (this.vote_data.end_time) {
+                            const endDate = new Date(this.vote_data.end_time);
+                            if (new Date() >= endDate) return;
+                        }
+                        if (this.vote_data.max_votes && this.vote_data.total_votes >= this.vote_data.max_votes) return;
+
+                        this.panel.wrapper.cast_vote(this.msgattr.id, optionIdx);
+                        this.has_voted = true;
+                        this.show_stats();
+                    }
+
+                    show_stats() {
+                        this.e_vote_stats.classList.remove('hidden');
+                        this.e_vote_stats.innerHTML = '';
+                        
+                        const options = this.vote_data.options || [];
+                        const totalVotes = this.vote_data.total_votes || 0;
+                        const votedUsers = this.vote_data.voted_users || {};
+                        const myVotes = votedUsers[logged_user.uid] || [];
+
+                        options.forEach((opt, idx) => {
+                            const count = opt.votes || 0;
+                            const percentage = totalVotes > 0 ? Math.round((count / totalVotes) * 100) : 0;
+                            const isMyVote = myVotes.includes(idx);
+                            
+                            const statRow = document.createElement('div');
+                            statRow.className = 'chat-mcr-vote-stat-row';
+                            if (isMyVote) statRow.classList.add('my-vote');
+                            statRow.innerHTML = `
+                                <span class="vote-stat-text">${opt.text}</span>
+                                <span class="vote-stat-bar-wrap"><span class="vote-stat-bar" style="width: ${percentage}%"></span></span>
+                                <span class="vote-stat-count">${count}票 (${percentage}%)</span>
+                                <span class="vote-stat-voters">${Object.keys(votedUsers).filter(uid => votedUsers[uid].includes(idx)).map(uid => votedUsers[uid + '_name'] || uid).join(', ')}</span>
+                            `;
+                            this.e_vote_stats.appendChild(statRow);
+                        });
+
+                        this.e_vote_stats.innerHTML += `<div class="vote-stat-total">总计: ${totalVotes} 票</div>`;
+                    }
+
+                }
+
+                return {TextMsg, ImageMsg, FileMsg, SysMsg, VoteMsg,};
             })()
 
 
@@ -17740,6 +17980,15 @@
                             msgobj.header().append_child(msgobj);
                         }
                         return msgobj;
+                    } else if (dashboardwrappers.ChatDashboardWrapper.message_type_checker.is_vote(msgattr.type)) {
+                        const msgobj = new contentpages._chat.msgtypes.VoteMsg(this.dashboard_element, contentpage, msgattr, msgseniors);
+                        msgattr.msgobj = msgobj;
+                        if (msgobj.is_header()) {
+                            if (!noappend && contentpage) contentpage.e_msgflow.append(msgobj.msgelement);
+                        } else {
+                            msgobj.header().append_child(msgobj);
+                        }
+                        return msgobj;
                     }
                 },
 
@@ -17806,7 +18055,32 @@
                 return string;
             }
 
-            get_contact_sort_weight(item) {
+            cast_vote(message_id, option_idx) {
+                const item = this.current_contact_item;
+                if (!item) return;
+
+                const {xxid, contact_type, ceid} = this.get_contact_xxid(item);
+
+                checkin.subviews.chat.cast_vote(null, contact_type, xxid, ceid, message_id, option_idx)
+                    .then(result => {
+                        if (result.message_attr) {
+                            this.update_contact_item_status(result.sync);
+                            const msg = item.msgs.find(m => m.id === message_id);
+                            if (msg) {
+                                msg.data_text = result.message_attr.data_text;
+                                if (msg.msgobj) {
+                                    msg.msgobj.vote_data = JSON.parse(result.message_attr.data_text);
+                                    msg.msgobj.has_voted = true;
+                                    msg.msgobj.show_stats();
+                                }
+                            }
+                        }
+                    }).catch(error => {
+                    MessageMark.report(error, null, null);
+                });
+            }
+
+            get_contact_xxid(item) {
                 const status = item.status_attr;
                 if (!status) return 999;
 
@@ -17949,6 +18223,8 @@
                     return type === dashboardwrappers.ChatDashboardWrapper.message_type.file;
                 }, is_text: (type) => {
                     return type === dashboardwrappers.ChatDashboardWrapper.message_type.text;
+                }, is_vote: (type) => {
+                    return type === dashboardwrappers.ChatDashboardWrapper.message_type.vote;
                 }, is_sys: (type) => {
                     return type === dashboardwrappers.ChatDashboardWrapper.message_type.sys;
                 },
