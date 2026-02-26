@@ -12781,6 +12781,7 @@
                     for (let i = 0; i < this.li.bindmap.sending_msgs.length; i++) {
                         const sendingMsg = this.li.bindmap.sending_msgs[i];
                         if (sendingMsg.sender_rand === sender_rand) {
+                            sendingMsg.is_sent = true;
                             if (this.li.bindmap.msgs.length === 0 && !form_field_checker.ffc_int(previous_message_id)) { // 群里的首条消息
                                 this.li.bindmap.sending_msgs.splice(i, 1);
                                 Object.assign(sendingMsg, message_attr);
