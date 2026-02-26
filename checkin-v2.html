@@ -8575,6 +8575,7 @@
             }
 
             async send_vote(ws_send, contact_type, xxid, ceid, sender_rand, vote_data_json,) {
+                console.log("send_vote called:", {contact_type, xxid, ceid, sender_rand, vote_type: dashboardwrappers.ChatDashboardWrapper.message_type.vote});
                 let url = join_path(this.api_url(), "send");
                 let body = {
                     contact_type, ceid,
@@ -12107,12 +12108,16 @@
 
             _send_vote_msg(msg) {
                 const {xxid, contact_type, ceid} = this.current_contact_xxid();
+                console.log("投票message_type:", dashboardwrappers.ChatDashboardWrapper.message_type);
+                console.log("发送投票消息:", {contact_type, xxid, ceid, sender_rand: msg.sender_rand, type: msg.type, data_text: msg.data_text ? msg.data_text.substring(0, 50) : null});
 
                 const onfetchload = (result) => {
+                    console.log("投票发送成功:", result);
                     this.client.dashboard_chat.wrapper.update_contact_item_status(result.sync);
                     this.msgflow_manage.update_sending_msg(msg.sender_rand, result.message_attr, result.previous_message_id);
                 };
                 const onfetcherror = (error) => {
+                    console.error("投票发送失败:", error);
                     msg.msgobj.on_send_failed(error);
                 };
                 const ws_isopen = false;
@@ -12120,9 +12125,11 @@
                     this.panel.wrapper.ws_send(args.body, {onfetchload, onfetcherror});
                 } : null, contact_type, xxid, ceid, msg.sender_rand, msg.data_text,)
                     .then(result => {
+                        console.log("投票发送then:", result);
                         if (ws_isopen) return;
                         onfetchload(result);
                     }).catch(error => {
+                    console.error("投票发送catch:", error);
                     onfetcherror(error);
                 });
             }
