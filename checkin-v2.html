@@ -10791,18 +10791,25 @@
                 this.e_topic_new_input = this.container.querySelector(".chat-topic-new-input");
                 this.e_topic_new_btn = this.container.querySelector(".chat-topic-new-btn");
                 
+                console.log("话题选择器元素:", this.e_topic_selector, this.e_topic_select);
+                
                 // 收集当前会话中的话题
                 this.current_topics = [''];  // 默认为空（闲聊）
                 
                 // 显示话题选择器（仅群聊时显示）
                 this.update_topic_selector_visibility = () => {
-                    if (!this.e_topic_selector) return;
+                    if (!this.e_topic_selector) {
+                        console.log("话题选择器未找到");
+                        return;
+                    }
                     try {
                         const {contact_type} = this.current_contact_xxid();
                         if (contact_type === subviews.Chat.receiver_type.group) {
                             this.e_topic_selector.classList.remove("hidden");
+                            console.log("显示话题选择器 - 群聊");
                         } else {
                             this.e_topic_selector.classList.add("hidden");
+                            console.log("隐藏话题选择器 - 私聊");
                         }
                     } catch (e) {
                         console.error("话题选择器初始化错误:", e);
@@ -10811,7 +10818,10 @@
                 
                 // 刷新话题下拉列表
                 this.refresh_topic_list = () => {
-                    if (!this.e_topic_select) return;
+                    if (!this.e_topic_select) {
+                        console.log("话题下拉框未找到");
+                        return;
+                    }
                     const currentVal = this.e_topic_select.value;
                     this.e_topic_select.innerHTML = '';
                     
@@ -11923,6 +11933,8 @@
                         plain_text: text,
                         topic: this.e_topic_select ? this.e_topic_select.value : '',
                     }
+
+                    console.log("发送消息，话题:", msg.topic, "下拉框:", this.e_topic_select);
 
                     // 将话题添加到列表中
                     if (msg.topic && !this.current_topics.includes(msg.topic)) {
