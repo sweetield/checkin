@@ -18681,35 +18681,10 @@
     checkin.apply_theme();
     initialize();
 
-    // 测试用：点击任何地方都尝试找已读元素
+    // 简单测试：点击任何地方都弹出提示
     document.addEventListener('click', function(e) {
-        // 先尝试直接找到最近的已读元素
-        let el = e.target;
-        while (el && el !== document) {
-            if (el.classList && el.classList.contains('chat-mcm-read-status')) {
-                console.log("找到已读元素:", el);
-                // 找到它的父容器
-                let container = el.parentElement;
-                while (container && container !== document) {
-                    if (container.classList && container.classList.contains('chat-message-content-container')) {
-                        if (container.msgobj) {
-                            const msgobj = container.msgobj;
-                            console.log("找到msgobj:", msgobj);
-                            if (msgobj.msgattr && msgobj.msgattr.read_list) {
-                                showReadListModal(msgobj);
-                            } else {
-                                alert("暂无已读数据");
-                            }
-                            return;
-                        }
-                    }
-                    container = container.parentElement;
-                }
-                break;
-            }
-            el = el.parentElement;
-        }
-    });
+        console.log("页面被点击了:", e.target);
+    }, true);
 
 </script>
 
