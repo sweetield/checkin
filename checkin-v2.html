@@ -13043,7 +13043,8 @@
                         if (this.e_read_status) {
                             this.e_read_status.style.cursor = "pointer";
                             this.e_read_status.title = "点击查看已读人员";
-                            this.e_read_status.addEventListener("click", (e) => {
+                            // 使用 mousedown 事件在右键菜单之前触发
+                            this.e_read_status.addEventListener("mousedown", (e) => {
                                 e.stopPropagation();
                                 e.preventDefault();
                                 console.log("点击已读状态:", this.at_attr, this.msgattr.read_list, this.contentpage ? this.contentpage.is_group() : false);
