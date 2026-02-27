@@ -15872,49 +15872,72 @@
                     });
                 }
 
-                get_category_input_html(defaultCategory = '') {
+                show_category_modal(defaultCategory = '', callback) {
+                    const overlay = document.createElement('div');
+                    overlay.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.5);z-index:9999;display:flex;align-items:center;justify-content:center;';
+                    
                     const categoryOptions = this.categories.map(c => 
                         `<option value="${c.name}" ${c.name === defaultCategory ? 'selected' : ''}>${c.name}</option>`
                     ).join('');
-                    return `
-                        <div style="margin-top: 10px;">
-                            <label>分类：</label>
-                            <select id="cat_select" style="width: 150px; padding: 5px;">
-                                <option value="">无</option>
-                                ${categoryOptions}
-                            </select>
-                            <input type="text" id="cat_input" placeholder="或输入新分类" style="width: 120px; padding: 5px; margin-left: 5px;">
+
+                    overlay.innerHTML = `
+                        <div style="background:#fff;padding:20px;border-radius:8px;min-width:300px;box-shadow:0 4px 20px rgba(0,0,0,0.3);">
+                            <h3 style="margin:0 0 15px 0;">选择分类</h3>
+                            <div style="margin-bottom:15px;">
+                                <select id="cat_select" style="width:150px;padding:8px;border:1px solid #ccc;border-radius:4px;">
+                                    <option value="">无</option>
+                                    ${categoryOptions}
+                                </select>
+                                <span style="margin:0 10px;">或</span>
+                                <input type="text" id="cat_input" placeholder="输入新分类" style="width:120px;padding:8px;border:1px solid #ccc;border-radius:4px;">
+                            </div>
+                            <div style="text-align:right;">
+                                <button id="cat_cancel" style="padding:8px 16px;margin-right:10px;border:1px solid #ccc;background:#f5f5f5;border-radius:4px;cursor:pointer;">取消</button>
+                                <button id="cat_ok" style="padding:8px 16px;background:#3399ff;color:#fff;border:none;border-radius:4px;cursor:pointer;">确定</button>
+                            </div>
                         </div>
                     `;
-                }
 
-                get_category_from_input() {
-                    const select = document.getElementById('cat_select');
-                    const input = document.getElementById('cat_input');
-                    if (input && input.value.trim()) {
-                        return input.value.trim();
-                    }
-                    if (select) {
-                        return select.value;
-                    }
-                    return '';
-                }
+                    document.body.appendChild(overlay);
 
-                show_category_prompt(defaultCategory = '', callback) {
-                    const html = this.get_category_input_html(defaultCategory);
-                    const result = prompt("请在下方选择或输入分类：\n(点击取消则不分类)" + html);
-                    if (result === null) {
+                    const select = overlay.querySelector('#cat_select');
+                    const input = overlay.querySelector('#cat_input');
+                    const okBtn = overlay.querySelector('#cat_ok');
+                    const cancelBtn = overlay.querySelector('#cat_cancel');
+
+                    const close = () => {
+                        document.body.removeChild(overlay);
+                    };
+
+                    okBtn.onclick = () => {
+                        let category = '';
+                        if (input.value.trim()) {
+                            category = input.value.trim();
+                        } else if (select.value) {
+                            category = select.value;
+                        }
+                        close();
+                        callback(category);
+                    };
+
+                    cancelBtn.onclick = () => {
+                        close();
                         callback('');
-                    } else {
-                        callback(this.get_category_from_input());
-                    }
+                    };
+
+                    overlay.onclick = (e) => {
+                        if (e.target === overlay) {
+                            close();
+                            callback('');
+                        }
+                    };
                 }
 
                 add_candidate() {
                     const word = prompt("请输入候选词：");
                     if (!word || !word.trim()) return;
                     
-                    this.show_category_prompt(this.current_category || '', (category) => {
+                    this.show_category_modal(this.current_category || '', (category) => {
                         this.loading_mark.show();
                         this.client.subviews.admin.add_candidate_word(word.trim(), category)
                             .then(result => {
@@ -15931,7 +15954,7 @@
                     const words = prompt("请输入候选词（多个用空格或|分隔）：");
                     if (!words || !words.trim()) return;
                     
-                    this.show_category_prompt(this.current_category || '', (category) => {
+                    this.show_category_modal(this.current_category || '', (category) => {
                         const word_list = words.split(/[\n |]/).map(w => w.trim()).filter(w => w).map(w => ({word: w, category: category}));
                         if (word_list.length === 0) return;
 
@@ -15952,7 +15975,7 @@
                     if (!new_word || !new_word.trim()) return;
                     if (new_word.trim() === word) return;
 
-                    this.show_category_prompt(currentCategory || '', (category) => {
+                    this.show_category_modal(currentCategory || '', (category) => {
                         this.loading_mark.show();
                         this.client.subviews.admin.edit_candidate_word(word, new_word.trim(), category)
                             .then(result => {
@@ -15966,7 +15989,7 @@
                 }
 
                 set_category(item, word, currentCategory) {
-                    this.show_category_prompt(currentCategory || '', (category) => {
+                    this.show_category_modal(currentCategory || '', (category) => {
                         this.loading_mark.show();
                         this.client.subviews.admin.set_candidate_category(word, category)
                             .then(result => {
@@ -15985,7 +16008,7 @@
                         return;
                     }
 
-                    this.show_category_prompt('', (category) => {
+                    this.show_category_modal('', (category) => {
                         const words = Array.from(this.selected_words);
                         this.loading_mark.show();
                         
