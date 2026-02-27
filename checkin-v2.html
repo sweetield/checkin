@@ -13039,12 +13039,19 @@
                         this.e_sent_time = this.e_marks.querySelector(":scope .chat-mcm-sent-time");
                         this.e_read_status = this.e_marks.querySelector(":scope .chat-mcm-read-status");
 
+                        // 绑定点击事件显示已读列表
                         if (this.e_read_status) {
                             this.e_read_status.style.cursor = "pointer";
+                            this.e_read_status.title = "点击查看已读人员";
                             this.e_read_status.addEventListener("click", (e) => {
                                 e.stopPropagation();
-                                if (this.at_attr.at_all && this.contentpage && this.contentpage.is_group()) {
+                                e.preventDefault();
+                                console.log("点击已读状态:", this.at_attr, this.msgattr.read_list, this.contentpage ? this.contentpage.is_group() : false);
+                                // 暂时放宽条件，只要消息有read_list且是群聊就显示
+                                if (this.msgattr && this.msgattr.read_list && this.contentpage && this.contentpage.is_group()) {
                                     showReadListModal(this);
+                                } else {
+                                    alert("暂无已读数据");
                                 }
                             });
                         }
@@ -13083,6 +13090,8 @@
 
                                 if (this.contentpage) { // 已读状态
                                     this.e_read_status.classList.remove("hidden");
+                                        });
+                                    }
 
                                     if (this.contentpage.is_group()) { // 群聊
                                         if (this.at_attr.at_all) { // 所有人
