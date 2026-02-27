@@ -13039,24 +13039,6 @@
                         this.e_sent_time = this.e_marks.querySelector(".chat-mcm-sent-time");
                         this.e_read_status = this.e_marks.querySelector(".chat-mcm-read-status");
 
-                        // 绑定点击事件显示已读列表
-                        const self = this;
-                        if (this.e_read_status) {
-                            this.e_read_status.style.cursor = "pointer";
-                            this.e_read_status.style.userSelect = "none";
-                            this.e_read_status.style.pointerEvents = "auto";
-                            this.e_read_status.onclick = function(e) {
-                                e.stopPropagation();
-                                e.cancelBubble = true;
-                                console.log("点击已读状态:", self.at_attr, self.msgattr.read_list);
-                                if (self.msgattr && self.msgattr.read_list) {
-                                    showReadListModal(self);
-                                } else {
-                                    alert("暂无已读数据");
-                                }
-                            };
-                        }
-
                         // 二编标记
                         {
                             let html = `<div class="chat-message-content-rect-mark-edited hidden"></div>`;
@@ -18699,6 +18681,25 @@
     checkin.apply_theme();
     initialize();
 
+    // 全局事件委托：处理已读状态点击
+    document.addEventListener('click', function(e) {
+        console.log("点击目标:", e.target);
+        const readStatusEl = e.target.closest('.chat-mcm-read-status');
+        console.log("找到已读元素:", readStatusEl);
+        if (readStatusEl) {
+            const msgContainer = readStatusEl.closest('.chat-message-content-container');
+            console.log("消息容器:", msgContainer);
+            if (msgContainer && msgContainer.msgobj) {
+                const msgobj = msgContainer.msgobj;
+                console.log("点击已读状态:", msgobj.msgattr.read_list);
+                if (msgobj.msgattr && msgobj.msgattr.read_list) {
+                    showReadListModal(msgobj);
+                } else {
+                    alert("暂无已读数据");
+                }
+            }
+        }
+    });
 
 </script>
 
