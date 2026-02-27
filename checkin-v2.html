@@ -7833,6 +7833,17 @@
                 throw new Error(await format_error_response(r));
             }
 
+            async delete_candidate_category_many(names) {
+                let url = join_path(this.api_url(), "candidate_category", "delete_many");
+                let body = {names: names};
+                let r = await net_fetcher.nf_post_json(url, body);
+                if (r.status === 200) {
+                    let text = await r.text();
+                    return text ? JSON.parse(text) : {success: true};
+                }
+                throw new Error(await format_error_response(r));
+            }
+
             async delete_candidate_word(word) {
                 let url = join_path(this.api_url(), "candidate_word", encodeURIComponent(word));
                 let r = await net_fetcher.nf_delete(url,);
@@ -15838,10 +15849,15 @@
                     const overlay = document.createElement('div');
                     overlay.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.5);z-index:9999;display:flex;align-items:center;justify-content:center;';
                     
+                    const selectedCategories = new Set();
+                    
                     const renderCategoryList = () => {
                         return this.categories.map((c, i) => `
-                            <div class="cat-item" style="display:flex;align-items:center;justify-content:space-between;padding:8px;border-bottom:1px solid #eee;">
-                                <span class="cat-name">${c.name}</span>
+                            <div class="cat-item" style="display:flex;align-items:center;justify-content:space-between;padding:8px;border-bottom:1px solid #eee;${selectedCategories.has(c.name) ? 'background:#e3f2fd;' : ''}">
+                                <div style="display:flex;align-items:center;">
+                                    <input type="checkbox" class="cat-checkbox" value="${c.name}" ${selectedCategories.has(c.name) ? 'checked' : ''} style="margin-right:10px;">
+                                    <span class="cat-name">${c.name}</span>
+                                </div>
                                 <div>
                                     <button class="cat-rename" data-name="${c.name}" style="padding:4px 8px;margin-right:5px;cursor:pointer;">重命名</button>
                                     <button class="cat-delete" data-name="${c.name}" style="padding:4px 8px;cursor:pointer;background:#ffebee;border:1px solid #d32f2f;color:#d32f2f;border-radius:3px;">删除</button>
@@ -15851,16 +15867,23 @@
                     };
 
                     overlay.innerHTML = `
-                        <div style="background:#fff;padding:20px;border-radius:8px;min-width:400px;max-height:80vh;overflow-y:auto;box-shadow:0 4px 20px rgba(0,0,0,0.3);">
+                        <div style="background:#fff;padding:20px;border-radius:8px;min-width:450px;max-height:80vh;overflow-y:auto;box-shadow:0 4px 20px rgba(0,0,0,0.3);">
                             <h3 style="margin:0 0 15px 0;">管理分类</h3>
                             <div style="margin-bottom:15px;">
                                 <input type="text" id="new_cat_name" placeholder="输入新分类名称" style="width:200px;padding:8px;border:1px solid #ccc;border-radius:4px;">
                                 <button id="add_cat" style="padding:8px 16px;background:#4caf50;color:#fff;border:none;border-radius:4px;cursor:pointer;">添加</button>
                             </div>
+                            <div style="margin-bottom:10px;padding:10px;background:#f5f5f5;border-radius:4px;">
+                                <label style="display:flex;align-items:center;cursor:pointer;">
+                                    <input type="checkbox" id="select_all_cats" style="margin-right:8px;">
+                                    <span>全选</span>
+                                </label>
+                            </div>
                             <div id="cat_list" style="border:1px solid #eee;border-radius:4px;max-height:300px;overflow-y:auto;">
                                 ${this.categories.length > 0 ? renderCategoryList() : '<div style="padding:20px;text-align:center;color:#999;">暂无分类</div>'}
                             </div>
-                            <div style="text-align:right;margin-top:15px;">
+                            <div style="margin-top:10px;display:flex;justify-content:space-between;">
+                                <button id="delete_selected_cats" style="padding:8px 16px;background:#d32f2f;color:#fff;border:none;border-radius:4px;cursor:pointer;display:${selectedCategories.size > 0 ? '' : 'none'};">删除选中 (${selectedCategories.size})</button>
                                 <button id="close_manage" style="padding:8px 16px;border:1px solid #ccc;background:#f5f5f5;border-radius:4px;cursor:pointer;">关闭</button>
                             </div>
                         </div>
@@ -15872,23 +15895,49 @@
                     const addBtn = overlay.querySelector('#add_cat');
                     const catList = overlay.querySelector('#cat_list');
                     const closeBtn = overlay.querySelector('#close_manage');
+                    const selectAllCheckbox = overlay.querySelector('#select_all_cats');
+                    const deleteSelectedBtn = overlay.querySelector('#delete_selected_cats');
 
                     const refreshList = () => {
                         catList.innerHTML = this.categories.length > 0 ? renderCategoryList() : '<div style="padding:20px;text-align:center;color:#999;">暂无分类</div>';
+                        updateDeleteButton();
                         attachEvents();
                     };
 
+                    const updateDeleteButton = () => {
+                        if (selectedCategories.size > 0) {
+                            deleteSelectedBtn.style.display = '';
+                            deleteSelectedBtn.textContent = `删除选中 (${selectedCategories.size})`;
+                        } else {
+                            deleteSelectedBtn.style.display = 'none';
+                        }
+                    };
+
                     const attachEvents = () => {
+                        catList.querySelectorAll('.cat-checkbox').forEach(cb => {
+                            cb.onchange = () => {
+                                if (cb.checked) {
+                                    selectedCategories.add(cb.value);
+                                } else {
+                                    selectedCategories.delete(cb.value);
+                                }
+                                refreshList();
+                            };
+                        });
+
                         catList.querySelectorAll('.cat-rename').forEach(btn => {
                             btn.onclick = () => {
                                 const oldName = btn.dataset.name;
                                 const newName = prompt('请输入新分类名称：', oldName);
                                 if (newName && newName.trim() && newName.trim() !== oldName) {
+                                    this.loading_mark.show();
                                     this.client.subviews.admin.edit_candidate_category(oldName, newName.trim(), 0)
                                         .then(() => {
+                                            this.remove_loading_mark();
                                             this.fetch_categories();
                                             refreshList();
                                         }).catch(error => {
+                                            this.remove_loading_mark();
                                             MessageMark.report(error);
                                         });
                                 }
@@ -15899,11 +15948,15 @@
                             btn.onclick = () => {
                                 const name = btn.dataset.name;
                                 if (confirm(`确定要删除分类"${name}"吗？\n该分类下的候选词将变为无分类。`)) {
+                                    this.loading_mark.show();
                                     this.client.subviews.admin.delete_candidate_category(name)
                                         .then(() => {
+                                            this.remove_loading_mark();
                                             this.fetch_categories();
+                                            selectedCategories.delete(name);
                                             refreshList();
                                         }).catch(error => {
+                                            this.remove_loading_mark();
                                             MessageMark.report(error);
                                         });
                                 }
@@ -15914,14 +15967,44 @@
                     addBtn.onclick = () => {
                         const name = newCatInput.value.trim();
                         if (!name) return;
+                        this.loading_mark.show();
                         this.client.subviews.admin.add_candidate_category(name, 0)
                             .then(() => {
+                                this.remove_loading_mark();
                                 newCatInput.value = '';
                                 this.fetch_categories();
                                 refreshList();
                             }).catch(error => {
+                                this.remove_loading_mark();
                                 MessageMark.report(error);
                             });
+                    };
+
+                    selectAllCheckbox.onchange = () => {
+                        if (selectAllCheckbox.checked) {
+                            this.categories.forEach(c => selectedCategories.add(c.name));
+                        } else {
+                            selectedCategories.clear();
+                        }
+                        refreshList();
+                    };
+
+                    deleteSelectedBtn.onclick = () => {
+                        if (selectedCategories.size === 0) return;
+                        if (confirm(`确定要删除选中的 ${selectedCategories.size} 个分类吗？\n这些分类下的候选词将变为无分类。`)) {
+                            this.loading_mark.show();
+                            const namesToDelete = Array.from(selectedCategories);
+                            this.client.subviews.admin.delete_candidate_category_many(namesToDelete)
+                                .then(() => {
+                                    this.remove_loading_mark();
+                                    selectedCategories.clear();
+                                    this.fetch_categories();
+                                    refreshList();
+                                }).catch(error => {
+                                    this.remove_loading_mark();
+                                    MessageMark.report(error);
+                                });
+                        }
                     };
 
                     closeBtn.onclick = () => {
