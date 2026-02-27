@@ -7806,8 +7806,8 @@
                 let body = {name: name, sort_order: sort_order};
                 let r = await net_fetcher.nf_post_json(url, body);
                 if (r.status === 200) {
-                    let d = await r.json();
-                    return d;
+                    let text = await r.text();
+                    return text ? JSON.parse(text) : {name: name};
                 }
                 throw new Error(await format_error_response(r));
             }
@@ -7817,8 +7817,8 @@
                 let body = {name: new_name, sort_order: sort_order};
                 let r = await net_fetcher.nf_put_json(url, body);
                 if (r.status === 200) {
-                    let d = await r.json();
-                    return d;
+                    let text = await r.text();
+                    return text ? JSON.parse(text) : {name: new_name};
                 }
                 throw new Error(await format_error_response(r));
             }
@@ -7827,8 +7827,8 @@
                 let url = join_path(this.api_url(), "candidate_category", encodeURIComponent(name));
                 let r = await net_fetcher.nf_delete(url);
                 if (r.status === 200) {
-                    let d = await r.json();
-                    return d;
+                    let text = await r.text();
+                    return text ? JSON.parse(text) : {success: true};
                 }
                 throw new Error(await format_error_response(r));
             }
@@ -15835,28 +15835,106 @@
                 }
 
                 manage_categories() {
-                    const names = this.categories.map(c => c.name).join('\n');
-                    const input = prompt("请输入分类名称（每行一个，多个用换行分隔）：", names);
-                    if (input === null) return;
+                    const overlay = document.createElement('div');
+                    overlay.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.5);z-index:9999;display:flex;align-items:center;justify-content:center;';
+                    
+                    const renderCategoryList = () => {
+                        return this.categories.map((c, i) => `
+                            <div class="cat-item" style="display:flex;align-items:center;justify-content:space-between;padding:8px;border-bottom:1px solid #eee;">
+                                <span class="cat-name">${c.name}</span>
+                                <div>
+                                    <button class="cat-rename" data-name="${c.name}" style="padding:4px 8px;margin-right:5px;cursor:pointer;">重命名</button>
+                                    <button class="cat-delete" data-name="${c.name}" style="padding:4px 8px;cursor:pointer;background:#ffebee;border:1px solid #d32f2f;color:#d32f2f;border-radius:3px;">删除</button>
+                                </div>
+                            </div>
+                        `).join('');
+                    };
 
-                    const new_categories = input.split('\n').map(s => s.trim()).filter(s => s);
-                    const old_names = new Set(this.categories.map(c => c.name));
-                    const new_names = new Set(new_categories);
+                    overlay.innerHTML = `
+                        <div style="background:#fff;padding:20px;border-radius:8px;min-width:400px;max-height:80vh;overflow-y:auto;box-shadow:0 4px 20px rgba(0,0,0,0.3);">
+                            <h3 style="margin:0 0 15px 0;">管理分类</h3>
+                            <div style="margin-bottom:15px;">
+                                <input type="text" id="new_cat_name" placeholder="输入新分类名称" style="width:200px;padding:8px;border:1px solid #ccc;border-radius:4px;">
+                                <button id="add_cat" style="padding:8px 16px;background:#4caf50;color:#fff;border:none;border-radius:4px;cursor:pointer;">添加</button>
+                            </div>
+                            <div id="cat_list" style="border:1px solid #eee;border-radius:4px;max-height:300px;overflow-y:auto;">
+                                ${this.categories.length > 0 ? renderCategoryList() : '<div style="padding:20px;text-align:center;color:#999;">暂无分类</div>'}
+                            </div>
+                            <div style="text-align:right;margin-top:15px;">
+                                <button id="close_manage" style="padding:8px 16px;border:1px solid #ccc;background:#f5f5f5;border-radius:4px;cursor:pointer;">关闭</button>
+                            </div>
+                        </div>
+                    `;
 
-                    const to_add = new_categories.filter(n => !old_names.has(n));
-                    const to_delete = this.categories.filter(c => !new_names.has(c.name)).map(c => c.name);
+                    document.body.appendChild(overlay);
 
-                    this.loading_mark.show();
-                    Promise.all([
-                        ...to_add.map(name => this.client.subviews.admin.add_candidate_category(name, 0)),
-                        ...to_delete.map(name => this.client.subviews.admin.delete_candidate_category(name))
-                    ]).then(() => {
-                        this.remove_loading_mark();
-                        this.fetch_categories();
-                    }).catch(error => {
-                        this.remove_loading_mark();
-                        MessageMark.report(error);
-                    });
+                    const newCatInput = overlay.querySelector('#new_cat_name');
+                    const addBtn = overlay.querySelector('#add_cat');
+                    const catList = overlay.querySelector('#cat_list');
+                    const closeBtn = overlay.querySelector('#close_manage');
+
+                    const refreshList = () => {
+                        catList.innerHTML = this.categories.length > 0 ? renderCategoryList() : '<div style="padding:20px;text-align:center;color:#999;">暂无分类</div>';
+                        attachEvents();
+                    };
+
+                    const attachEvents = () => {
+                        catList.querySelectorAll('.cat-rename').forEach(btn => {
+                            btn.onclick = () => {
+                                const oldName = btn.dataset.name;
+                                const newName = prompt('请输入新分类名称：', oldName);
+                                if (newName && newName.trim() && newName.trim() !== oldName) {
+                                    this.client.subviews.admin.edit_candidate_category(oldName, newName.trim(), 0)
+                                        .then(() => {
+                                            this.fetch_categories();
+                                            refreshList();
+                                        }).catch(error => {
+                                            MessageMark.report(error);
+                                        });
+                                }
+                            };
+                        });
+
+                        catList.querySelectorAll('.cat-delete').forEach(btn => {
+                            btn.onclick = () => {
+                                const name = btn.dataset.name;
+                                if (confirm(`确定要删除分类"${name}"吗？\n该分类下的候选词将变为无分类。`)) {
+                                    this.client.subviews.admin.delete_candidate_category(name)
+                                        .then(() => {
+                                            this.fetch_categories();
+                                            refreshList();
+                                        }).catch(error => {
+                                            MessageMark.report(error);
+                                        });
+                                }
+                            };
+                        });
+                    };
+
+                    addBtn.onclick = () => {
+                        const name = newCatInput.value.trim();
+                        if (!name) return;
+                        this.client.subviews.admin.add_candidate_category(name, 0)
+                            .then(() => {
+                                newCatInput.value = '';
+                                this.fetch_categories();
+                                refreshList();
+                            }).catch(error => {
+                                MessageMark.report(error);
+                            });
+                    };
+
+                    closeBtn.onclick = () => {
+                        document.body.removeChild(overlay);
+                    };
+
+                    overlay.onclick = (e) => {
+                        if (e.target === overlay) {
+                            document.body.removeChild(overlay);
+                        }
+                    };
+
+                    attachEvents();
                 }
 
                 filter_list() {
@@ -15909,13 +15987,22 @@
                         document.body.removeChild(overlay);
                     };
 
-                    okBtn.onclick = () => {
+                    okBtn.onclick = async () => {
                         let category = '';
                         if (input.value.trim()) {
                             category = input.value.trim();
                         } else if (select.value) {
                             category = select.value;
                         }
+                        
+                        if (category && !this.categories.find(c => c.name === category)) {
+                            try {
+                                await this.client.subviews.admin.add_candidate_category(category, 0);
+                            } catch (e) {
+                                console.error('添加分类失败', e);
+                            }
+                        }
+                        
                         close();
                         callback(category);
                     };
@@ -15942,7 +16029,7 @@
                         this.client.subviews.admin.add_candidate_word(word.trim(), category)
                             .then(result => {
                                 this.remove_loading_mark();
-                                this.fetch_list();
+                                this.fetch_categories();
                             }).catch(error => {
                                 this.remove_loading_mark();
                                 MessageMark.report(error);
@@ -15962,7 +16049,7 @@
                         this.client.subviews.admin.add_candidate_words(word_list)
                             .then(result => {
                                 this.remove_loading_mark();
-                                this.fetch_list();
+                                this.fetch_categories();
                             }).catch(error => {
                                 this.remove_loading_mark();
                                 MessageMark.report(error);
@@ -15980,7 +16067,7 @@
                         this.client.subviews.admin.edit_candidate_word(word, new_word.trim(), category)
                             .then(result => {
                                 this.remove_loading_mark();
-                                this.fetch_list();
+                                this.fetch_categories();
                             }).catch(error => {
                                 this.remove_loading_mark();
                                 MessageMark.report(error);
@@ -15994,7 +16081,7 @@
                         this.client.subviews.admin.set_candidate_category(word, category)
                             .then(result => {
                                 this.remove_loading_mark();
-                                this.fetch_list();
+                                this.fetch_categories();
                             }).catch(error => {
                                 this.remove_loading_mark();
                                 MessageMark.report(error);
@@ -16017,7 +16104,7 @@
                         )).then(() => {
                             this.remove_loading_mark();
                             this.e_select_all_checkbox.checked = false;
-                            this.fetch_list();
+                            this.fetch_categories();
                         }).catch(error => {
                             this.remove_loading_mark();
                             MessageMark.report(error);
