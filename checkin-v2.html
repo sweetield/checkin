@@ -18681,23 +18681,33 @@
     checkin.apply_theme();
     initialize();
 
-    // 全局事件委托：处理已读状态点击
+    // 测试用：点击任何地方都尝试找已读元素
     document.addEventListener('click', function(e) {
-        console.log("点击目标:", e.target);
-        const readStatusEl = e.target.closest('.chat-mcm-read-status');
-        console.log("找到已读元素:", readStatusEl);
-        if (readStatusEl) {
-            const msgContainer = readStatusEl.closest('.chat-message-content-container');
-            console.log("消息容器:", msgContainer);
-            if (msgContainer && msgContainer.msgobj) {
-                const msgobj = msgContainer.msgobj;
-                console.log("点击已读状态:", msgobj.msgattr.read_list);
-                if (msgobj.msgattr && msgobj.msgattr.read_list) {
-                    showReadListModal(msgobj);
-                } else {
-                    alert("暂无已读数据");
+        // 先尝试直接找到最近的已读元素
+        let el = e.target;
+        while (el && el !== document) {
+            if (el.classList && el.classList.contains('chat-mcm-read-status')) {
+                console.log("找到已读元素:", el);
+                // 找到它的父容器
+                let container = el.parentElement;
+                while (container && container !== document) {
+                    if (container.classList && container.classList.contains('chat-message-content-container')) {
+                        if (container.msgobj) {
+                            const msgobj = container.msgobj;
+                            console.log("找到msgobj:", msgobj);
+                            if (msgobj.msgattr && msgobj.msgattr.read_list) {
+                                showReadListModal(msgobj);
+                            } else {
+                                alert("暂无已读数据");
+                            }
+                            return;
+                        }
+                    }
+                    container = container.parentElement;
                 }
+                break;
             }
+            el = el.parentElement;
         }
     });
 
