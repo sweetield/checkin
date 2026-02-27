@@ -7785,8 +7785,8 @@
                 let body = {word: word, category: category};
                 let r = await net_fetcher.nf_post_json(url, body);
                 if (r.status === 200) {
-                    let d = await r.json();
-                    return d;
+                    let text = await r.text();
+                    return text ? JSON.parse(text) : {success: true};
                 }
                 throw new Error(await format_error_response(r));
             }
