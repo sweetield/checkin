@@ -15751,6 +15751,7 @@
     <button class="btn-import-candidates">📥 批量导入</button>
     <button class="btn-reset-counts">🔄 重置频率</button>
     <button class="btn-delete-selected" style="display:none">🗑️ 批量删除</button>
+    <button class="btn-set-category-selected" style="display:none">🏷️ 批量分类</button>
     <button class="btn-manage-categories">🏷️ 管理分类</button>
 </div>
 <div class="candidate-words-filter">
@@ -15782,6 +15783,9 @@
 
                     this.e_btn_delete_selected = this.container.querySelector(":scope button.btn-delete-selected");
                     this.e_btn_delete_selected.addEventListener("click", (event) => this.delete_selected());
+
+                    this.e_btn_set_category_selected = this.container.querySelector(":scope button.btn-set-category-selected");
+                    this.e_btn_set_category_selected.addEventListener("click", (event) => this.set_category_selected());
 
                     this.e_btn_manage_categories = this.container.querySelector(":scope button.btn-manage-categories");
                     this.e_btn_manage_categories.addEventListener("click", (event) => this.manage_categories());
@@ -15868,45 +15872,79 @@
                     });
                 }
 
+                get_category_input_html(defaultCategory = '') {
+                    const categoryOptions = this.categories.map(c => 
+                        `<option value="${c.name}" ${c.name === defaultCategory ? 'selected' : ''}>${c.name}</option>`
+                    ).join('');
+                    return `
+                        <div style="margin-top: 10px;">
+                            <label>分类：</label>
+                            <select id="cat_select" style="width: 150px; padding: 5px;">
+                                <option value="">无</option>
+                                ${categoryOptions}
+                            </select>
+                            <input type="text" id="cat_input" placeholder="或输入新分类" style="width: 120px; padding: 5px; margin-left: 5px;">
+                        </div>
+                    `;
+                }
+
+                get_category_from_input() {
+                    const select = document.getElementById('cat_select');
+                    const input = document.getElementById('cat_input');
+                    if (input && input.value.trim()) {
+                        return input.value.trim();
+                    }
+                    if (select) {
+                        return select.value;
+                    }
+                    return '';
+                }
+
+                show_category_prompt(defaultCategory = '', callback) {
+                    const html = this.get_category_input_html(defaultCategory);
+                    const result = prompt("请在下方选择或输入分类：\n(点击取消则不分类)" + html);
+                    if (result === null) {
+                        callback('');
+                    } else {
+                        callback(this.get_category_from_input());
+                    }
+                }
+
                 add_candidate() {
                     const word = prompt("请输入候选词：");
                     if (!word || !word.trim()) return;
                     
-                    const category = this.current_category || '';
-                    const categoryInput = prompt("请输入分类（可选，不填则不分类）：", category);
-                    const finalCategory = categoryInput !== null ? categoryInput.trim() : category;
-
-                    this.loading_mark.show();
-                    this.client.subviews.admin.add_candidate_word(word.trim(), finalCategory)
-                        .then(result => {
-                            this.remove_loading_mark();
-                            this.fetch_list();
-                        }).catch(error => {
-                            this.remove_loading_mark();
-                            MessageMark.report(error);
-                        });
+                    this.show_category_prompt(this.current_category || '', (category) => {
+                        this.loading_mark.show();
+                        this.client.subviews.admin.add_candidate_word(word.trim(), category)
+                            .then(result => {
+                                this.remove_loading_mark();
+                                this.fetch_list();
+                            }).catch(error => {
+                                this.remove_loading_mark();
+                                MessageMark.report(error);
+                            });
+                    });
                 }
 
                 import_candidates() {
                     const words = prompt("请输入候选词（多个用空格或|分隔）：");
                     if (!words || !words.trim()) return;
                     
-                    const defaultCategory = this.current_category || '';
-                    const category = prompt("请输入分类（可选）：", defaultCategory);
-                    const finalCategory = category !== null ? category.trim() : '';
-                    
-                    const word_list = words.split(/[\n |]/).map(w => w.trim()).filter(w => w).map(w => ({word: w, category: finalCategory}));
-                    if (word_list.length === 0) return;
+                    this.show_category_prompt(this.current_category || '', (category) => {
+                        const word_list = words.split(/[\n |]/).map(w => w.trim()).filter(w => w).map(w => ({word: w, category: category}));
+                        if (word_list.length === 0) return;
 
-                    this.loading_mark.show();
-                    this.client.subviews.admin.add_candidate_words(word_list)
-                        .then(result => {
-                            this.remove_loading_mark();
-                            this.fetch_list();
-                        }).catch(error => {
-                            this.remove_loading_mark();
-                            MessageMark.report(error);
-                        });
+                        this.loading_mark.show();
+                        this.client.subviews.admin.add_candidate_words(word_list)
+                            .then(result => {
+                                this.remove_loading_mark();
+                                this.fetch_list();
+                            }).catch(error => {
+                                this.remove_loading_mark();
+                                MessageMark.report(error);
+                            });
+                    });
                 }
 
                 edit_candidate(item, word, currentCategory) {
@@ -15914,35 +15952,54 @@
                     if (!new_word || !new_word.trim()) return;
                     if (new_word.trim() === word) return;
 
-                    const category = prompt("请输入分类（可选）：", currentCategory || '');
-                    const finalCategory = category !== null ? category.trim() : '';
-
-                    this.loading_mark.show();
-                    this.client.subviews.admin.edit_candidate_word(word, new_word.trim(), finalCategory)
-                        .then(result => {
-                            this.remove_loading_mark();
-                            this.fetch_list();
-                        }).catch(error => {
-                            this.remove_loading_mark();
-                            MessageMark.report(error);
-                        });
+                    this.show_category_prompt(currentCategory || '', (category) => {
+                        this.loading_mark.show();
+                        this.client.subviews.admin.edit_candidate_word(word, new_word.trim(), category)
+                            .then(result => {
+                                this.remove_loading_mark();
+                                this.fetch_list();
+                            }).catch(error => {
+                                this.remove_loading_mark();
+                                MessageMark.report(error);
+                            });
+                    });
                 }
 
                 set_category(item, word, currentCategory) {
-                    const categories = ['', ...this.categories.map(c => c.name)];
-                    const category = prompt(`请输入分类（可选，当前：${currentCategory || '无'}）：\n可选：${categories.join(', ')}`, currentCategory || '');
-                    if (category === null) return;
-                    const finalCategory = category.trim();
+                    this.show_category_prompt(currentCategory || '', (category) => {
+                        this.loading_mark.show();
+                        this.client.subviews.admin.set_candidate_category(word, category)
+                            .then(result => {
+                                this.remove_loading_mark();
+                                this.fetch_list();
+                            }).catch(error => {
+                                this.remove_loading_mark();
+                                MessageMark.report(error);
+                            });
+                    });
+                }
 
-                    this.loading_mark.show();
-                    this.client.subviews.admin.set_candidate_category(word, finalCategory)
-                        .then(result => {
+                set_category_selected() {
+                    if (this.selected_words.size === 0) {
+                        alert("请先选择要分类的候选词");
+                        return;
+                    }
+
+                    this.show_category_prompt('', (category) => {
+                        const words = Array.from(this.selected_words);
+                        this.loading_mark.show();
+                        
+                        Promise.all(words.map(word => 
+                            this.client.subviews.admin.set_candidate_category(word, category)
+                        )).then(() => {
                             this.remove_loading_mark();
+                            this.e_select_all_checkbox.checked = false;
                             this.fetch_list();
                         }).catch(error => {
                             this.remove_loading_mark();
                             MessageMark.report(error);
                         });
+                    });
                 }
 
                 delete_candidate(item, word) {
@@ -15993,9 +16050,11 @@
                     
                     if (list.length > 0) {
                         this.e_btn_delete_selected.style.display = "";
+                        this.e_btn_set_category_selected.style.display = "none";
                         this.e_select_all_label.style.display = "";
                     } else {
                         this.e_btn_delete_selected.style.display = "none";
+                        this.e_btn_set_category_selected.style.display = "none";
                         this.e_select_all_label.style.display = "none";
                     }
                     
@@ -16062,8 +16121,14 @@
                 update_delete_button() {
                     if (this.selected_words.size > 0) {
                         this.e_btn_delete_selected.textContent = `🗑️ 批量删除 (${this.selected_words.size})`;
+                        this.e_btn_set_category_selected.textContent = `🏷️ 批量分类 (${this.selected_words.size})`;
+                        this.e_btn_delete_selected.style.display = "";
+                        this.e_btn_set_category_selected.style.display = "";
                     } else {
                         this.e_btn_delete_selected.textContent = `🗑️ 批量删除`;
+                        this.e_btn_set_category_selected.textContent = `🏷️ 批量分类`;
+                        this.e_btn_delete_selected.style.display = "none";
+                        this.e_btn_set_category_selected.style.display = "none";
                     }
                 }
 
