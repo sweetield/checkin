@@ -357,124 +357,6 @@
             padding: 25px 35px;
             border-radius: 10px;
             text-align: center;
-        }
-
-        /* 已读/未读列表弹窗 */
-        .read-list-modal {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0,0,0,0.5);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            z-index: 10000;
-            opacity: 0;
-            pointer-events: none;
-            transition: opacity 0.25s ease;
-        }
-
-        .read-list-modal.show {
-            opacity: 1;
-            pointer-events: all;
-        }
-
-        .read-list-content {
-            background: white;
-            padding: 20px;
-            border-radius: 10px;
-            max-width: 400px;
-            max-height: 70vh;
-            width: 90%;
-            display: flex;
-            flex-direction: column;
-            box-shadow: 0 6px 20px rgba(0,0,0,0.35);
-            transform: scale(0.8);
-            transition: transform 0.25s ease;
-        }
-
-        .read-list-modal.show .read-list-content {
-            transform: scale(1);
-        }
-
-        .read-list-header {
-            font-size: 18px;
-            font-weight: 600;
-            margin-bottom: 15px;
-            text-align: center;
-            padding-bottom: 10px;
-            border-bottom: 1px solid #eee;
-        }
-
-        .read-list-body {
-            flex: 1;
-            overflow-y: auto;
-            display: flex;
-            flex-direction: column;
-            gap: 15px;
-        }
-
-        .read-list-section {
-            display: flex;
-            flex-direction: column;
-            gap: 6px;
-        }
-
-        .read-list-section-title {
-            font-weight: 600;
-            font-size: 14px;
-            display: flex;
-            align-items: center;
-            gap: 6px;
-        }
-
-        .read-list-section-title.readed {
-            color: #28a745;
-        }
-
-        .read-list-section-title.unread {
-            color: #dc3545;
-        }
-
-        .read-list-users {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 6px;
-        }
-
-        .read-list-user {
-            padding: 4px 10px;
-            border-radius: 15px;
-            font-size: 13px;
-            background: #f0f0f0;
-        }
-
-        .read-list-user.readed {
-            background: #d4edda;
-            color: #155724;
-        }
-
-        .read-list-user.unread {
-            background: #f8d7da;
-            color: #721c24;
-        }
-
-        .read-list-close {
-            margin-top: 15px;
-            padding: 10px 20px;
-            border: none;
-            border-radius: 6px;
-            background: #007aff;
-            color: white;
-            cursor: pointer;
-            font-size: 14px;
-        }
-
-        .read-list-close:hover {
-            background: #005bb5;
-        }
             max-width: 420px;
             font-size: 1.25rem; /* 字体大 */
             font-weight: 600;
@@ -770,10 +652,10 @@
 		.chat-candidate-panel-prev:disabled,
 		.chat-candidate-panel-next:disabled {
 			background: #ddd;
-			cursor: not-allowed;
-		}
+		cursor: not-allowed;
+	}
 
-		
+	
 		/* 🔥 筛选输入框样式 */
 		.chat-candidate-panel-filter {
 			flex: 1;                /* 占剩余空间，自适应 */
@@ -796,6 +678,21 @@
 
 		.chat-candidate-panel-filter::placeholder {
 			color: rgba(0,0,0,0.4);
+		}
+
+		.chat-candidate-panel-category {
+			padding: 6px 10px;
+			font-size: 14px;
+			background-color: #fff;
+			border: 2px solid #3399ff;
+			border-radius: 6px;
+			outline: none;
+			color: #000;
+			cursor: pointer;
+		}
+
+		.chat-candidate-panel-category:focus {
+			border-color: #0066cc;
 		}
 
 
@@ -2734,14 +2631,25 @@
         .candidate-words-filter {
             padding: 8px;
             border-bottom: 1px solid #ddd;
+            display: flex;
+            gap: 8px;
+            align-items: center;
         }
 
         .candidate-words-filter input {
-            width: 100%;
+            flex: 1;
             padding: 6px 10px;
             border: 1px solid #ccc;
             border-radius: 4px;
             box-sizing: border-box;
+        }
+
+        .candidate-words-filter select.category-filter {
+            padding: 6px 10px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            background: #fff;
+            cursor: pointer;
         }
 
         .select-all-label {
@@ -2797,6 +2705,16 @@
         .candidate-word {
             flex: 1;
             word-break: break-all;
+        }
+
+        .candidate-category {
+            width: 80px;
+            text-align: center;
+            color: #666;
+            font-size: 12px;
+            padding: 2px 6px;
+            background: #e8f5e9;
+            border-radius: 10px;
         }
 
         .candidate-count {
@@ -4987,80 +4905,6 @@
 
         btn.addEventListener("click", closeModal);
         document.addEventListener("keydown", escHandler);
-    }
-
-    async function showReadListModal(msgobj) {
-        const modal = document.getElementById("read-list-modal");
-        const readedUsersEl = document.getElementById("readed-users");
-        const unreadUsersEl = document.getElementById("unread-users");
-        const readedCountEl = document.getElementById("readed-count");
-        const unreadCountEl = document.getElementById("unread-count");
-        const closeBtn = document.getElementById("read-list-close");
-
-        if (!modal || !readedUsersEl || !unreadUsersEl) {
-            console.error("已读列表弹窗元素未找到！");
-            return;
-        }
-
-        const msgattr = msgobj.msgattr;
-        const read_list = msgattr.read_list || [];
-        const readedUserIds = read_list.map(r => r.uid);
-
-        const contentpage = msgobj.contentpage;
-        let groupMembers = [];
-
-        if (contentpage.is_group()) {
-            const contact_attr = contentpage.li.bindmap.contact_attr;
-            const gid = contact_attr.gid;
-            try {
-                const membersData = await checkin.subviews.chat.members(subviews.Chat.receiver_type.group, gid);
-                groupMembers = membersData.users || [];
-            } catch (e) {
-                console.error("获取群成员失败:", e);
-            }
-        }
-
-        const readedList = [];
-        const unreadList = [];
-
-        if (contentpage.is_group()) {
-            groupMembers.forEach(member => {
-                if (readedUserIds.includes(member.uid)) {
-                    readedList.push(member);
-                } else {
-                    unreadList.push(member);
-                }
-            });
-        }
-
-        readedCountEl.textContent = readedList.length;
-        unreadCountEl.textContent = unreadList.length;
-
-        readedUsersEl.innerHTML = readedList.map(u => `<span class="read-list-user readed">${escapeHtml(u.name || u.uid)}</span>`).join("") || "<span style='color:#999;font-size:13px;'>无</span>";
-        unreadUsersEl.innerHTML = unreadList.map(u => `<span class="read-list-user unread">${escapeHtml(u.name || u.uid)}</span>`).join("") || "<span style='color:#999;font-size:13px;'>无</span>";
-
-        modal.classList.remove("hidden");
-        modal.classList.add("show");
-
-        const closeModal = () => {
-            modal.classList.remove("show");
-            modal.classList.add("hidden");
-            closeBtn.removeEventListener("click", closeModal);
-            document.removeEventListener("keydown", escHandler);
-        };
-
-        const escHandler = (e) => {
-            if (e.key === "Escape") closeModal();
-        };
-
-        closeBtn.addEventListener("click", closeModal);
-        document.addEventListener("keydown", escHandler);
-    }
-
-    function escapeHtml(text) {
-        const div = document.createElement("div");
-        div.textContent = text;
-        return div.innerHTML;
     }
 
     // ===== 标题闪烁 =====
@@ -7889,8 +7733,11 @@
                 throw new Error(await format_error_response(r));
             }
 
-            async fetch_candidate_word_list() {
+            async fetch_candidate_word_list(category = null) {
                 let url = join_path(this.api_url(), "candidate_word", "list");
+                if (category !== null && category !== '') {
+                    url += `?category=${encodeURIComponent(category)}`;
+                }
                 let r = await net_fetcher.nf_get(url,);
                 if (r.status === 200) {
                     let d = await r.json();
@@ -7899,9 +7746,9 @@
                 throw new Error(await format_error_response(r));
             }
 
-            async add_candidate_word(word) {
+            async add_candidate_word(word, category = '') {
                 let url = join_path(this.api_url(), "candidate_word",);
-                let body = word;
+                let body = typeof word === 'string' ? {word: word, category: category} : word;
                 let r = await net_fetcher.nf_post_json(url, body);
                 if (r.status === 200) {
                     let d = await r.json();
@@ -7912,7 +7759,7 @@
 
             async add_candidate_words(words) {
                 let url = join_path(this.api_url(), "candidate_word",);
-                let body = words;
+                let body = words.map(w => typeof w === 'string' ? {word: w, category: ''} : {word: w.word, category: w.category || ''});
                 let r = await net_fetcher.nf_post_json(url, body);
                 if (r.status === 200) {
                     let d = await r.json();
@@ -7921,10 +7768,64 @@
                 throw new Error(await format_error_response(r));
             }
 
-            async edit_candidate_word(word, new_word) {
+            async edit_candidate_word(word, new_word, category = null) {
                 let url = join_path(this.api_url(), "candidate_word", encodeURIComponent(word));
                 let body = {word: new_word};
+                if (category !== null) body.category = category;
                 let r = await net_fetcher.nf_put_json(url, body);
+                if (r.status === 200) {
+                    let d = await r.json();
+                    return d;
+                }
+                throw new Error(await format_error_response(r));
+            }
+
+            async set_candidate_category(word, category) {
+                let url = join_path(this.api_url(), "candidate_word/set_category",);
+                let body = {word: word, category: category};
+                let r = await net_fetcher.nf_post_json(url, body);
+                if (r.status === 200) {
+                    let d = await r.json();
+                    return d;
+                }
+                throw new Error(await format_error_response(r));
+            }
+
+            async fetch_candidate_category_list() {
+                let url = join_path(this.api_url(), "candidate_category/list",);
+                let r = await net_fetcher.nf_get(url);
+                if (r.status === 200) {
+                    let d = await r.json();
+                    return d;
+                }
+                throw new Error(await format_error_response(r));
+            }
+
+            async add_candidate_category(name, sort_order = 0) {
+                let url = join_path(this.api_url(), "candidate_category",);
+                let body = {name: name, sort_order: sort_order};
+                let r = await net_fetcher.nf_post_json(url, body);
+                if (r.status === 200) {
+                    let d = await r.json();
+                    return d;
+                }
+                throw new Error(await format_error_response(r));
+            }
+
+            async edit_candidate_category(name, new_name, sort_order = 0) {
+                let url = join_path(this.api_url(), "candidate_category", encodeURIComponent(name));
+                let body = {name: new_name, sort_order: sort_order};
+                let r = await net_fetcher.nf_put_json(url, body);
+                if (r.status === 200) {
+                    let d = await r.json();
+                    return d;
+                }
+                throw new Error(await format_error_response(r));
+            }
+
+            async delete_candidate_category(name) {
+                let url = join_path(this.api_url(), "candidate_category", encodeURIComponent(name));
+                let r = await net_fetcher.nf_delete(url);
                 if (r.status === 200) {
                     let d = await r.json();
                     return d;
@@ -10391,7 +10292,10 @@
 <div class="chat-candidate-panel hidden">
     <div class="chat-candidate-panel-header">
 		<button class="chat-candidate-panel-prev">← 上一页</button>
-		<!-- 🔥 中间添加筛选输入框 -->
+		<!-- 🔥 中间添加筛选输入框和类别下拉框 -->
+		<select class="chat-candidate-panel-category">
+			<option value="">全部</option>
+		</select>
     	<input type="text" class="chat-candidate-panel-filter" placeholder="筛选候选词…">
 		<button class="chat-candidate-panel-next">下一页 →</button>
 		<button class="chat-candidate-panel-close">✕</button>
@@ -10430,24 +10334,6 @@
     <div class="ai-alert-content">
         <p id="ai-alert-text"></p>
         <button id="ai-alert-ok">知道了</button>
-    </div>
-</div>
-
-<!-- 已读/未读列表弹窗 -->
-<div id="read-list-modal" class="read-list-modal hidden">
-    <div class="read-list-content">
-        <div class="read-list-header">已读情况</div>
-        <div class="read-list-body">
-            <div class="read-list-section" id="read-list-readed-section">
-                <div class="read-list-section-title readed">已读 (<span id="readed-count">0</span>人)</div>
-                <div class="read-list-users" id="readed-users"></div>
-            </div>
-            <div class="read-list-section" id="read-list-unread-section">
-                <div class="read-list-section-title unread">未读 (<span id="unread-count">0</span>人)</div>
-                <div class="read-list-users" id="unread-users"></div>
-            </div>
-        </div>
-        <button class="read-list-close" id="read-list-close">关闭</button>
     </div>
 </div>
 
@@ -10702,10 +10588,11 @@
 
 
 				// 🔹 半屏候选词 DOM
-				this.e_candidate_panel_body = this.container.querySelector(".chat-candidate-panel-body");
+			this.e_candidate_panel_body = this.container.querySelector(".chat-candidate-panel-body");
 				this.e_candidate_prev = this.container.querySelector(".chat-candidate-panel-prev");
 				this.e_candidate_next = this.container.querySelector(".chat-candidate-panel-next");
 				this.e_candidate_filter = this.container.querySelector(".chat-candidate-panel-filter");
+				this.e_candidate_category = this.container.querySelector(".chat-candidate-panel-category");
 
 				// 🔹 更新按钮状态函数
 				const updateCandidateButtons = () => {
@@ -10778,10 +10665,42 @@
 				
 				
 				
-				// =============================
+			// =============================
 			// 🔥 从API加载候选词
 			// =============================
 			let commonPhrases = [];
+			let candidateCategories = [];
+			
+			// 加载候选词分类列表
+			async function loadCandidateCategories() {
+				try {
+					const url = join_path(root_url(), "admin/api", "candidate_category", "list");
+					const resp = await fetch(url, {
+						credentials: 'include'
+					});
+					if (resp.ok) {
+						const cats = await resp.json();
+						if (cats && cats.length > 0) {
+							candidateCategories = cats;
+							updateCategoryDropdown();
+						}
+					}
+				} catch (e) {
+					console.error('加载候选词分类失败', e);
+				}
+			}
+			
+			function updateCategoryDropdown() {
+				const select = document.querySelector(".chat-candidate-panel-category");
+				if (!select) return;
+				select.innerHTML = '<option value="">全部</option>';
+				candidateCategories.forEach(cat => {
+					const option = document.createElement("option");
+					option.value = cat.name;
+					option.textContent = cat.name;
+					select.appendChild(option);
+				});
+			}
 			
 			// 加载候选词列表
 			async function loadCandidateWords() {
@@ -10821,17 +10740,19 @@
 				}
 			}
 				
-			// 初始加载候选词
+			// 初始加载候选词和分类
 			loadCandidateWords();
+			loadCandidateCategories();
 			
 			// =============================
 			// 🔥 半屏候选词渲染
 				// =============================
-				this.render_candidate_panel = (list) => {
+			this.render_candidate_panel = (list) => {
 					const body = this.e_candidate_panel_body;
 					body.innerHTML = "";
 
-					list.forEach(text => {
+					list.forEach(item => {
+						const text = typeof item === 'string' ? item : item.word;
 						const div = document.createElement("div");
 						div.className = "chat-candidate-item";
 						div.textContent = text;
@@ -10862,7 +10783,8 @@
                     // 只取前50个
                     const limitedList = list.slice(0, 2000);
 
-                    limitedList.forEach(text => {
+                    limitedList.forEach(item => {
+                        const text = typeof item === 'string' ? item : item.word;
                         const div = document.createElement("div");
                         div.className = "chat-session-inputarea-candidate-item";
                         div.textContent = text;
@@ -10872,12 +10794,34 @@
                     container.classList.remove("hidden");
                 };
 
-
 				// 🔹 输入筛选事件
 				this.e_candidate_filter.addEventListener("input", () => {
 					const v = this.e_candidate_filter.value.trim();
-					const filtered = v === "" ? commonPhrases : commonPhrases.filter(p => p.includes(v));
+					const category = this.e_candidate_category.value;
+					let filtered = commonPhrases;
+					if (category) {
+						filtered = filtered.filter(p => (p.category || '') === category);
+					}
+					if (v !== "") {
+						filtered = filtered.filter(p => (p.word || p).includes(v));
+					}
 					this.render_candidate_panel(filtered); // ✅ 传入筛选后的列表
+					this.e_candidate_panel_body.scrollTop = 0;
+					updateCandidateButtons();
+				});
+				
+				// 🔹 分类筛选事件
+				this.e_candidate_category.addEventListener("change", () => {
+					const v = this.e_candidate_filter.value.trim();
+					const category = this.e_candidate_category.value;
+					let filtered = commonPhrases;
+					if (category) {
+						filtered = filtered.filter(p => (p.category || '') === category);
+					}
+					if (v !== "") {
+						filtered = filtered.filter(p => (p.word || p).includes(v));
+					}
+					this.render_candidate_panel(filtered);
 					this.e_candidate_panel_body.scrollTop = 0;
 					updateCandidateButtons();
 				});
@@ -10885,7 +10829,7 @@
                 // 输入框 input 显示候选词
                 this.e_inputarea_textarea.addEventListener("input", () => {
                     const v = this.e_inputarea_textarea.value.trim();
-                    renderCandidates(v === "" ? commonPhrases : commonPhrases.filter(p => p.includes(v)));
+                    renderCandidates(v === "" ? commonPhrases : commonPhrases.filter(p => (p.word || p).includes(v)));
                 });
 
                 // focus 显示候选词
@@ -13036,8 +12980,8 @@
                             this.contentpage.resend_msg(this);
                         });
 
-                        this.e_sent_time = this.e_marks.querySelector(".chat-mcm-sent-time");
-                        this.e_read_status = this.e_marks.querySelector(".chat-mcm-read-status");
+                        this.e_sent_time = this.e_marks.querySelector(":scope .chat-mcm-sent-time");
+                        this.e_read_status = this.e_marks.querySelector(":scope .chat-mcm-read-status");
 
                         // 二编标记
                         {
@@ -13073,8 +13017,6 @@
 
                                 if (this.contentpage) { // 已读状态
                                     this.e_read_status.classList.remove("hidden");
-                                        });
-                                    }
 
                                     if (this.contentpage.is_group()) { // 群聊
                                         if (this.at_attr.at_all) { // 所有人
@@ -15809,11 +15751,15 @@
     <button class="btn-import-candidates">📥 批量导入</button>
     <button class="btn-reset-counts">🔄 重置频率</button>
     <button class="btn-delete-selected" style="display:none">🗑️ 批量删除</button>
+    <button class="btn-manage-categories">🏷️ 管理分类</button>
 </div>
 <div class="candidate-words-filter">
     <label class="select-all-label" style="display:none">
         <input type="checkbox" class="select-all-checkbox"> 全选
     </label>
+    <select class="category-filter">
+        <option value="">全部类别</option>
+    </select>
     <input type="text" class="filter-input" placeholder="筛选候选词...">
 </div>
 <div class="candidate-words-list"></div>
@@ -15837,16 +15783,76 @@
                     this.e_btn_delete_selected = this.container.querySelector(":scope button.btn-delete-selected");
                     this.e_btn_delete_selected.addEventListener("click", (event) => this.delete_selected());
 
+                    this.e_btn_manage_categories = this.container.querySelector(":scope button.btn-manage-categories");
+                    this.e_btn_manage_categories.addEventListener("click", (event) => this.manage_categories());
+
                     this.e_select_all_label = this.container.querySelector(":scope label.select-all-label");
                     this.e_select_all_checkbox = this.container.querySelector(":scope input.select-all-checkbox");
                     this.e_select_all_checkbox.addEventListener("change", (event) => this.toggle_select_all());
+
+                    this.e_category_filter = this.container.querySelector(":scope select.category-filter");
+                    this.e_category_filter.addEventListener("change", (event) => this.on_category_change());
 
                     this.e_filter_input = this.container.querySelector(":scope input.filter-input");
                     this.e_filter_input.addEventListener("input", (event) => this.filter_list());
 
                     this.e_list = this.container.querySelector(":scope div.candidate-words-list");
 
+                    this.current_category = '';
+                    this.categories = [];
+                    this.fetch_categories();
+                }
+
+                on_category_change() {
+                    this.current_category = this.e_category_filter.value;
                     this.fetch_list();
+                }
+
+                async fetch_categories() {
+                    try {
+                        const categories = await this.client.subviews.admin.fetch_candidate_category_list();
+                        this.categories = categories || [];
+                        this.render_category_filter();
+                        this.fetch_list();
+                    } catch (e) {
+                        console.error('获取分类失败', e);
+                        this.fetch_list();
+                    }
+                }
+
+                render_category_filter() {
+                    this.e_category_filter.innerHTML = '<option value="">全部类别</option>';
+                    this.categories.forEach(cat => {
+                        const option = document.createElement("option");
+                        option.value = cat.name;
+                        option.textContent = cat.name;
+                        this.e_category_filter.appendChild(option);
+                    });
+                }
+
+                manage_categories() {
+                    const names = this.categories.map(c => c.name).join('\n');
+                    const input = prompt("请输入分类名称（每行一个，多个用换行分隔）：", names);
+                    if (input === null) return;
+
+                    const new_categories = input.split('\n').map(s => s.trim()).filter(s => s);
+                    const old_names = new Set(this.categories.map(c => c.name));
+                    const new_names = new Set(new_categories);
+
+                    const to_add = new_categories.filter(n => !old_names.has(n));
+                    const to_delete = this.categories.filter(c => !new_names.has(c.name)).map(c => c.name);
+
+                    this.loading_mark.show();
+                    Promise.all([
+                        ...to_add.map(name => this.client.subviews.admin.add_candidate_category(name, 0)),
+                        ...to_delete.map(name => this.client.subviews.admin.delete_candidate_category(name))
+                    ]).then(() => {
+                        this.remove_loading_mark();
+                        this.fetch_categories();
+                    }).catch(error => {
+                        this.remove_loading_mark();
+                        MessageMark.report(error);
+                    });
                 }
 
                 filter_list() {
@@ -15866,8 +15872,12 @@
                     const word = prompt("请输入候选词：");
                     if (!word || !word.trim()) return;
                     
+                    const category = this.current_category || '';
+                    const categoryInput = prompt("请输入分类（可选，不填则不分类）：", category);
+                    const finalCategory = categoryInput !== null ? categoryInput.trim() : category;
+
                     this.loading_mark.show();
-                    this.client.subviews.admin.add_candidate_word(word.trim())
+                    this.client.subviews.admin.add_candidate_word(word.trim(), finalCategory)
                         .then(result => {
                             this.remove_loading_mark();
                             this.fetch_list();
@@ -15881,7 +15891,11 @@
                     const words = prompt("请输入候选词（多个用空格或|分隔）：");
                     if (!words || !words.trim()) return;
                     
-                    const word_list = words.split(/[\n |]/).map(w => w.trim()).filter(w => w);
+                    const defaultCategory = this.current_category || '';
+                    const category = prompt("请输入分类（可选）：", defaultCategory);
+                    const finalCategory = category !== null ? category.trim() : '';
+                    
+                    const word_list = words.split(/[\n |]/).map(w => w.trim()).filter(w => w).map(w => ({word: w, category: finalCategory}));
                     if (word_list.length === 0) return;
 
                     this.loading_mark.show();
@@ -15895,13 +15909,33 @@
                         });
                 }
 
-                edit_candidate(item, word) {
+                edit_candidate(item, word, currentCategory) {
                     const new_word = prompt("请输入新的候选词：", word);
                     if (!new_word || !new_word.trim()) return;
                     if (new_word.trim() === word) return;
 
+                    const category = prompt("请输入分类（可选）：", currentCategory || '');
+                    const finalCategory = category !== null ? category.trim() : '';
+
                     this.loading_mark.show();
-                    this.client.subviews.admin.edit_candidate_word(word, new_word.trim())
+                    this.client.subviews.admin.edit_candidate_word(word, new_word.trim(), finalCategory)
+                        .then(result => {
+                            this.remove_loading_mark();
+                            this.fetch_list();
+                        }).catch(error => {
+                            this.remove_loading_mark();
+                            MessageMark.report(error);
+                        });
+                }
+
+                set_category(item, word, currentCategory) {
+                    const categories = ['', ...this.categories.map(c => c.name)];
+                    const category = prompt(`请输入分类（可选，当前：${currentCategory || '无'}）：\n可选：${categories.join(', ')}`, currentCategory || '');
+                    if (category === null) return;
+                    const finalCategory = category.trim();
+
+                    this.loading_mark.show();
+                    this.client.subviews.admin.set_candidate_category(word, finalCategory)
                         .then(result => {
                             this.remove_loading_mark();
                             this.fetch_list();
@@ -15941,7 +15975,7 @@
 
                 fetch_list() {
                     this.loading_mark.show();
-                    this.client.subviews.admin.fetch_candidate_word_list()
+                    this.client.subviews.admin.fetch_candidate_word_list(this.current_category || null)
                         .then(result => {
                             if (this.closed) return;
                             this.render_list(result);
@@ -15969,12 +16003,15 @@
                         const div = document.createElement("div");
                         div.className = "candidate-word-item";
                         div.dataset.word = item.word;
+                        div.dataset.category = item.category || '';
                         div.innerHTML = `
                             <input type="checkbox" class="candidate-checkbox">
                             <span class="candidate-index">${index + 1}</span>
                             <span class="candidate-word">${item.word}</span>
+                            <span class="candidate-category">${item.category || '-'}</span>
                             <span class="candidate-count">${item.use_count || 0}</span>
                             <span class="candidate-actions">
+                                <button class="btn-set-category">分类</button>
                                 <button class="btn-edit">编辑</button>
                                 <button class="btn-delete">删除</button>
                             </span>
@@ -15990,8 +16027,11 @@
                             this.update_delete_button();
                         });
                         
+                        div.querySelector(".btn-set-category").addEventListener("click", () => {
+                            this.set_category(div, item.word, item.category || '');
+                        });
                         div.querySelector(".btn-edit").addEventListener("click", () => {
-                            this.edit_candidate(div, item.word);
+                            this.edit_candidate(div, item.word, item.category || '');
                         });
                         div.querySelector(".btn-delete").addEventListener("click", () => {
                             this.delete_candidate(div, item.word);
@@ -18681,10 +18721,6 @@
     checkin.apply_theme();
     initialize();
 
-    // 简单测试：点击任何地方都弹出提示
-    document.addEventListener('click', function(e) {
-        console.log("页面被点击了:", e.target);
-    }, true);
 
 </script>
 
