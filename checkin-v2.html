@@ -13036,25 +13036,25 @@
                             this.contentpage.resend_msg(this);
                         });
 
-                        this.e_sent_time = this.e_marks.querySelector(":scope .chat-mcm-sent-time");
-                        this.e_read_status = this.e_marks.querySelector(":scope .chat-mcm-read-status");
+                        this.e_sent_time = this.e_marks.querySelector(".chat-mcm-sent-time");
+                        this.e_read_status = this.e_marks.querySelector(".chat-mcm-read-status");
 
                         // 绑定点击事件显示已读列表
+                        const self = this;
                         if (this.e_read_status) {
                             this.e_read_status.style.cursor = "pointer";
-                            this.e_read_status.title = "点击查看已读人员";
-                            // 使用 mousedown 事件在右键菜单之前触发
-                            this.e_read_status.addEventListener("mousedown", (e) => {
+                            this.e_read_status.style.userSelect = "none";
+                            this.e_read_status.style.pointerEvents = "auto";
+                            this.e_read_status.onclick = function(e) {
                                 e.stopPropagation();
-                                e.preventDefault();
-                                console.log("点击已读状态:", this.at_attr, this.msgattr.read_list, this.contentpage ? this.contentpage.is_group() : false);
-                                // 暂时放宽条件，只要消息有read_list且是群聊就显示
-                                if (this.msgattr && this.msgattr.read_list && this.contentpage && this.contentpage.is_group()) {
-                                    showReadListModal(this);
+                                e.cancelBubble = true;
+                                console.log("点击已读状态:", self.at_attr, self.msgattr.read_list);
+                                if (self.msgattr && self.msgattr.read_list) {
+                                    showReadListModal(self);
                                 } else {
                                     alert("暂无已读数据");
                                 }
-                            });
+                            };
                         }
 
                         // 二编标记
