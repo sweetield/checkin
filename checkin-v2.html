@@ -10562,14 +10562,7 @@
                 // 候选词容器
                 this.e_inputarea_candidates = this.container.querySelector(".chat-session-inputarea-candidates");
 
-				if (feature_settings) {
-					// 控制悬浮候选词
-					if (feature_settings.enable_candidate_word === false) {
 
-                            this.e_inputarea_candidates.classList.add("hidden");
-					}
-
-				}
                 // 鼠标悬停时将垂直滚轮转换为水平滚动
                 if (this.e_inputarea_candidates) {
                     this.e_inputarea_candidates.addEventListener('wheel', (event) => {
@@ -10674,10 +10667,18 @@
                         container.appendChild(div);
                     });
 
-                    container.classList.remove("hidden");
+
+                    container.classList.add("hidden");
                 };
 
+				if (feature_settings) {
+					// 控制悬浮候选词
+					if (feature_settings.enable_candidate_word === false) {
 
+                            this.e_inputarea_candidates.classList.add("hidden");
+					}
+
+				}
 		        // 🔹 输入筛选事件
 		        this.e_candidate_filter.addEventListener("input", () => {
 			        const v = this.e_candidate_filter.value.trim();
