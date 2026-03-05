@@ -10674,7 +10674,7 @@
 
 				if (feature_settings) {
 					// 控制悬浮候选词
-					if (feature_settings.enable_candidate_word === false) {
+					if (feature_settings.enable_candidate_word === true) {
 				        // 🔹 输入筛选事件
 				        this.e_candidate_filter.addEventListener("input", () => {
 					        const v = this.e_candidate_filter.value.trim();
