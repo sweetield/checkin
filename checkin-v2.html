@@ -680,6 +680,25 @@
 			color: rgba(0,0,0,0.4);
 		}
 
+		/* 🔥 类别筛选下拉框 */
+		.chat-candidate-panel-category {
+			flex: 0 0 100px;
+			padding: 6px 10px;
+			font-size: 15px;
+			background-color: #e6f2ff;
+			border: 2px solid #3399ff;
+			border-radius: 6px;
+			outline: none;
+			color: #000;
+			box-sizing: border-box;
+			cursor: pointer;
+		}
+
+		.chat-candidate-panel-category:focus {
+			border-color: #0066cc;
+			background-color: #cce6ff;
+		}
+
 
 		.chat-candidate-panel-prev:hover,
 		.chat-candidate-panel-next:hover,
@@ -2658,6 +2677,16 @@
             background: #fafafa;
         }
 
+        .candidate-word-item .candidate-category {
+            min-width: 80px;
+            padding: 2px 8px;
+            background: #e3f2fd;
+            color: #1565c0;
+            border-radius: 3px;
+            font-size: 12px;
+            text-align: center;
+        }
+
         .candidate-word-item .candidate-checkbox {
             width: 18px;
             height: 18px;
@@ -2666,6 +2695,59 @@
 
         .candidate-word-item:hover {
             background: #f0f0f0;
+        }
+
+        .category-manager {
+            min-width: 350px;
+            padding: 16px;
+        }
+
+        .category-manager-header h3 {
+            margin: 0 0 16px 0;
+            color: #333;
+            font-size: 18px;
+        }
+
+        .category-manager-list {
+            max-height: 300px;
+            overflow-y: auto;
+            margin-bottom: 16px;
+        }
+
+        .category-manager-item {
+            display: flex;
+            align-items: center;
+            padding: 8px;
+            border-bottom: 1px solid #eee;
+            gap: 8px;
+        }
+
+        .category-manager-item .category-checkbox {
+            width: 18px;
+            height: 18px;
+        }
+
+        .category-manager-item .category-name {
+            flex: 1;
+            font-size: 14px;
+        }
+
+        .category-manager-item button {
+            padding: 4px 8px;
+            font-size: 12px;
+            margin-left: 4px;
+            cursor: pointer;
+            border: 1px solid #ccc;
+            border-radius: 3px;
+            background: #f5f5f5;
+        }
+
+        .category-manager-item button:hover {
+            background: #e0e0e0;
+        }
+
+        .category-manager-actions {
+            text-align: right;
         }
 
         .candidate-index {
@@ -7760,6 +7842,57 @@
                 throw new Error(await format_error_response(r));
             }
 
+            async update_candidate_word_category(words, old_category, new_category) {
+                let url = join_path(this.api_url(), "candidate_word", "update_category");
+                let body = {words: words, old_category: old_category, new_category: new_category};
+                let r = await net_fetcher.nf_post_json(url, body);
+                if (r.status === 200) {
+                    return true;
+                }
+                throw new Error(await format_error_response(r));
+            }
+
+            async fetch_candidate_category_list() {
+                let url = join_path(this.api_url(), "candidate_category", "list");
+                let r = await net_fetcher.nf_get(url,);
+                if (r.status === 200) {
+                    let d = await r.json();
+                    return d;
+                }
+                throw new Error(await format_error_response(r));
+            }
+
+            async add_candidate_category(name) {
+                let url = join_path(this.api_url(), "candidate_category",);
+                let body = {name: name};
+                let r = await net_fetcher.nf_post_json(url, body);
+                if (r.status === 200) {
+                    let d = await r.json();
+                    return d;
+                }
+                throw new Error(await format_error_response(r));
+            }
+
+            async edit_candidate_category(name, new_name) {
+                let url = join_path(this.api_url(), "candidate_category", encodeURIComponent(name));
+                let body = {name: new_name};
+                let r = await net_fetcher.nf_put_json(url, body);
+                if (r.status === 200) {
+                    let d = await r.json();
+                    return d;
+                }
+                throw new Error(await format_error_response(r));
+            }
+
+            async delete_candidate_category(name) {
+                let url = join_path(this.api_url(), "candidate_category", encodeURIComponent(name));
+                let r = await net_fetcher.nf_delete(url,);
+                if (r.status === 200) {
+                    return;
+                }
+                throw new Error(await format_error_response(r));
+            }
+
             async fetch_all_people_notice_list() {
                 let url = join_path(this.api_url(), "all_people_notice", "list");
                 let r = await net_fetcher.nf_get(url,);
@@ -10200,6 +10333,10 @@
 <div class="chat-candidate-panel hidden">
     <div class="chat-candidate-panel-header">
 		<button class="chat-candidate-panel-prev">← 上一页</button>
+		<!-- 🔥 类别筛选下拉框 -->
+		<select class="chat-candidate-panel-category">
+			<option value="全部">全部</option>
+		</select>
 		<!-- 🔥 中间添加筛选输入框 -->
     	<input type="text" class="chat-candidate-panel-filter" placeholder="筛选候选词…">
 		<button class="chat-candidate-panel-next">下一页 →</button>
@@ -10497,6 +10634,54 @@
 				this.e_candidate_prev = this.container.querySelector(".chat-candidate-panel-prev");
 				this.e_candidate_next = this.container.querySelector(".chat-candidate-panel-next");
 				this.e_candidate_filter = this.container.querySelector(".chat-candidate-panel-filter");
+				this.e_candidate_category = this.container.querySelector(".chat-candidate-panel-category");
+
+				// 🔹 候选词数据
+				this.candidate_words_all = [];
+				this.candidate_categories = ["默认"];
+
+				// 🔹 加载分类列表
+				const loadCandidateCategories = async () => {
+					try {
+						const url = join_path(this.api_url(), "candidate_category", "list");
+						const resp = await fetch(url, {credentials: 'include'});
+						if (resp.ok) {
+							const list = await resp.json();
+							if (list && list.length > 0) {
+								this.candidate_categories = list.map(c => c.name);
+								this.e_candidate_category.innerHTML = '<option value="全部">全部</option>';
+								list.forEach(c => {
+									const opt = document.createElement("option");
+									opt.value = c.name;
+									opt.textContent = c.name;
+									this.e_candidate_category.appendChild(opt);
+								});
+							}
+						}
+					} catch (e) {
+						console.error('加载分类失败', e);
+					}
+				};
+
+				// 🔹 筛选候选词
+				const filterCandidates = () => {
+					const category = this.e_candidate_category.value;
+					const keyword = this.e_candidate_filter.value.trim().toLowerCase();
+					let filtered = this.candidate_words_all;
+					if (category && category !== "全部") {
+						filtered = filtered.filter(w => w.category === category);
+					}
+					if (keyword) {
+						filtered = filtered.filter(w => w.word.toLowerCase().includes(keyword));
+					}
+					this.render_candidate_panel(filtered);
+				};
+
+				// 🔹 分类选择变化
+				this.e_candidate_category.addEventListener("change", filterCandidates);
+
+				// 🔹 搜索框输入
+				this.e_candidate_filter.addEventListener("input", filterCandidates);
 
 				// 🔹 更新按钮状态函数
 				const updateCandidateButtons = () => {
@@ -10521,8 +10706,12 @@
 				this.e_candidate_panel_body.addEventListener("scroll", updateCandidateButtons);
 
 				// 🔹 打开面板按钮
-				this.e_candidate_btn.addEventListener("click", () => {
-					this.render_candidate_panel(this.commonPhrases);
+				this.e_candidate_btn.addEventListener("click", async () => {
+					await loadCandidateCategories.call(this);
+					if (!this.candidate_words_all || this.candidate_words_all.length === 0) {
+						await loadCandidateWords.call(this);
+					}
+					filterCandidates();
 					this.e_candidate_panel.classList.remove("hidden");
 					updateCandidateButtons();
 				});
@@ -10592,6 +10781,7 @@
 						const words = await resp.json();
 						if (words && words.length > 0) {
 							commonPhrases = words;
+							this.candidate_words_all = words;
 							return;
 						}
 					}
@@ -10600,18 +10790,19 @@
 				}
 				// 加载失败时使用默认候选词
 				commonPhrases = [
-					"请自行添加"
+					{word: "请自行添加", category: "默认"}
 				];
+				this.candidate_words_all = commonPhrases;
 			}
 				
 			// 使用候选词后更新频率
-			async function useCandidateWord(word) {
+			async function useCandidateWord(word, category = "默认") {
 				try {
 					const url = join_path(root_url(), "api", "candidate_word", "use");
 					await fetch(url, {
 						method: 'POST',
 						headers: {'Content-Type': 'application/json'},
-						body: JSON.stringify({word}),
+						body: JSON.stringify({word, category}),
 						credentials: 'include'
 					});
 				} catch (e) {
@@ -10620,7 +10811,7 @@
 			}
 				
 			// 初始加载候选词
-			loadCandidateWords();
+			loadCandidateWords.call(this);
 			
 			// =============================
 			// 🔥 半屏候选词渲染
@@ -10629,7 +10820,9 @@
 					const body = this.e_candidate_panel_body;
 					body.innerHTML = "";
 
-					list.forEach(text => {
+					list.forEach(item => {
+						const text = typeof item === 'string' ? item : (item.word || item);
+						const category = typeof item === 'object' ? (item.category || "默认") : "默认";
 						const div = document.createElement("div");
 						div.className = "chat-candidate-item";
 						div.textContent = text;
@@ -10637,7 +10830,7 @@
 						div.addEventListener("click", () => {
 							this.add_new_textarea_element(text);
 							this.send_msg_text();
-							useCandidateWord(text);
+							useCandidateWord(text, category);
 							this.e_candidate_panel.classList.add("hidden");
 						});
 
@@ -10660,7 +10853,8 @@
                     // 只取前50个
                     const limitedList = list.slice(0, 2000);
 
-                    limitedList.forEach(text => {
+                    limitedList.forEach(item => {
+                        const text = typeof item === 'string' ? item : (item.word || item);
                         const div = document.createElement("div");
                         div.className = "chat-session-inputarea-candidate-item";
                         div.textContent = text;
@@ -10736,13 +10930,17 @@
                     const item = e.target.closest(".chat-session-inputarea-candidate-item");
                     if (!item) return;
 
+                    const word = item.textContent;
+                    const categoryObj = this.candidate_words_all ? this.candidate_words_all.find(w => w.word === word) : null;
+                    const category = categoryObj ? (categoryObj.category || "默认") : "默认";
+
                     // 插入光标位置
-                    this.add_new_textarea_element(item.textContent);
+                    this.add_new_textarea_element(word);
 
                     this.send_msg_text();
                     
                     // 更新候选词使用频率
-                    useCandidateWord(item.textContent);
+                    useCandidateWord(word, category);
 
                     // 隐藏候选词
                     this.e_inputarea_candidates.classList.add("hidden");
@@ -10754,12 +10952,16 @@
                     const item = e.target.closest(".chat-session-inputarea-candidate-item");
                     if (!item) return; // 不是候选词就忽略
 
+                    const word = item.textContent;
+                    const categoryObj = this.candidate_words_all ? this.candidate_words_all.find(w => w.word === word) : null;
+                    const category = categoryObj ? (categoryObj.category || "默认") : "默认";
+
                     // 插入文本并发送
-                    this.add_new_textarea_element(item.textContent);
+                    this.add_new_textarea_element(word);
                     this.send_msg_text();
                     
                     // 更新候选词使用频率
-                    useCandidateWord(item.textContent);
+                    useCandidateWord(word, category);
 
                     // 隐藏候选词
                     this.e_inputarea_candidates.classList.add("hidden");
@@ -15608,6 +15810,8 @@
             candidate_words: class extends _ {
                 constructor(client, panel, li) {
                     super(client, panel, li);
+                    this.categories = [];
+                    this.selected_words = new Set();
                 }
 
                 close_page() {
@@ -15624,6 +15828,8 @@
     <button class="btn-add-candidate">➕ 添加候选词</button>
     <button class="btn-import-candidates">📥 批量导入</button>
     <button class="btn-reset-counts">🔄 重置频率</button>
+    <button class="btn-manage-categories">📂 管理分类</button>
+    <button class="btn-set-category" style="display:none">📁 批量分类</button>
     <button class="btn-delete-selected" style="display:none">🗑️ 批量删除</button>
 </div>
 <div class="candidate-words-filter">
@@ -15650,6 +15856,12 @@
                     this.e_btn_reset = this.container.querySelector(":scope button.btn-reset-counts");
                     this.e_btn_reset.addEventListener("click", (event) => this.reset_counts());
 
+                    this.e_btn_manage_categories = this.container.querySelector(":scope button.btn-manage-categories");
+                    this.e_btn_manage_categories.addEventListener("click", (event) => this.manage_categories());
+
+                    this.e_btn_set_category = this.container.querySelector(":scope button.btn-set-category");
+                    this.e_btn_set_category.addEventListener("click", (event) => this.set_category_batch());
+
                     this.e_btn_delete_selected = this.container.querySelector(":scope button.btn-delete-selected");
                     this.e_btn_delete_selected.addEventListener("click", (event) => this.delete_selected());
 
@@ -15662,7 +15874,26 @@
 
                     this.e_list = this.container.querySelector(":scope div.candidate-words-list");
 
-                    this.fetch_list();
+                    this.fetch_categories().then(() => this.fetch_list());
+                }
+
+                async fetch_categories() {
+                    try {
+                        const list = await this.client.subviews.admin.fetch_candidate_category_list();
+                        this.categories = list || [];
+                    } catch (e) {
+                        this.categories = [];
+                    }
+                }
+
+                get_category_select_html(selected = "") {
+                    let html = '<select class="category-select"><option value="">无</option>';
+                    this.categories.forEach(c => {
+                        const selected_attr = c.name === selected ? 'selected' : '';
+                        html += `<option value="${c.name}" ${selected_attr}>${c.name}</option>`;
+                    });
+                    html += '<option value="__new__">+ 新建分类</option></select>';
+                    return html;
                 }
 
                 filter_list() {
@@ -15678,46 +15909,187 @@
                     });
                 }
 
-                add_candidate() {
+                async add_candidate() {
                     const word = prompt("请输入候选词：");
                     if (!word || !word.trim()) return;
                     
+                    const category = await this.select_category_with_prompt("选择分类（可选）");
+                    const category_name = category || "默认";
+                    
                     this.loading_mark.show();
-                    this.client.subviews.admin.add_candidate_word(word.trim())
-                        .then(result => {
-                            this.remove_loading_mark();
-                            this.fetch_list();
-                        }).catch(error => {
-                            this.remove_loading_mark();
-                            MessageMark.report(error);
-                        });
+                    try {
+                        await this.client.subviews.admin.add_candidate_word({word: word.trim(), category: category_name});
+                        this.fetch_list();
+                    } catch (error) {
+                        MessageMark.report(error);
+                    } finally {
+                        this.remove_loading_mark();
+                    }
                 }
 
-                import_candidates() {
+                async import_candidates() {
                     const words = prompt("请输入候选词（多个用空格或|分隔）：");
                     if (!words || !words.trim()) return;
                     
                     const word_list = words.split(/[\n |]/).map(w => w.trim()).filter(w => w);
                     if (word_list.length === 0) return;
 
+                    const category = await this.select_category_with_prompt("选择分类（可选）");
+                    const category_name = category || "默认";
+
                     this.loading_mark.show();
-                    this.client.subviews.admin.add_candidate_words(word_list)
-                        .then(result => {
-                            this.remove_loading_mark();
-                            this.fetch_list();
-                        }).catch(error => {
-                            this.remove_loading_mark();
-                            MessageMark.report(error);
-                        });
+                    try {
+                        await this.client.subviews.admin.add_candidate_words(word_list.map(w => ({word: w, category: category_name})));
+                        this.fetch_list();
+                    } catch (error) {
+                        MessageMark.report(error);
+                    } finally {
+                        this.remove_loading_mark();
+                    }
                 }
 
-                edit_candidate(item, word) {
+                async select_category_with_prompt(prompt_text) {
+                    if (this.categories.length === 0) {
+                        await this.fetch_categories();
+                    }
+                    
+                    let options = this.categories.map(c => c.name);
+                    options.push("新建分类");
+                    options.push("取消");
+                    
+                    const choice = prompt(`${prompt_text}\n可选: ${options.join(", ")}\n直接回车使用默认分类`);
+                    
+                    if (choice === null || choice === "" || choice === "取消") {
+                        return choice === "" ? "默认" : null;
+                    }
+                    
+                    if (choice === "新建分类") {
+                        const new_category = prompt("请输入新分类名称：");
+                        if (new_category && new_category.trim()) {
+                            await this.client.subviews.admin.add_candidate_category(new_category.trim());
+                            await this.fetch_categories();
+                            return new_category.trim();
+                        }
+                        return null;
+                    }
+                    
+                    if (options.slice(0, -1).includes(choice)) {
+                        return choice;
+                    }
+                    
+                    return "默认";
+                }
+
+                manage_categories() {
+                    const html = `
+                        <div class="category-manager">
+                            <div class="category-manager-header">
+                                <h3>管理分类</h3>
+                            </div>
+                            <div class="category-manager-list"></div>
+                            <div class="category-manager-actions">
+                                <button class="btn-add-category">➕ 添加分类</button>
+                            </div>
+                        </div>
+                    `;
+                    
+                    const rect = this.e_btn_manage_categories.getBoundingClientRect();
+                    const fm = new FormMark({x: rect.left, y: rect.top + rect.height + 10,});
+                    fm.rect = {x: rect.left, y: rect.top + rect.height + 10,};
+                    fm.show(html);
+                    
+                    const list_div = fm.dialog.querySelector(".category-manager-list");
+                    const btn_add = fm.dialog.querySelector(".btn-add-category");
+                    
+                    const render_categories = () => {
+                        list_div.innerHTML = "";
+                        this.categories.forEach(c => {
+                            const item = document.createElement("div");
+                            item.className = "category-manager-item";
+                            item.innerHTML = `
+                                <input type="checkbox" class="category-checkbox" value="${c.name}">
+                                <span class="category-name">${c.name}</span>
+                                <button class="btn-rename-category">重命名</button>
+                                <button class="btn-delete-category">删除</button>
+                            `;
+                            
+                            item.querySelector(".btn-rename-category").addEventListener("click", async () => {
+                                const new_name = prompt("请输入新名称：", c.name);
+                                if (new_name && new_name.trim() && new_name.trim() !== c.name) {
+                                    try {
+                                        await this.client.subviews.admin.edit_candidate_category(c.name, new_name.trim());
+                                        await this.fetch_categories();
+                                        render_categories();
+                                        this.fetch_list();
+                                    } catch (e) {
+                                        MessageMark.report(e);
+                                    }
+                                }
+                            });
+                            
+                            item.querySelector(".btn-delete-category").addEventListener("click", async () => {
+                                if (confirm(`确定删除分类"${c.name}"吗？\n该分类下的候选词将移到"默认"分类。`)) {
+                                    try {
+                                        await this.client.subviews.admin.delete_candidate_category(c.name);
+                                        await this.fetch_categories();
+                                        render_categories();
+                                        this.fetch_list();
+                                    } catch (e) {
+                                        MessageMark.report(e);
+                                    }
+                                }
+                            });
+                            
+                            list_div.appendChild(item);
+                        });
+                    };
+                    
+                    btn_add.addEventListener("click", async () => {
+                        const name = prompt("请输入新分类名称：");
+                        if (name && name.trim()) {
+                            try {
+                                await this.client.subviews.admin.add_candidate_category(name.trim());
+                                await this.fetch_categories();
+                                render_categories();
+                            } catch (e) {
+                                MessageMark.report(e);
+                            }
+                        }
+                    });
+                    
+                    render_categories();
+                }
+
+                async set_category_batch() {
+                    if (this.selected_words.size === 0) {
+                        alert("请先选择候选词");
+                        return;
+                    }
+                    
+                    const category = await this.select_category_with_prompt("选择目标分类");
+                    if (category === null) return;
+                    
+                    const category_name = category || "默认";
+                    
+                    this.loading_mark.show();
+                    try {
+                        const words = Array.from(this.selected_words);
+                        await this.client.subviews.admin.update_candidate_word_category(words, "", category_name);
+                        this.fetch_list();
+                    } catch (error) {
+                        MessageMark.report(error);
+                    } finally {
+                        this.remove_loading_mark();
+                    }
+                }
+
+                edit_candidate(item, word, category) {
                     const new_word = prompt("请输入新的候选词：", word);
                     if (!new_word || !new_word.trim()) return;
                     if (new_word.trim() === word) return;
 
                     this.loading_mark.show();
-                    this.client.subviews.admin.edit_candidate_word(word, new_word.trim())
+                    this.client.subviews.admin.edit_candidate_word(word, new_word.trim(), category)
                         .then(result => {
                             this.remove_loading_mark();
                             this.fetch_list();
@@ -15782,13 +16154,16 @@
                     }
                     
                     list.forEach((item, index) => {
+                        const category = item.category || "默认";
                         const div = document.createElement("div");
                         div.className = "candidate-word-item";
                         div.dataset.word = item.word;
+                        div.dataset.category = category;
                         div.innerHTML = `
                             <input type="checkbox" class="candidate-checkbox">
                             <span class="candidate-index">${index + 1}</span>
                             <span class="candidate-word">${item.word}</span>
+                            <span class="candidate-category">${category}</span>
                             <span class="candidate-count">${item.use_count || 0}</span>
                             <span class="candidate-actions">
                                 <button class="btn-edit">编辑</button>
@@ -15799,18 +16174,18 @@
                         const checkbox = div.querySelector(".candidate-checkbox");
                         checkbox.addEventListener("change", (event) => {
                             if (checkbox.checked) {
-                                this.selected_words.add(item.word);
+                                this.selected_words.add(item.word + "||" + category);
                             } else {
-                                this.selected_words.delete(item.word);
+                                this.selected_words.delete(item.word + "||" + category);
                             }
                             this.update_delete_button();
                         });
                         
                         div.querySelector(".btn-edit").addEventListener("click", () => {
-                            this.edit_candidate(div, item.word);
+                            this.edit_candidate(div, item.word, category);
                         });
                         div.querySelector(".btn-delete").addEventListener("click", () => {
-                            this.delete_candidate(div, item.word);
+                            this.delete_candidate(div, item.word, category);
                         });
                         
                         this.e_list.appendChild(div);
@@ -15838,9 +16213,26 @@
                 update_delete_button() {
                     if (this.selected_words.size > 0) {
                         this.e_btn_delete_selected.textContent = `🗑️ 批量删除 (${this.selected_words.size})`;
+                        this.e_btn_set_category.style.display = "";
+                        this.e_btn_set_category.textContent = `📁 批量分类 (${this.selected_words.size})`;
                     } else {
                         this.e_btn_delete_selected.textContent = `🗑️ 批量删除`;
+                        this.e_btn_set_category.style.display = "none";
                     }
+                }
+
+                delete_candidate(item, word, category) {
+                    if (!confirm(`确定要删除候选词"${word}"吗？`)) return;
+
+                    this.loading_mark.show();
+                    this.client.subviews.admin.delete_candidate_word(word, category)
+                        .then(result => {
+                            this.remove_loading_mark();
+                            item.remove();
+                        }).catch(error => {
+                            this.remove_loading_mark();
+                            MessageMark.report(error);
+                        });
                 }
 
                 delete_selected() {
@@ -15854,9 +16246,10 @@
                     const words = Array.from(this.selected_words);
                     this.loading_mark.show();
                     
-                    const deletePromises = words.map(word => 
-                        this.client.subviews.admin.delete_candidate_word(word)
-                    );
+                    const deletePromises = words.map(w => {
+                        const [word, category] = w.split("||");
+                        return this.client.subviews.admin.delete_candidate_word(word, category);
+                    });
 
                     Promise.all(deletePromises)
                         .then(() => {
