@@ -10527,18 +10527,12 @@
 					updateCandidateButtons();
 				});
 
-				// 根据功能开关控制按钮显示/隐藏
-				if (feature_settings) {
-					// 控制悬浮候选词
-					if (feature_settings.enable_candidate_word === false) {
-						if (this.e_candidate_btn) this.e_candidate_btn.classList.add("hidden");
-						if (this.e_candidate_panel) this.e_candidate_panel.classList.add("hidden");
-					}
-					// 控制AI咨询功能
-					if (feature_settings.enable_ai_consult === false) {
-						if (this.e_ai_teacher_btn) this.e_ai_teacher_btn.classList.add("hidden");
-					}
-				}
+
+				if (this.e_candidate_btn) this.e_candidate_btn.classList.add("hidden");
+				if (this.e_candidate_panel) this.e_candidate_panel.classList.add("hidden");
+				if (this.e_ai_teacher_btn) this.e_ai_teacher_btn.classList.add("hidden");
+
+
 
 
 
