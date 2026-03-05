@@ -10528,7 +10528,6 @@
 				});
 
 				// 根据功能开关控制按钮显示/隐藏
-
 				this.e_candidate_btn.classList.remove("hidden");
 				this.e_candidate_panel.classList.add("hidden");
 
@@ -10686,10 +10685,17 @@
                     renderCandidates(v === "" ? commonPhrases : commonPhrases.filter(p => p.includes(v)));
                 });
 
-                // focus 显示候选词
-                this.e_inputarea_textarea.addEventListener("focus", () => {
-                    renderCandidates(commonPhrases);
-                });
+				if (feature_settings) {
+					// 控制悬浮候选词
+					if (feature_settings.enable_candidate_word === false) {
+						// focus 显示候选词
+                        this.e_inputarea_textarea.addEventListener("focus", () => {
+                            renderCandidates(commonPhrases);
+                        });
+					}
+
+				}
+                
 
                 // blur 隐藏候选词，但判断如果正在点击候选词就不隐藏
                 this.e_inputarea_textarea.addEventListener("blur", (e) => {
