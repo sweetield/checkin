@@ -10530,9 +10530,16 @@
 				// 根据功能开关控制按钮显示/隐藏
 				this.e_candidate_btn.classList.remove("hidden");
 				this.e_candidate_panel.classList.add("hidden");
-
 				this.e_ai_teacher_btn.classList.remove("hidden");
 
+				if (feature_settings) {
+					// 控制悬浮候选词
+					if (feature_settings.enable_candidate_word === false) {
+
+                            this.e_inputarea_candidates.classList.add("hidden");
+					}
+
+				}
 
 
                 // 自动高度
@@ -10670,38 +10677,32 @@
                 };
 
 
+		        // 🔹 输入筛选事件
+		        this.e_candidate_filter.addEventListener("input", () => {
+			        const v = this.e_candidate_filter.value.trim();
+			        const filtered = v === "" ? commonPhrases : commonPhrases.filter(p => p.includes(v));
+			        this.render_candidate_panel(filtered); // ✅ 传入筛选后的列表
+			        this.e_candidate_panel_body.scrollTop = 0;
+			        updateCandidateButtons();
+		        });
+                // 输入框 input 显示候选词
+                this.e_inputarea_textarea.addEventListener("input", () => {
+                    const v = this.e_inputarea_textarea.value.trim();
+                    renderCandidates(v === "" ? commonPhrases : commonPhrases.filter(p => p.includes(v)));
+                });
+                // 输入框 input 显示候选词
+                this.e_inputarea_textarea.addEventListener("input", () => {
+                    const v = this.e_inputarea_textarea.value.trim();
+                    renderCandidates(v === "" ? commonPhrases : commonPhrases.filter(p => p.includes(v)));
+                });
+
+				// focus 显示候选词
+                this.e_inputarea_textarea.addEventListener("focus", () => {
+                    renderCandidates(commonPhrases);
+                });
 
 
-				if (feature_settings) {
-					// 控制悬浮候选词
-					if (feature_settings.enable_candidate_word === true) {
-				        // 🔹 输入筛选事件
-				        this.e_candidate_filter.addEventListener("input", () => {
-					        const v = this.e_candidate_filter.value.trim();
-					        const filtered = v === "" ? commonPhrases : commonPhrases.filter(p => p.includes(v));
-					        this.render_candidate_panel(filtered); // ✅ 传入筛选后的列表
-					        this.e_candidate_panel_body.scrollTop = 0;
-					        updateCandidateButtons();
-				        });
-                        // 输入框 input 显示候选词
-                        this.e_inputarea_textarea.addEventListener("input", () => {
-                            const v = this.e_inputarea_textarea.value.trim();
-                            renderCandidates(v === "" ? commonPhrases : commonPhrases.filter(p => p.includes(v)));
-                        });
-                        // 输入框 input 显示候选词
-                        this.e_inputarea_textarea.addEventListener("input", () => {
-                            const v = this.e_inputarea_textarea.value.trim();
-                            renderCandidates(v === "" ? commonPhrases : commonPhrases.filter(p => p.includes(v)));
-                        });
 
-						// focus 显示候选词
-                        this.e_inputarea_textarea.addEventListener("focus", () => {
-                            renderCandidates(commonPhrases);
-                        });
-
-					}
-
-				}
                 
 
 
