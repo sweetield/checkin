@@ -10688,14 +10688,22 @@
 				if (feature_settings) {
 					// 控制悬浮候选词
 					if (feature_settings.enable_candidate_word === false) {
+                        // 输入框 input 显示候选词
+                        this.e_inputarea_textarea.addEventListener("input", () => {
+                            const v = this.e_inputarea_textarea.value.trim();
+                            renderCandidates(v === "" ? commonPhrases : commonPhrases.filter(p => p.includes(v)));
+                        });
+
 						// focus 显示候选词
                         this.e_inputarea_textarea.addEventListener("focus", () => {
                             renderCandidates(commonPhrases);
                         });
+
 					}
 
 				}
                 
+
 
                 // blur 隐藏候选词，但判断如果正在点击候选词就不隐藏
                 this.e_inputarea_textarea.addEventListener("blur", (e) => {
