@@ -10532,14 +10532,7 @@
 				this.e_candidate_panel.classList.add("hidden");
 				this.e_ai_teacher_btn.classList.remove("hidden");
 
-				if (feature_settings) {
-					// 控制悬浮候选词
-					if (feature_settings.enable_candidate_word === false) {
 
-                            this.e_inputarea_candidates.classList.add("hidden");
-					}
-
-				}
 
 
                 // 自动高度
@@ -10582,7 +10575,7 @@
 				
 				
 				
-				// =============================
+			// =============================
 			// 🔥 从API加载候选词
 			// =============================
 			let commonPhrases = [];
@@ -10716,6 +10709,14 @@
                     }, 150);
                 });
 
+				if (feature_settings) {
+					// 控制悬浮候选词
+					if (feature_settings.enable_candidate_word === false) {
+
+                            this.e_inputarea_candidates.classList.add("hidden");
+					}
+
+				}
 
 				// =============================
 				// 🔥 半屏候选词：打开 / 关闭
