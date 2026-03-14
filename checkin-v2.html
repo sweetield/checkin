@@ -14772,10 +14772,10 @@
 
             check_scroll_position_to_load(event) {
                 if (this.closed) return;
-                if (this.e_msgflow.scrollTop <= 10) {
+                if (this.e_msgflow.scrollTop <= 50) {
                     clearTimeout(this.e_msgflow__load_history_timer);
                     this.e_msgflow__load_history_timer = setTimeout(() => {
-                        if (this.e_msgflow.scrollTop > 10) return;
+                        if (this.e_msgflow.scrollTop > 50) return;
                         this.start__load_history();
                     }, 200);
                 }
