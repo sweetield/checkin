@@ -23335,6 +23335,7 @@
             }
 
             async _update_contact_item_status(item, status_attr, for_refresh = false) {
+                if (!item) return;
                 if (for_refresh && item.status_attr !== status_attr) return;
                 item.status_attr = status_attr;
 
