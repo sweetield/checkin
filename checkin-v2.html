@@ -7936,7 +7936,7 @@
     * */
     const RequestQueue = (() => {
         const MAX_CONCURRENT_REQUESTS = 1; // 最大并发请求数（设为1以彻底避免并发）
-        const REQUEST_DELAY_MS = 3000; // 请求间隔（毫秒，设为3秒以彻底避免触发限制）
+        const REQUEST_DELAY_MS = 5000; // 请求间隔（毫秒，设为5秒以彻底避免触发限制）
 
         let activeRequests = 0;
         let pendingRequests = [];
