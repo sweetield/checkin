@@ -7935,8 +7935,8 @@
     * 全局请求队列管理器 - 用于控制并发请求数量，避免 Too many API requests 错误
     * */
     const RequestQueue = (() => {
-        const MAX_CONCURRENT_REQUESTS = 5; // 最大并发请求数
-        const REQUEST_DELAY_MS = 100; // 请求间隔（毫秒）
+        const MAX_CONCURRENT_REQUESTS = 3; // 最大并发请求数（减少以避免触发限制）
+        const REQUEST_DELAY_MS = 200; // 请求间隔（毫秒，增加延迟）
 
         let activeRequests = 0;
         let pendingRequests = [];
@@ -8406,12 +8406,28 @@
 
         // 处理网络错误
         handleNetworkError(error) {
+            const isApiLimitError = error.message && error.message.includes("Too many API requests");
+            
             // 打印详细日志到控制台
-            console.error(`[网络错误] ${new Date().toLocaleTimeString()}`, {
-                message: error.message,
-                stack: error.stack,
-                auto_retry: error.auto_retry
-            });
+            if (isApiLimitError) {
+                console.log(`[API限制] ${new Date().toLocaleTimeString()} - 静默重试中`, {
+                    message: error.message,
+                    auto_retry: error.auto_retry
+                });
+            } else {
+                console.error(`[网络错误] ${new Date().toLocaleTimeString()}`, {
+                    message: error.message,
+                    stack: error.stack,
+                    auto_retry: error.auto_retry
+                });
+            }
+
+            // 如果是API限制错误，完全静默处理，不显示任何通知
+            if (isApiLimitError) {
+                this.errorCount++;
+                // 不增加 maxSilentRetries 计数，避免触发警告
+                return;
+            }
 
             // 如果是自动重试的错误，增加计数器但不显示通知
             if (error.auto_retry) {
@@ -13046,8 +13062,8 @@
                 }
 
                 this.timer__fetch_unread_msgs = null;
-                this.interval__fetch_unread_msgs = 7500;
-                this.interval__fetch_unread_msgs__ws = 4500;
+                this.interval__fetch_unread_msgs = 10000; // 增加重试间隔以减少API调用频率
+                this.interval__fetch_unread_msgs__ws = 6000;
                 this.is_processing__fetch_unread_msgs = false;
 
                 this.timer__update_read_progress = null;
@@ -19469,6 +19485,8 @@
                 this.change_loading_status__loadhistory();
 
                 const first_msgattr = this.li.bindmap.msgs.length > 0 ? this.li.bindmap.msgs.at(0) : null;
+                
+                console.log('start__load_history called, first_msgattr:', first_msgattr ? first_msgattr.id : null);
 
                 const {xxid, contact_type, ceid} = this.current_contact_xxid();
 
@@ -19479,6 +19497,7 @@
 
                 const onfetchload = (result) => {
                     // if (this.closed) return;
+                    console.log('load_history response:', result);
                     this.is_processing__load_history = false;
                     this.change_loading_status__loadhistory();
                     this.client.dashboard_chat.wrapper.update_contact_item_status(result.sync);
@@ -19487,6 +19506,7 @@
                 };
                 const onfetcherror = (error) => {
                     // if (this.closed) return;
+                    console.log('load_history error:', error);
                     this.is_processing__load_history = false;
                     this.change_loading_status__loadhistory();
                     MessageMark.report(error);
@@ -23077,8 +23097,8 @@
                 super(dashboard_element);
 
                 this.timer__sync = null;
-                this.interval__sync = 10000;
-                this.interval__sync__ws = 7000;
+                this.interval__sync = 15000; // 增加同步间隔以减少API调用频率
+                this.interval__sync__ws = 10000;
                 this.is_processing__sync = false;
 
                 // 同步状态改为控制台日志
@@ -24215,6 +24235,9 @@
                         if (json.error.message.includes("Too many API requests by single worker invocation")) {
                             this.ws_close();
                             error.auto_retry = true;
+                            // 完全静默处理，不调用错误回调，避免显示错误
+                            console.log(`[API限制] WebSocket连接已关闭，将自动重连`);
+                            return;
                         }
                         callback.onfetcherror(error);
                     } else {
