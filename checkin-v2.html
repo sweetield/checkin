@@ -24133,6 +24133,7 @@
 
             async update_contact_item_status(status_attr) {
                 if (!this.is_active()) return;
+                if (!status_attr) return;
                 const items = this.contact_items();
                 let item;
                 if (status_attr.type === subviews.Chat.receiver_type.group) {
