@@ -7935,8 +7935,8 @@
     * 全局请求队列管理器 - 用于控制并发请求数量，避免 Too many API requests 错误
     * */
     const RequestQueue = (() => {
-        const MAX_CONCURRENT_REQUESTS = 1; // 最大并发请求数（设为1以彻底避免并发）
-        const REQUEST_DELAY_MS = 10000; // 请求间隔（毫秒，设为10秒以彻底避免触发限制）
+        const MAX_CONCURRENT_REQUESTS = 5; // 最大并发请求数
+        const REQUEST_DELAY_MS = 100; // 请求间隔（毫秒）
 
         let activeRequests = 0;
         let pendingRequests = [];
@@ -8406,29 +8406,12 @@
 
         // 处理网络错误
         handleNetworkError(error) {
-            const isApiLimitError = error.message && error.message.includes("Too many API requests");
-            
             // 打印详细日志到控制台
-            if (isApiLimitError) {
-                console.log(`[API限制] ${new Date().toLocaleTimeString()} - 静默重试中`, {
-                    message: error.message,
-                    auto_retry: error.auto_retry
-                });
-            } else {
-                console.error(`[网络错误] ${new Date().toLocaleTimeString()}`, {
-                    message: error.message,
-                    stack: error.stack,
-                    auto_retry: error.auto_retry
-                });
-            }
-
-            // 如果是API限制错误，完全静默处理，不显示任何通知
-            if (isApiLimitError) {
-                this.errorCount++;
-                // 记录API限制错误，但不触发警告显示
-                console.log(`[API限制] 已触发 ${this.errorCount} 次，系统将自动调整请求频率`);
-                return;
-            }
+            console.error(`[网络错误] ${new Date().toLocaleTimeString()}`, {
+                message: error.message,
+                stack: error.stack,
+                auto_retry: error.auto_retry
+            });
 
             // 如果是自动重试的错误，增加计数器但不显示通知
             if (error.auto_retry) {
@@ -13063,8 +13046,8 @@
                 }
 
                 this.timer__fetch_unread_msgs = null;
-                this.interval__fetch_unread_msgs = 15000; // 进一步增加间隔以减少API调用频率
-                this.interval__fetch_unread_msgs__ws = 10000;
+                this.interval__fetch_unread_msgs = 7500;
+                this.interval__fetch_unread_msgs__ws = 4500;
                 this.is_processing__fetch_unread_msgs = false;
 
                 this.timer__update_read_progress = null;
@@ -14789,10 +14772,10 @@
 
             check_scroll_position_to_load(event) {
                 if (this.closed) return;
-                if (this.e_msgflow.scrollTop <= 50) {
+                if (this.e_msgflow.scrollTop === 0) {
                     clearTimeout(this.e_msgflow__load_history_timer);
                     this.e_msgflow__load_history_timer = setTimeout(() => {
-                        if (this.e_msgflow.scrollTop > 50) return;
+                        if (this.e_msgflow.scrollTop > 10) return;
                         this.start__load_history();
                     }, 200);
                 }
@@ -17608,8 +17591,7 @@
                     }
 
                     update() {
-                        super.update();
-
+                        // 先解析消息内容，设置 at_attr，再调用 super.update() 处理已读状态
                         if (!this.msgattr.is_sent && this.msgattr.plain_text) {
                             // this.e_mcr_span.textContent = this.msgattr.plain_text;
                             this.e_mcr_span.innerHTML = MarkdownResolver.to_html(this.msgattr.plain_text);
@@ -17632,6 +17614,8 @@
                                         if (this.msgattr.pinned === 1 || this.msgattr.pinned === true) {
                                             this.update_pinned_preview();
                                         }
+                                        // 解密完成后重新更新已读状态
+                                        super.update();
                                     }).catch(error => {
                                         this.e_mcr_span.classList.add("red");
                                         this.e_mcr_span.textContent = decrypt_error_string;
@@ -17650,7 +17634,8 @@
 
                             }
                         }
-
+                        // 在 at_attr 设置后调用 super.update() 处理已读状态
+                        super.update();
                     }
 
                     init_md() {
@@ -19486,8 +19471,6 @@
                 this.change_loading_status__loadhistory();
 
                 const first_msgattr = this.li.bindmap.msgs.length > 0 ? this.li.bindmap.msgs.at(0) : null;
-                
-                console.log('start__load_history called, first_msgattr:', first_msgattr ? first_msgattr.id : null);
 
                 const {xxid, contact_type, ceid} = this.current_contact_xxid();
 
@@ -19498,7 +19481,6 @@
 
                 const onfetchload = (result) => {
                     // if (this.closed) return;
-                    console.log('load_history response:', result);
                     this.is_processing__load_history = false;
                     this.change_loading_status__loadhistory();
                     this.client.dashboard_chat.wrapper.update_contact_item_status(result.sync);
@@ -19507,7 +19489,6 @@
                 };
                 const onfetcherror = (error) => {
                     // if (this.closed) return;
-                    console.log('load_history error:', error);
                     this.is_processing__load_history = false;
                     this.change_loading_status__loadhistory();
                     MessageMark.report(error);
@@ -19691,7 +19672,7 @@
             async exportChatWithImages(mdFileName, mdContent, imageFiles) {
                 try {
                     // 动态加载 JSZip 库
-                    const jsZipUrl = 'https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js';
+                    const jsZipUrl = 'https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js';
 
                     if (typeof JSZip === 'undefined') {
                         await new Promise((resolve, reject) => {
@@ -23098,8 +23079,8 @@
                 super(dashboard_element);
 
                 this.timer__sync = null;
-                this.interval__sync = 20000; // 进一步增加同步间隔以减少API调用频率
-                this.interval__sync__ws = 15000;
+                this.interval__sync = 10000;
+                this.interval__sync__ws = 7000;
                 this.is_processing__sync = false;
 
                 // 同步状态改为控制台日志
@@ -23335,7 +23316,6 @@
             }
 
             async _update_contact_item_status(item, status_attr, for_refresh = false) {
-                if (!item) return;
                 if (for_refresh && item.status_attr !== status_attr) return;
                 item.status_attr = status_attr;
 
@@ -24134,7 +24114,6 @@
 
             async update_contact_item_status(status_attr) {
                 if (!this.is_active()) return;
-                if (!status_attr) return;
                 const items = this.contact_items();
                 let item;
                 if (status_attr.type === subviews.Chat.receiver_type.group) {
@@ -24238,14 +24217,6 @@
                         if (json.error.message.includes("Too many API requests by single worker invocation")) {
                             this.ws_close();
                             error.auto_retry = true;
-                            // 完全静默处理，不调用错误回调，避免显示错误
-                            console.log(`[API限制] WebSocket连接已关闭，将等待10秒后自动重连`);
-                            // 等待10秒后尝试重连，给系统更多时间恢复
-                            setTimeout(() => {
-                                console.log(`[API限制] 尝试重新连接WebSocket`);
-                                this.ws_connect();
-                            }, 10000);
-                            return;
                         }
                         callback.onfetcherror(error);
                     } else {
