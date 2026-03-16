@@ -18078,20 +18078,20 @@
 
                                     encryptors.decrypt2string(this.msgattr.file_attr.name)
                                         .then(result => {
-                                            set_htmlContent_if_different(this.e_mcr_span, `<i class="bi bi-file-earmark"></i> 文件 ${result} ${fileSize} 点击下载文件`);
+                                            set_htmlContent_if_different(this.e_mcr_span, `<i class="bi bi-file-earmark"></i> 🗳️文件 ${result} ${fileSize} 点击下载文件`);
                                             this.msgattr.plain_file_name = result;
                                         })
                                         .catch(error => {
                                             this.e_mcr_span.classList.add("mcr-status");
                                             this.e_mcr_span.classList.add("status-error");
-                                            set_htmlContent_if_different(this.e_mcr_span, `<i class="bi bi-exclamation-triangle"></i> 文件 ${decrypt_error_string}`);
+                                            set_htmlContent_if_different(this.e_mcr_span, `<i class="bi bi-exclamation-triangle"></i> 🗳️文件 ${decrypt_error_string}`);
                                         });
 
                                 } else {
                                     this.e_mcr_span.classList.add("mcr-status");
                                     this.e_mcr_span.classList.add("status-download");
                                     set_htmlContent_if_different(this.e_mcr_span,
-                                        `<i class="bi bi-file-earmark"></i> 文件 ${this.msgattr.file_attr.name} ${fileSize} 点击下载文件`);
+                                        `<i class="bi bi-file-earmark"></i> 🗳️文件 ${this.msgattr.file_attr.name} ${fileSize} 点击下载文件`);
                                     this.msgattr.plain_file_name = this.msgattr.file_attr.name;
                                 }
                             } else { // 已有下载任务
