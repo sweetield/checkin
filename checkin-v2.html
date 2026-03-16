@@ -15901,10 +15901,7 @@
 
                 const onfetchload = (result) => {
                     // if (this.closed) return;
-                    // 只有当消息属于当前会话时才更新联系人状态
-                    if (result && result.sync && (result.sync.uid === xxid || result.sync.gid === xxid)) {
-                        this.client.dashboard_chat.wrapper.update_contact_item_status(result.sync);
-                    }
+                    this.client.dashboard_chat.wrapper.update_contact_item_status(result.sync);
                     this.msgflow_manage.update_msg(msgattr, result.message_attr,);
                 };
                 const onfetcherror = (error) => {
@@ -15928,10 +15925,7 @@
 
                 const onfetchload = (result) => {
                     // if (this.closed) return;
-                    // 只有当消息属于当前会话时才更新联系人状态
-                    if (result && result.sync && (result.sync.uid === xxid || result.sync.gid === xxid)) {
-                        this.client.dashboard_chat.wrapper.update_contact_item_status(result.sync);
-                    }
+                    this.client.dashboard_chat.wrapper.update_contact_item_status(result.sync);
                     this.msgflow_manage.update_msg(msgattr, result.message_attr,);
                 };
                 const onfetcherror = (error) => {
@@ -16792,10 +16786,6 @@
                                         });
                                     })
                                     .then(result => {
-                                        // 同步更新左侧联系人状态
-                                        if (result && result.sync && (result.sync.uid === xxid || result.sync.gid === xxid)) {
-                                            this.client.dashboard_chat.wrapper.update_contact_item_status(result.sync);
-                                        }
 
                                         // 刷新回应标签（立即刷新）
                                         if (this.contentpage && this.contentpage.refresh_reply_tags_immediately) {
@@ -20326,10 +20316,6 @@
                             throw new Error(isReplied ? "取消回应失败" : "回应失败");
                         })
                         .then(result => {
-                            // 同步更新左侧联系人状态
-                            if (result && result.sync && (result.sync.uid === xxid || result.sync.gid === xxid)) {
-                                this.client.dashboard_chat.wrapper.update_contact_item_status(result.sync);
-                            }
                                                 // 刷新回应标签（立即刷新）
                                                 if (msg.msgobj && msg.msgobj.check_reply_status) {
                                                     if (msg.msgobj.contentpage && msg.msgobj.contentpage.refresh_reply_tags_immediately) {
