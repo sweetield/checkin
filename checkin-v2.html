@@ -23117,38 +23117,20 @@
 
         }
 
-        class ChatDashboardWrapper extends DashboardWrapper {
-            constructor(dashboard_element) {
-                super(dashboard_element);
-
-                this.timer__sync = null;
-                this.interval__sync = 10000;
-                this.interval__sync__ws = 7000;
-                this.is_processing__sync = false;
-
-                // 同步状态改为控制台日志
-                this.change_loading_status__syncing();
-
-                this.ws_client = null;
-                this.ws_counter = 0;
-                this.ws_callbacks = {};
-                this.ws_lasttime_connecting = 0;
-                
-                // WebSocket 请求队列控制
-                this.ws_pending_count = 0;
-                this.ws_max_pending = 5; // 最大等待响应数
-                this.ws_send_queue = [];
-
-                // 【优化机制】WebSocket 主动重连计数器
-                this.ws_action_count = 0;           // 当前连接已发送的请求次数
-                this.max_ws_requests = 30;          // 触发重连的安全阈值
-                this.ws_pending_count = 0;
-                this.ws_max_pending = 5; // 最大等待响应数
-                this.ws_send_queue = [];
-
-                // 初始化左侧边栏搜索（搜索群聊和私聊）
-                this.init_aside_search();
-            }
+            class ChatDashboardWrapper extends DashboardWrapper {
+                constructor(client) {
+                    super(client);
+                    
+                    this.ws_callbacks = {};       // 回调函数映射
+                    this.ws_send_queue = [];      // 消息发送队列
+                    this.ws_pending_count = 0;    // 当前等待响应的消息数量
+                    this.ws_max_pending = 5;      // 最大等待响应数量
+                    this.ws_action_count = 0;           // 当前连接已发送的请求次数
+                    this.max_ws_requests = 100;         // 触发重连的安全阈值（增加从30到100，减少主动断开频率）
+                    
+                    // 初始化搜索功能
+                    this.init_aside_search();
+                }
 
             /*
             初始化左侧边栏搜索功能
@@ -24247,10 +24229,20 @@
 
             ws_onerror(event) {
                 console.log("websocket 发生错误", event);
+                
+                // 改进错误处理：区分临时错误和永久错误
+                const isTemporaryError = event && (
+                    event.code === 1006 || // 异常关闭
+                    event.code === 1001 || // 远程端点关闭
+                    !event.code || // 某些浏览器可能不提供code
+                    event.code === 1005 // 无状态码（通常是连接未能建立）
+                );
+                
                 for (let key in this.ws_callbacks) {
                     if (this.ws_callbacks.hasOwnProperty(key)) {
                         const error = new Error(`Websocket连接异常关闭：${event.code}，${event.reason}，${event}`);
                         error.auto_retry = true;
+                        error.isTemporary = isTemporaryError; // 添加临时错误标记
                         this.ws_callbacks[key].onfetcherror(error);
                         delete this.ws_callbacks[key];
                     }
@@ -24258,6 +24250,17 @@
                 // 清理请求队列
                 this.ws_send_queue = [];
                 this.ws_pending_count = 0;
+                
+                // 如果是临时错误，尝试快速重连
+                if (isTemporaryError && this.ws_client) {
+                    console.log("[WebSocket] 检测到临时错误，准备快速重连...");
+                    // 短延迟后重连，避免频繁重连造成雪崩效应
+                    setTimeout(() => {
+                        if (!this.ws_client || this.ws_client.readyState !== WebSocket.OPEN) {
+                            this.ws_connect();
+                        }
+                    }, 500); // 500ms快速重连
+                }
             }
 
             ws_isopen() {
@@ -24276,18 +24279,18 @@
                         this.ws_close();
                     }
 
-                    // 延迟 1.5 秒后重新连接并补发消息
+                    // 延迟 1.0 秒后重新连接并补发消息（减少等待时间）
                     setTimeout(() => {
                         console.log("⚡【优化机制】重连完成，补发消息...");
                         this.ws_connect(); // 重新连接
-                        // 等待连接建立后再发送消息
+                        // 等待连接建立后再发送消息（减少检查间隔，提高响应速度）
                         const checkInterval = setInterval(() => {
                             if (this.ws_isopen()) {
                                 clearInterval(checkInterval);
                                 this.ws_send(json, callback); // 重新调用发送
                             }
-                        }, 100);
-                    }, 1500);
+                        }, 50); // 从100ms减少到50ms
+                    }, 1000); // 从1500ms减少到1000ms
 
                     return; // 拦截本次直接发送
                 }
