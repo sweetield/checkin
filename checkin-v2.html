@@ -7185,19 +7185,13 @@
                     </div>
                     <ol class="nav-buttons">
                     </ol>
+                    <div class="chat-contact-type chat-contact-type-private">
+                        <p class="chat-contact-title">私聊：</p>
+                        <input type="text" class="chat-contact-search chat-contact-search-private" placeholder="搜索私聊...">
+                    </div>
+                    <ol class="nav-buttons chat-private-list">
+                    </ol>
                 </nav>
-               <nav>
-                <div class="chat-contact-type chat-contact-type-private">
-                    <p class="chat-contact-title">私聊：</p>
-                    <input type="text" class="chat-contact-search chat-contact-search-private" placeholder="搜索私聊...">
-                </div>
-
-                <ol class="nav-buttons chat-private-list">
-                </ol>
-            </nav>
-            </aside>
-        </div>
-        <div class="aside-divider"></div>
         <aside class="aside-right">
         </aside>
     </section>
@@ -23135,7 +23129,7 @@
             init_aside_search() {
                 const groupSearchInput = this.dashboard_element.querySelector(".chat-contact-search-group");
                 const privateSearchInput = this.dashboard_element.querySelector(".chat-contact-search-private");
-                const privateList = this.dashboard_element.querySelector(".chat-private-list");
+                const privateList = this.dashboard_element.querySelector(".nav-buttons.chat-private-list");
                 const groupList = this.dashboard_element.querySelector(".nav-buttons");
 
                 // DOM 还没渲染好就直接跳过（安全兜底）
