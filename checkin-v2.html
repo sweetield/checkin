@@ -19079,7 +19079,7 @@
 
                 // 安全地设置 textarea 内容
                 const input = modal.querySelector("#announcement-input");
-                input.value = currentContent;
+                input.value = MarkdownResolver.unescapeHTML(currentContent);
                 input.focus();
 
                 // 绑定事件
@@ -22981,6 +22981,14 @@
             const div = document.createElement('div');
             div.textContent = str; // 或使用 div.innerText
             const r = div.innerHTML;
+            div.remove();
+            return r;
+        },
+
+        unescapeHTML: (str) => {
+            const div = document.createElement('div');
+            div.innerHTML = str;
+            const r = div.textContent;
             div.remove();
             return r;
         },
