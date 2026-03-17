@@ -19053,9 +19053,26 @@
                     this.e_group_settings_panel.classList.add("hidden");
                 }
 
-                // 获取当前公告原始内容（从 data-raw-content 属性获取，避免渲染后的 HTML）
-                const contentEl = this.e_announcement.querySelector(".chat-message-content-text");
-                const currentContent = contentEl?.dataset?.rawContent || "";
+                // 直接从服务器获取最新公告内容
+                fetch(`${top_level_path}/chat/api/get_announcement?gid=${gid}`, { credentials: 'include' })
+                    .then(response => response.json())
+                    .then(result => {
+                        if (result.announcement) {
+                            encryptors.decrypt2string(result.announcement).then(currentContent => {
+                                this._show_announcement_editor(gid, currentContent);
+                            }).catch(() => {
+                                this._show_announcement_editor(gid, "");
+                            });
+                        } else {
+                            this._show_announcement_editor(gid, "");
+                        }
+                    })
+                    .catch(() => {
+                        this._show_announcement_editor(gid, "");
+                    });
+            }
+
+            _show_announcement_editor(gid, currentContent) {
 
                 // 创建弹窗
                 const modal = document.createElement("div");
@@ -19079,7 +19096,7 @@
 
                 // 安全地设置 textarea 内容
                 const input = modal.querySelector("#announcement-input");
-                input.value = MarkdownResolver.unescapeHTML(currentContent);
+                input.value = currentContent;
                 input.focus();
 
                 // 绑定事件
