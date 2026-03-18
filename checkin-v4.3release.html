@@ -23153,6 +23153,13 @@
                     this.ws_action_count = 0;           // 当前连接已发送的请求次数
                     this.max_ws_requests = 100;         // 触发重连的安全阈值（增加从30到100，减少主动断开频率）
                     
+                    this.timer __ sync = null;
+
+                    this.interval __ sync = 10000; // HTTP 模式：每 10 秒同步一次
+
+                    this.interval sync ws = 7000; // WebSocket 模式：每 7 秒同步一次
+
+                    this.is_processing __ sync = false; 
                     // 初始化搜索功能
                     this.init_aside_search();
                 }
