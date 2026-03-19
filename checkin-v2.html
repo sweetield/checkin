@@ -85,7 +85,7 @@
             100% { box-shadow: 0 8px 20px rgba(59,130,246,0.35), inset 0 1px 0 rgba(255,255,255,0.1); }
         }
 
-         /* =================人员列表筛选框 ================= */
+         /* =====人员列表筛选框 ===== */
         .chat-contact-type-private {
             display: flex;
             flex-direction: row;      /* 横向排列，使标题和搜索框在同一行 */
@@ -2436,6 +2436,9 @@
 
         .theme-dark span.form-mark-input-noticing {
             color: rgba(255, 100, 100, 0.9);
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            line-height: 1.6;
         }
 
         .theme-dark {
@@ -2589,6 +2592,15 @@
             justify-content: center;
             transition: all 0.2s ease;
             position: relative;
+        }
+
+        /* 授权按钮默认隐藏，只在admin路径下显示 */
+        #header-toolbar-btn-auth {
+            display: none;
+        }
+
+        #header-toolbar-btn-auth:not(.hidden) {
+            display: flex;
         }
 
         .header-toolbar-btn:hover {
@@ -2839,6 +2851,79 @@
         }
 
         button#login-btn {
+            padding: 6px 6px;
+            cursor: pointer;
+        }
+
+        /* 分页标签样式 */
+        .login-tabs {
+            display: flex;
+            border-bottom: 2px solid #2088ee66;
+        }
+
+        .login-tab {
+            flex: 1;
+            padding: 5px 0;
+            background: transparent;
+            border: none;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-size: 15px;
+            color: #555;
+            position: relative;
+            text-align: center;
+        }
+
+        .login-tab:hover {
+            color: #2088ee;
+        }
+
+        .login-tab.active {
+            color: #2088ee;
+            font-weight: 600;
+        }
+
+        .login-tab.active::after {
+            content: '';
+            position: absolute;
+            bottom: -2px;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: #2088ee;
+        }
+
+        /* 标签内容样式 */
+        .login-tab-content {
+            display: none;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .login-tab-content.active {
+            display: flex;
+        }
+
+        /* 清空按钮样式 */
+        .clear-input-btn {
+            margin-left: 8px;
+            padding: 4px 8px;
+            font-size: 12px;
+            background: #2088ee44;
+            border: 1px solid #2088ee66;
+            border-radius: 3px;
+            cursor: pointer;
+            color: #333;
+            transition: all 0.2s;
+        }
+
+        .clear-input-btn:hover {
+            background: #2088ee66;
+            border-color: #2088ee88;
+        }
+
+        /* 注册按钮样式 */
+        button#register-btn {
             padding: 6px 6px;
             cursor: pointer;
         }
@@ -3874,6 +3959,7 @@
         }
 
         div#form-mark-input-group > label > *:first-child {
+            min-width: 50px;
             margin-left: 4px;
         }
 
@@ -3935,6 +4021,9 @@
         span.form-mark-input-noticing {
             font-size: 14px;
             color: rgba(253, 25, 25, 0.9);
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            line-height: 1.6;
         }
 
     </style>
@@ -4162,6 +4251,273 @@
                 transform: translateX(333%);
             }
         }
+
+    /* ===== 授权对话框 ===== */
+    #auth-dialog {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.5);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 99999;
+    }
+
+    #auth-top-margin {
+        height: 20%;
+    }
+
+    #auth-bottom-margin {
+        height: 25%;
+    }
+
+    #auth-rect {
+        background: white;
+        padding: 16px;
+        box-shadow: 0 0 8px rgba(0, 0, 0, 0.3);
+        border-radius: 8px;
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+        min-width: 400px;
+        max-width: 90vw;
+    }
+
+    .auth-tabbar {
+        display: flex;
+        flex-direction: row;
+        border-bottom: 2px solid #2088eeaa;
+        padding: 0 4px;
+    }
+
+    .auth-tabbar button {
+        display: inline-block;
+        padding: 8px 16px;
+        background: transparent;
+        transition: all 0.1s ease-in-out;
+        border: none;
+        border-radius: 0;
+        cursor: pointer;
+        text-align: left;
+        font-size: 16px;
+        color: var(--fc-less);
+    }
+
+    .auth-tabbar button:hover {
+        background: rgba(0, 0, 0, 0.1);
+    }
+
+    .auth-tabbar button:active {
+        background: rgba(0, 0, 0, 0.24);
+    }
+
+    .auth-tabbar button.active {
+        font-weight: bold;
+        background: #2088ee33;
+    }
+
+    .auth-tabcontent {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+        min-height: 200px;
+    }
+
+    .auth-tab-pane {
+        display: none;
+    }
+
+    .auth-tab-pane.active {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+    }
+
+    .auth-input-row {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+    }
+
+    .auth-invite-codes-list {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+        max-height: 200px;
+        overflow-y: auto;
+    }
+
+    .auth-invite-code-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 8px 12px;
+        background: #f8f9fa;
+        border: 1px solid #ddd;
+        border-radius: 6px;
+        transition: all 0.2s;
+    }
+
+    .auth-invite-code-item:hover {
+        background: #e9ecef;
+        border-color: #007bff;
+    }
+
+    .auth-invite-code-text {
+        flex: 1;
+        font-family: monospace;
+        font-size: 14px;
+        color: #333;
+        cursor: pointer;
+        user-select: none;
+    }
+
+    .auth-invite-code-text:hover {
+        color: #007bff;
+    }
+
+    .auth-invite-code-delete {
+        width: 24px;
+        height: 24px;
+        border: none;
+        background: transparent;
+        color: #999;
+        font-size: 18px;
+        cursor: pointer;
+        border-radius: 4px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.2s;
+        flex-shrink: 0;
+    }
+
+    .auth-invite-code-delete:hover {
+        background: #fee;
+        color: #dc3545;
+    }
+
+    .theme-dark .auth-invite-code-item {
+        background: #3d3d3d;
+        border-color: #555;
+    }
+
+    .theme-dark .auth-invite-code-item:hover {
+        background: #4d4d4d;
+        border-color: #63b3ed;
+    }
+
+    .theme-dark .auth-invite-code-text {
+        color: #e0e0e0;
+    }
+
+    .theme-dark .auth-invite-code-text:hover {
+        color: #63b3ed;
+    }
+
+    .theme-dark .auth-invite-code-delete:hover {
+        background: #5a3a3a;
+        color: #ff6b6b;
+    }
+
+    .auth-text-input {
+        width: 100%;
+        padding: 10px 12px;
+        font-size: 14px;
+        border: 1px solid #ddd;
+        border-radius: 6px;
+        box-sizing: border-box;
+        background: #f8f9fa;
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+
+    .auth-text-input:hover {
+        background: #e9ecef;
+        border-color: #007bff;
+    }
+
+    .auth-text-input:focus {
+        outline: none;
+        border-color: #007bff;
+        box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.1);
+    }
+
+    .auth-textarea-input {
+        width: 100%;
+        padding: 10px 12px;
+        font-size: 14px;
+        border: 1px solid #ddd;
+        border-radius: 6px;
+        box-sizing: border-box;
+        resize: vertical;
+        min-height: 200px;
+        font-family: inherit;
+        line-height: 1.6;
+        transition: all 0.2s;
+    }
+
+    .auth-textarea-input:focus {
+        outline: none;
+        border-color: #007bff;
+        box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.1);
+    }
+
+    .auth-textarea-input::placeholder {
+        color: #999;
+    }
+
+    /* 暗色主题适配 */
+    .theme-dark #auth-rect {
+        background: #2d2d2d;
+        color: #e0e0e0;
+    }
+
+    .theme-dark .auth-text-input {
+        background: #3d3d3d;
+        border-color: #555;
+        color: #e0e0e0;
+    }
+
+    .theme-dark .auth-text-input:hover {
+        background: #4d4d4d;
+        border-color: #63b3ed;
+    }
+
+    .theme-dark .auth-text-input:focus {
+        border-color: #63b3ed;
+        box-shadow: 0 0 0 3px rgba(99, 179, 237, 0.1);
+    }
+
+    .theme-dark .auth-textarea-input {
+        background: #3d3d3d;
+        border-color: #555;
+        color: #e0e0e0;
+    }
+
+    .theme-dark .auth-textarea-input:focus {
+        border-color: #63b3ed;
+        box-shadow: 0 0 0 3px rgba(99, 179, 237, 0.1);
+    }
+
+    .theme-dark .auth-textarea-input::placeholder {
+        color: #718096;
+    }
+
+    .theme-dark .auth-action-btn {
+        background: #3b6fdc;
+    }
+
+    .theme-dark .auth-action-btn:hover:not(:disabled) {
+        background: #2a5bb5;
+    }
+
+    .theme-dark .auth-action-btn:disabled {
+        background: #555;
+    }
 
         .backtask-content {
             display: flex;
@@ -7073,6 +7429,9 @@
         <i class="bi bi-cloud-download"></i>
         <span id="header-download-badge" class="header-badge hidden"></span>
     </button>
+    <button id="header-toolbar-btn-auth" class="header-toolbar-btn" title="授权">
+        <i class="bi bi-shield-check"></i>
+    </button>
     <button id="header-toolbar-btn-links" class="header-toolbar-btn" title="友链">
         <i class="bi bi-link-45deg"></i>
     </button>
@@ -7091,21 +7450,62 @@
     <section id="login-panel" class="">
         <span id="login-top-margin"></span>
         <div id="login-rect">
+            <!-- 提示信息 -->
             <span id="login-tip-user" class="hidden"></span>
             <span id="login-tip-admin" class="hidden">管理员</span>
 
-            <label id="login-input-account-label">
-                账号：
-                <input type="text" id="login-input-account">
-            </label>
+            <!-- 分页标签 -->
+            <div class="login-tabs">
+                <button class="login-tab active" data-tab="login">登录</button>
+                <button class="login-tab" data-tab="register">注册</button>
+            </div>
 
-            <label>
-                密码：
-                <input type="text" id="login-input-password">
-                <button type="button" class="clear-input-btn" data-target="login-input-password">清空</button>
-            </label>
+            <!-- 登录标签页内容 -->
+            <div class="login-tab-content active" id="login-tab-content">
 
-            <button id="login-btn">登录</button>
+                <label id="login-input-account-label">
+                    账号：
+                    <input type="text" id="login-input-account" autocomplete="off">
+                    <button type="button" class="clear-input-btn" data-target="login-input-account">清空</button>
+                </label>
+
+                <label>
+                    密码：
+                    <input type="text" id="login-input-password" autocomplete="off">
+                    <button type="button" class="clear-input-btn" data-target="login-input-password">清空</button>
+                </label>
+
+                <button id="login-btn">登录</button>
+            </div>
+
+            <!-- 注册标签页内容 -->
+            <div class="login-tab-content" id="register-tab-content">
+                <label>
+                    账号：
+                    <input type="text" id="register-input-account" autocomplete="off">
+                    <button type="button" class="clear-input-btn" data-target="register-input-account">清空</button>
+                </label>
+
+                <label>
+                    密码：
+                    <input type="text" id="register-input-password" autocomplete="off">
+                    <button type="button" class="clear-input-btn" data-target="register-input-password">清空</button>
+                </label>
+
+                <label>
+                    确认：
+                    <input type="text" id="register-input-confirm-password" autocomplete="off">
+                    <button type="button" class="clear-input-btn" data-target="register-input-confirm-password">清空</button>
+                </label>
+
+                <label>
+                    邀请码：
+                    <input type="text" id="register-input-invite-code" autocomplete="off">
+                    <button type="button" class="clear-input-btn" data-target="register-input-invite-code">清空</button>
+                </label>
+
+                <button id="register-btn">注册</button>
+            </div>
         </div>
     </section>
 
@@ -7177,6 +7577,18 @@
     <section id="dashboard-chat">
         <div class="aside-left-wrap" style="width: 190px;">
             <aside class="aside-left tiny-scrollbar">
+                <!-- 社交功能按钮 -->
+                <div id="social-buttons-container" style="display: none; gap: 8px; padding: 0 10px;">
+                    <button id="btn-add-friend" class="social-button" style="display: none; flex: 1; padding: 6px; font-size: 12px; background: transparent; border: 1px solid #3498db; border-radius: 4px; cursor: pointer; color: #3498db; transition: all 0.2s;" onmouseover="this.style.background='#3498db'; this.style.color='#fff'" onmouseout="this.style.background='transparent'; this.style.color='#3498db'" data-permission="can_add_friend">
+                        好友
+                    </button>
+                    <button id="btn-create-group" class="social-button" style="display: none; flex: 1; padding: 6px; font-size: 12px; background: transparent; border: 1px solid #3498db; border-radius: 4px; cursor: pointer; color: #3498db; transition: all 0.2s;" onmouseover="this.style.background='#3498db'; this.style.color='#fff'" onmouseout="this.style.background='transparent'; this.style.color='#3498db'" data-permission="can_create_group">
+                        建群
+                    </button>
+                    <button id="btn-invite-to-group" class="social-button" style="display: none; flex: 1; padding: 6px; font-size: 12px; background: transparent; border: 1px solid #3498db; border-radius: 4px; cursor: pointer; color: #3498db; transition: all 0.2s;" onmouseover="this.style.background='#3498db'; this.style.color='#fff'" onmouseout="this.style.background='transparent'; this.style.color='#3498db'" data-permission="can_invite_to_group">
+                        邀请
+                    </button>
+                </div>
                 <!-- 搜索框 -->
                 <nav style="flex: none; max-height: 300px;">
                     <div class="chat-contact-type chat-contact-type-private">
@@ -7191,7 +7603,6 @@
                     <p class="chat-contact-title">私聊：</p>
                     <input type="text" class="chat-contact-search chat-contact-search-private" placeholder="搜索私聊...">
                 </div>
-
                 <ol class="nav-buttons chat-private-list">
                 </ol>
             </nav>
@@ -7372,6 +7783,26 @@
                     floatball.ballClicked(e);
                 }
             });
+        }
+
+        // 授权按钮 - 始终绑定事件，通过 CSS 控制显示/隐藏
+        const headerAuthBtn = document.getElementById("header-toolbar-btn-auth");
+        if (headerAuthBtn && typeof AuthDialog !== "undefined") {
+            // 始终绑定事件
+            headerAuthBtn.addEventListener("click", function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                if (typeof AuthDialog.show === "function") {
+                    AuthDialog.show();
+                }
+            });
+
+            // 根据当前状态设置显示/隐藏
+            if (jumpto && jumpto.backend_panel && logged_admin) {
+                headerAuthBtn.classList.remove("hidden");
+            } else {
+                headerAuthBtn.classList.add("hidden");
+            }
         }
     });
 
@@ -8944,6 +9375,233 @@
             return fm;
         }
 
+    }
+
+    /*
+    * 授权对话框
+    * */
+    class AuthDialog extends BlurMark {
+        constructor() {
+            super(document.body);
+            this.currentTab = null;
+            this.tabContents = [];
+            this.tabButtons = [];
+            this.inviteCode = null;
+        }
+
+        fill() {
+            let html = `
+<div id="auth-dialog">
+    <span id="auth-top-margin"></span>
+    <div id="auth-rect">
+        <div class="auth-tabbar">
+            <button id="auth-tab-invite" class="active">邀请</button>
+        </div>
+        <div class="auth-tabcontent">
+            <!-- 邀请标签页 -->
+            <div id="auth-content-invite" class="auth-tab-pane active">
+                <div class="auth-input-row">
+                    <div id="auth-invite-codes-list" class="auth-invite-codes-list"></div>
+                </div>
+            </div>
+        </div>
+        <div id="form-mark-btn-group"></div>
+    </div>
+    <span id="auth-bottom-margin"></span>
+</div>
+`;
+            this.mark.insertAdjacentHTML("beforeend", html);
+
+            this.rect = this.mark.querySelector("#auth-rect");
+            this.rect.style.background = MessageMark.get_background_color.call(this);
+
+            // 获取标签页元素
+            this.tabBar = this.mark.querySelector(".auth-tabbar");
+            this.tabContent = this.mark.querySelector(".auth-tabcontent");
+            this.tabInvite = this.mark.querySelector("#auth-tab-invite");
+            this.contentInvite = this.mark.querySelector("#auth-content-invite");
+
+            // 邀请功能元素
+            this.inviteCodesList = this.mark.querySelector("#auth-invite-codes-list");
+
+            // 按钮组
+            this.btnGroup = this.mark.querySelector("#form-mark-btn-group");
+
+            // 点击背景关闭对话框
+            this.mark.addEventListener("click", (e) => {
+                if (e.target === this.mark) {
+                    this.remove();
+                }
+            });
+
+            // 初始显示邀请标签页
+            this.switchTab("invite");
+        }
+
+        switchTab(tabName) {
+            // 移除所有激活状态
+            this.tabInvite.classList.remove("active");
+            this.contentInvite.classList.remove("active");
+
+            // 清空按钮组
+            this.btnGroup.innerHTML = "";
+
+            // 激活选中的标签页并显示相应按钮
+            if (tabName === "invite") {
+                this.tabInvite.classList.add("active");
+                this.contentInvite.classList.add("active");
+
+                // 自动加载邀请码列表
+                this.loadInviteCodes();
+
+                // 显示"生成"和"取消"按钮
+                this.btnGroup.insertAdjacentHTML("beforeend", `<button class="form-mark-btn" id="auth-generate-btn">生成</button>`);
+                const generateBtn = this.btnGroup.querySelector("#auth-generate-btn");
+                generateBtn.addEventListener("click", () => this.generateInviteCode());
+
+                this.btnGroup.insertAdjacentHTML("beforeend", `<button class="form-mark-btn">取消</button>`);
+                const cancelBtn = this.btnGroup.querySelector("button:last-of-type");
+                cancelBtn.addEventListener("click", () => this.remove());
+            }
+
+            this.currentTab = tabName;
+        }
+
+        async loadInviteCodes() {
+            try {
+                const response = await fetch("/admin/api/invite_codes");
+                const codes = await response.json();
+
+                // 清空现有列表
+                this.inviteCodesList.innerHTML = "";
+
+                // 添加邀请码到列表
+                if (Array.isArray(codes) && codes.length > 0) {
+                    codes.forEach(codeRecord => {
+                        this.addInviteCodeItem(codeRecord.code, codeRecord.id);
+                    });
+                }
+            } catch (error) {
+                console.error("加载邀请码列表错误:", error);
+                // 静默失败，不显示错误提示
+            }
+        }
+
+        async generateInviteCode() {
+            const generateBtn = this.btnGroup.querySelector("#auth-generate-btn");
+            try {
+                generateBtn.disabled = true;
+                generateBtn.textContent = "生成中...";
+
+                const response = await fetch("/admin/api/generate_invite_code", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json"
+                    }
+                });
+
+                const result = await response.json();
+
+                if (result.success && result.code) {
+                    this.addInviteCodeItem(result.code);
+                    // 使用 toast 提示成功信息
+                    showChatToast({
+                        title: "✅ 邀请码生成成功",
+                        content: `邀请码: ${result.code}`,
+                        onClick: () => {
+                            // 点击 toast 可以复制邀请码
+                            navigator.clipboard.writeText(result.code).then(() => {
+                                showChatToast({
+                                    title: "✓ 已复制",
+                                    content: "邀请码已复制到剪贴板"
+                                });
+                            });
+                        }
+                    });
+                } else {
+                    MessageMark.report("生成邀请码失败");
+                }
+            } catch (error) {
+                console.error("生成邀请码错误:", error);
+                MessageMark.report("生成邀请码失败: " + error.message);
+            } finally {
+                generateBtn.disabled = false;
+                generateBtn.textContent = "生成";
+            }
+        }
+
+        // 添加邀请码项到列表
+        addInviteCodeItem(code, id = null) {
+            const item = document.createElement("div");
+            item.className = "auth-invite-code-item";
+            item.dataset.codeId = id; // 保存数据库 ID
+            item.innerHTML = `
+                <span class="auth-invite-code-text">${code}</span>
+                <button class="auth-invite-code-delete" title="删除">✕</button>
+            `;
+
+            // 点击邀请码文本复制
+            item.querySelector(".auth-invite-code-text").addEventListener("click", () => {
+                navigator.clipboard.writeText(code).then(() => {
+                    showChatToast({
+                        title: "✓ 已复制",
+                        content: "邀请码已复制到剪贴板"
+                    });
+                }).catch(err => {
+                    MessageMark.report("复制失败: " + err.message);
+                });
+            });
+
+            // 点击删除按钮移除该项
+            item.querySelector(".auth-invite-code-delete").addEventListener("click", (e) => {
+                e.stopPropagation();
+                this.deleteInviteCode(item, code, id);
+            });
+
+            this.inviteCodesList.appendChild(item);
+        }
+
+        // 删除邀请码
+        async deleteInviteCode(item, code, id) {
+            try {
+                if (id) {
+                    // 从数据库删除
+                    const response = await fetch(`/admin/api/invite_codes/${id}`, {
+                        method: "DELETE"
+                    });
+                    if (response.ok) {
+                        item.remove();
+                        showChatToast({
+                            title: "✓ 已删除",
+                            content: "邀请码已删除"
+                        });
+                    } else {
+                        MessageMark.report("删除邀请码失败");
+                    }
+                } else {
+                    // 仅从列表移除（新生成的，可能还未保存）
+                    item.remove();
+                }
+            } catch (error) {
+                console.error("删除邀请码错误:", error);
+                MessageMark.report("删除邀请码失败: " + error.message);
+            }
+        }
+
+        // 重写 remove() 方法，清理实例
+        remove() {
+            super.remove();
+            AuthDialog.instance = null;
+        }
+
+        static show() {
+            if (!AuthDialog.instance) {
+                AuthDialog.instance = new AuthDialog();
+                AuthDialog.instance.show();
+            } else {
+                AuthDialog.instance.show();
+            }
+        }
     }
 
     class ImageMark extends BlurMark {
@@ -10560,7 +11218,6 @@
                 if (!is_edit && form["密码"].length === 0) throw new Error("密码");
                 const d = {
                     uid: form["名称"],
-                    password_hash: form["密码"].length > 0 ? await hash_password(form["密码"]) : "",
                     disabled: form["停用"],
                     contact_any: form["允许主动与所有用户通信"],
                     manage_drive: form["允许管理所有用户的网盘"],
@@ -10570,7 +11227,17 @@
                     contact_groups: form["允许主动与这些组通信"],
                     contact_users: form["允许主动与这些用户通信"],
 
+                    can_add_friend: form["允许添加好友"],
+                    can_create_group: form["允许创建群组"],
+                    can_invite_to_group: form["允许邀请用户"],
+
                 };
+
+                // 只有在密码不为空时才设置 password_hash
+                if (form["密码"].length > 0) {
+                    d.password_hash = await hash_password(form["密码"]);
+                }
+
                 return d;
             }
 
@@ -21006,6 +21673,10 @@
                     }
 
                     if (!form_field_checker.ffc_bool(attr["允许管理所有用户的网盘"])) throw new Error("允许管理所有用户的网盘");
+
+                    if (!form_field_checker.ffc_bool(attr["允许添加好友"])) throw new Error("允许添加好友");
+                    if (!form_field_checker.ffc_bool(attr["允许创建群组"])) throw new Error("允许创建群组");
+                    if (!form_field_checker.ffc_bool(attr["允许邀请用户"])) throw new Error("允许邀请用户");
                 }
 
                 #_template = {
@@ -21018,6 +21689,9 @@
                     "允许主动与这些组通信": [],
                     "允许主动与这些用户通信": [],
                     "允许管理所有用户的网盘": false,
+                    "允许添加好友": false,
+                    "允许创建群组": false,
+                    "允许邀请用户": false,
                 }
 
                 new_user() {
@@ -21104,6 +21778,9 @@
                     _template["允许主动与这些组通信"] = attr.contact_groups;
                     _template["允许主动与这些用户通信"] = attr.contact_users;
                     _template["允许管理所有用户的网盘"] = Boolean(attr.manage_drive);
+                    _template["允许添加好友"] = Boolean(attr.can_add_friend);
+                    _template["允许创建群组"] = Boolean(attr.can_create_group);
+                    _template["允许邀请用户"] = Boolean(attr.can_invite_to_group);
 
                     let form = [
                         {type: "title", label: `编辑用户：${attr.uid}`},
@@ -23152,11 +23829,12 @@
                     this.ws_max_pending = 5;      // 最大等待响应数量
                     this.ws_action_count = 0;           // 当前连接已发送的请求次数
                     this.max_ws_requests = 100;         // 触发重连的安全阈值（增加从30到100，减少主动断开频率）
-                    
+
                     this.timer__sync = null;
                     this.interval__sync = 10000;        // HTTP 模式：每 10 秒同步一次
                     this.interval__sync__ws = 7000;     // WebSocket 模式：每 7 秒同步一次
                     this.is_processing__sync = false;
+                    
                     // 初始化搜索功能
                     this.init_aside_search();
                 }
@@ -23985,6 +24663,30 @@
                 return result; // mainactions
             }
 
+            /*
+            * 同步联系人列表
+            * 重新获取联系人列表并刷新界面
+            * */
+            async sync_contacts() {
+                if (!this.is_active()) return;
+                
+                try {
+                    this.remove_all_contact_items();
+                    this.loading_mark.show();
+                    
+                    const result = await checkin.subviews.chat.fetch_contacts();
+                    for (const resultElement of result) {
+                        this.add_contact_item(resultElement);
+                    }
+                    
+                    this.remove_loading_mark();
+                    this.start_timer__sync(false);
+                } catch (error) {
+                    this.remove_loading_mark();
+                    MessageMark.report(error);
+                }
+            }
+
             static online_status = "chat"; // 被服务端文本替换
             static activity_type = "chat";
             static message_type = "chat";
@@ -24425,6 +25127,75 @@
                     {type: "button", text: "切换主题", callback: event => this.switch_theme(),},
                     {type: "section", text: "",},
                 );
+                if (logged_user) {
+                    items.push(
+                        {type: "button", text: "修改名称", callback: event => {
+                            const currentName = logged_user ? logged_user.uid : "您的账号";
+
+                            // 使用FormMark创建弹窗
+                            const form = [
+                                {
+                                    type: "title",
+                                    label: "修改用户名",
+                                },
+                                {
+                                    type: "linetext",
+                                    label: "新名称",
+                                    placeholder: "请输入新的用户名",
+                                    value: currentName,
+                                },
+                                {
+                                    type: "noticing",
+                                    label: "",
+                                    text: "重要提醒：修改用户名后下次登录必须使用新名称！",
+                                },
+                            ];
+
+                            const confirm_callback = async (form_mark) => {
+                                // 收集表单数据
+                                form_mark.collect_data();
+                                const newName = form[1].value.trim();
+
+                                if (!newName) {
+                                    MessageMark.report("新名称不能为空", null, null, null, MessageMark.colors.red);
+                                    return;
+                                }
+
+                                if (newName === currentName) {
+                                    MessageMark.report("新名称与当前名称相同，无需修改", null, null, null, MessageMark.colors.blue);
+                                    form_mark.remove();
+                                    return;
+                                }
+
+                                // 调用后端API
+                                try {
+                                    const response = await net_fetcher.nf_post_json(`${top_level_path}/chat/api/rename_me`, {
+                                        new_uid: newName
+                                    });
+
+                                    if (response.status === 200) {
+                                        const result = await response.json();
+                                        MessageMark.report(result.message || "修改成功！", null, null, null, MessageMark.colors.green);
+                                        form_mark.remove();
+                                        // 延迟刷新页面，让用户看到成功消息
+                                        setTimeout(() => {
+                                            location.reload();
+                                        }, 1500);
+                                    } else {
+                                        const errorData = await response.json();
+                                        MessageMark.report(errorData.message || "修改失败", null, null, null, MessageMark.colors.red);
+                                    }
+                                } catch (error) {
+                                    console.error("修改名称失败:", error);
+                                    MessageMark.report("网络错误：" + error.message, null, null, null, MessageMark.colors.red);
+                                }
+                            };
+
+                            FormMark.get_global_input(form, confirm_callback);
+                        },},
+                        {type: "section", text: "",},
+                    );
+                }
                 if (!jumpto.backend_panel) {
                     items.push(
                         {type: "button", text: "进入后台", callback: event => this.open_admin_page(event, true),},
@@ -24490,6 +25261,57 @@
                 this.handle_login(event)
             });
 
+            // 分页标签切换
+            const loginTabs = document.querySelectorAll('.login-tab');
+            loginTabs.forEach(tab => {
+                tab.addEventListener('click', (e) => {
+                    const tabName = e.target.getAttribute('data-tab');
+
+                    // 移除所有标签的active类
+                    loginTabs.forEach(t => t.classList.remove('active'));
+
+                    // 添加active类到当前标签
+                    e.target.classList.add('active');
+
+                    // 隐藏所有标签内容
+                    document.querySelectorAll('.login-tab-content').forEach(content => {
+                        content.classList.remove('active');
+                    });
+
+                    // 显示对应的标签内容
+                    document.getElementById(`${tabName}-tab-content`).classList.add('active');
+                });
+            });
+
+            // 管理员登录页面：隐藏标签页，只显示登录功能
+            if (jumpto && jumpto.backend_panel) {
+                const loginTabsContainer = document.querySelector('.login-tabs');
+                if (loginTabsContainer) {
+                    loginTabsContainer.style.display = 'none';
+                }
+                // 确保登录内容始终显示
+                const loginContent = document.getElementById('login-tab-content');
+                if (loginContent) {
+                    loginContent.style.display = 'flex';
+                    loginContent.classList.add('active');
+                }
+                // 隐藏注册内容
+                const registerContent = document.getElementById('register-tab-content');
+                if (registerContent) {
+                    registerContent.style.display = 'none';
+                }
+            }
+
+            // 注册相关元素
+            this.register_input_account = document.getElementById("register-input-account");
+            this.register_input_password = document.getElementById("register-input-password");
+            this.register_input_confirm_password = document.getElementById("register-input-confirm-password");
+            this.register_input_invite_code = document.getElementById("register-input-invite-code");
+            this.register_btn = document.getElementById("register-btn");
+            this.register_btn.addEventListener("click", (event) => {
+                this.handle_register(event)
+            });
+
             const enter2focus = (a, b) => {
                 a.addEventListener('keydown', function (event) {
                     if (event.key === 'Enter') b.focus();
@@ -24497,6 +25319,12 @@
             }
             enter2focus(this.login_input_account, this.login_input_password);
             enter2focus(this.login_input_password, this.login_btn);
+
+            // 注册表单的回车键处理
+            enter2focus(this.register_input_account, this.register_input_password);
+            enter2focus(this.register_input_password, this.register_input_confirm_password);
+            enter2focus(this.register_input_confirm_password, this.register_input_invite_code);
+            enter2focus(this.register_input_invite_code, this.register_btn);
 
 
             this.#setup_divider(this.dashboard_mail) // 面板的左右布局
@@ -24531,6 +25359,9 @@
 
             this.#bind_mainactions(this.dashboard_chat, 0, [])
             this.#bind_mainactions(this.dashboard_chat, 1, [])
+
+            // 绑定社交功能按钮事件
+            this.#bind_social_buttons()
 
             this.#bind_mainactions(this.dashboard_forum, 0, [
                 {text: "全部主题", pagetype: contentpages.dashboard_forum.myspace,},
@@ -24616,6 +25447,195 @@
         }
 
         /*
+        * 检查社交功能按钮权限
+        * */
+        check_social_buttons_permissions() {
+            if (!logged_user) {
+                return;
+            }
+
+            const buttons = document.querySelectorAll('.social-button');
+            let visibleCount = 0;
+
+            buttons.forEach(button => {
+                const permission = button.getAttribute('data-permission');
+                const hasPermission = permission && logged_user[permission] === 1;
+
+                if (hasPermission) {
+                    button.style.setProperty('display', 'block', 'important');
+                    visibleCount++;
+                } else {
+                    button.style.setProperty('display', 'none', 'important');
+                }
+            });
+
+            // 控制整个容器的显示和隐藏
+            const container = document.getElementById('social-buttons-container');
+            if (container) {
+                if (visibleCount > 0) {
+                    container.style.setProperty('display', 'flex', 'important');
+                } else {
+                    container.style.setProperty('display', 'none', 'important');
+                }
+            }
+        }
+
+        /*
+        * 社交功能按钮绑定
+        * */
+        #bind_social_buttons() {
+            // 好友按钮
+            const btnAddFriend = document.getElementById("btn-add-friend");
+            if (btnAddFriend) {
+                btnAddFriend.addEventListener("click", () => {
+                    const form = [
+                        {type: "title", label: "添加好友",},
+                        {type: "linetext", label: "用户名：", value: "", placeholder: "请输入要添加的好友用户名",},
+                    ];
+                    const confirm_callback = async (formmark,) => {
+                        const rows = formmark.form;
+                        const target_uid = rows[1].input_element.value.trim();
+                        if (!target_uid) {
+                            MessageMark.report("请输入用户名", null, null, null, MessageMark.colors.yellow);
+                            return;
+                        }
+
+                        try {
+                            const response = await fetch("/chat/api/add_friend", {
+                                method: "POST",
+                                headers: {"Content-Type": "application/json"},
+                                body: JSON.stringify({target_uid: target_uid})
+                            });
+                            const result = await response.json();
+                            if (result.success) {
+                                MessageMark.report(result.message || "添加好友成功！", null, null, null, MessageMark.colors.green);
+                                formmark.remove();
+                                // 刷新联系人列表
+                                this.dashboard_chat.wrapper.sync_contacts();
+                            } else {
+                                MessageMark.report(result.message || "添加好友失败", null, null, null, MessageMark.colors.red);
+                            }
+                        } catch (error) {
+                            MessageMark.report("网络错误：" + error.message, null, null, null, MessageMark.colors.red);
+                        }
+                    };
+                    FormMark.get_global_input(form, confirm_callback);
+                });
+            }
+
+            // 建群按钮
+            const btnCreateGroup = document.getElementById("btn-create-group");
+            if (btnCreateGroup) {
+                btnCreateGroup.addEventListener("click", () => {
+                    const form = [
+                        {type: "title", label: "创建群组",},
+                        {type: "linetext", label: "群组名称：", value: "", placeholder: "请输入新群组的名称",},
+                    ];
+                    const confirm_callback = async (formmark,) => {
+                        const rows = formmark.form;
+                        const gid = rows[1].input_element.value.trim();
+                        if (!gid) {
+                            MessageMark.report("请输入群组名称", null, null, null, MessageMark.colors.yellow);
+                            return;
+                        }
+
+                        try {
+                            const response = await fetch("/chat/api/create_group", {
+                                method: "POST",
+                                headers: {"Content-Type": "application/json"},
+                                body: JSON.stringify({gid: gid})
+                            });
+                            const result = await response.json();
+                            if (result.success) {
+                                MessageMark.report(result.message || "群组创建成功！", null, null, null, MessageMark.colors.green);
+                                formmark.remove();
+                                // 刷新联系人列表
+                                this.dashboard_chat.wrapper.sync_contacts();
+                            } else {
+                                MessageMark.report(result.message || "创建群组失败", null, null, null, MessageMark.colors.red);
+                            }
+                        } catch (error) {
+                            MessageMark.report("网络错误：" + error.message, null, null, null, MessageMark.colors.red);
+                        }
+                    };
+                    FormMark.get_global_input(form, confirm_callback);
+                });
+            }
+
+            // 邀请按钮
+            const btnInviteToGroup = document.getElementById("btn-invite-to-group");
+            if (btnInviteToGroup) {
+                btnInviteToGroup.addEventListener("click", async () => {
+                    // 获取用户所在的群组列表
+                    let groups = [];
+                    try {
+                        const response = await fetch("/chat/api/contacts");
+                        if (!response.ok) {
+                            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                        }
+                        const result = await response.json();
+                        if (result && Array.isArray(result)) {
+                            groups = result.filter(item => item.type === 2); // type=2 表示群组
+                        }
+                    } catch (error) {
+                        console.error("获取群组列表失败:", error);
+                        MessageMark.report("获取群组列表失败: " + error.message, null, null, null, MessageMark.colors.red);
+                        return;
+                    }
+
+                    if (groups.length === 0) {
+                        MessageMark.report("您还没有加入任何群组", null, null, null, MessageMark.colors.yellow);
+                        return;
+                    }
+
+                    // 构建群组选项
+                    const groupOptions = {};
+                    groups.forEach(group => {
+                        groupOptions[group.gid] = group.gid;
+                    });
+
+                    const form = [
+                        {type: "title", label: "邀请用户",},
+                        {type: "combobox", label: "群组名：", options: groupOptions,},
+                        {type: "linetext", label: "用户名：", value: "", placeholder: "请输入要邀请的用户名",},
+                    ];
+                    const confirm_callback = async (formmark,) => {
+                        const rows = formmark.form;
+                        const gid = rows[1].input_element.value.trim();
+                        const target_uid = rows[2].input_element.value.trim();
+
+                        if (!gid) {
+                            MessageMark.report("请选择群组", null, null, null, MessageMark.colors.yellow);
+                            return;
+                        }
+                        if (!target_uid) {
+                            MessageMark.report("请输入用户名", null, null, null, MessageMark.colors.yellow);
+                            return;
+                        }
+
+                        try {
+                            const response = await fetch("/chat/api/invite_to_group", {
+                                method: "POST",
+                                headers: {"Content-Type": "application/json"},
+                                body: JSON.stringify({gid: gid, target_uid: target_uid})
+                            });
+                            const result = await response.json();
+                            if (result.success) {
+                                MessageMark.report(result.message || "邀请成功！", null, null, null, MessageMark.colors.green);
+                                formmark.remove();
+                            } else {
+                                MessageMark.report(result.message || "邀请失败", null, null, null, MessageMark.colors.red);
+                            }
+                        } catch (error) {
+                            MessageMark.report("网络错误：" + error.message, null, null, null, MessageMark.colors.red);
+                        }
+                    };
+                    FormMark.get_global_input(form, confirm_callback);
+                });
+            }
+        }
+
+        /*
         * 登录 登出
         * */
         login(event) {
@@ -24637,6 +25657,11 @@
                         lm.remove()
                         logged_admin = true;
                         this.switch_panel_to_backend();
+                        // 显示授权按钮
+                        const headerAuthBtn = document.getElementById("header-toolbar-btn-auth");
+                        if (headerAuthBtn) {
+                            headerAuthBtn.classList.remove("hidden");
+                        }
                     }).catch(error => {
                     lm.remove()
                     MessageMark.report(error);
@@ -24645,10 +25670,12 @@
                 this.subviews.api.auth(account, password)
                     .then(result => {
                         lm.remove()
-                        logged_user = result;
-
-                        // this.header_btn_mail.classList.remove("hidden");
-                        // this.header_btn_drive.classList.remove("hidden");
+                                                logged_user = result;
+                        
+                                                // 检查社交功能按钮权限
+                                                this.check_social_buttons_permissions()
+                        
+                                                // this.header_btn_mail.classList.remove("hidden");                        // this.header_btn_drive.classList.remove("hidden");
                         // this.header_btn_chat.classList.remove("hidden");
                         // this.header_btn_forum.classList.remove("hidden");
                         this.header_btn_startpage.classList.remove("hidden");
@@ -24728,11 +25755,99 @@
                 });
         }
 
+        handle_register(event) {
+            this.register_input_account.value = this.register_input_account.value.replace(/[\s\r\t\n]+/g, "");
+
+            let account = this.register_input_account.value;
+            let password = this.register_input_password.value;
+            let confirm_password = this.register_input_confirm_password.value;
+            let invite_code = this.register_input_invite_code.value;
+
+            // 验证输入
+            if (account.length === 0) {
+                MessageMark.report("请输入账号");
+                return;
+            }
+
+            if (password.length === 0) {
+                MessageMark.report("请输入密码");
+                return;
+            }
+
+            if (confirm_password.length === 0) {
+                MessageMark.report("请确认密码");
+                return;
+            }
+
+            if (password !== confirm_password) {
+                MessageMark.report("两次输入的密码不一致");
+                return;
+            }
+
+            if (invite_code.length === 0) {
+                MessageMark.report("请输入邀请码");
+                return;
+            }
+
+            const lm = new LoadingMark(this.login_rect);
+            lm.show();
+
+            // 调用注册API
+            net_fetcher.nf_post_json(`${top_level_path}/api/register`, {
+                account: account,
+                password: password,
+                invite_code: invite_code
+            })
+            .then(response => {
+                if (response.status === 200) {
+                    return response.json();
+                } else {
+                    return response.json().then(data => {
+                        throw new Error(data.message || "注册失败");
+                    });
+                }
+            })
+            .then(result => {
+                lm.remove();
+                MessageMark.report("注册成功！请使用账号密码登录", null, null, null, MessageMark.colors.green);
+
+                // 切换到登录标签
+                document.querySelector('.login-tab[data-tab="login"]').click();
+
+                // 自动填充账号
+                this.login_input_account.value = account;
+                this.login_input_password.value = "";
+            })
+            .catch(error => {
+                lm.remove();
+                // 显示错误提示
+                let error_msg = "注册失败";
+                if (error.message) {
+                    // 将英文错误转换为中文提示
+                    if (error.message.includes("邀请码")) {
+                        error_msg = error.message;
+                    } else if (error.message.includes("账号")) {
+                        error_msg = error.message;
+                    } else if (error.message.includes("JSON.parse")) {
+                        error_msg = "服务器响应错误，请稍后重试";
+                    } else {
+                        error_msg = error.message;
+                    }
+                }
+                MessageMark.report(error_msg);
+            });
+        }
+
         logout(event) {
             if (jumpto.backend_panel) {
                 // 清除加密密钥
                 frontCrypto.clearEncryptionKey();
                 delete_cookie("admin_session_id");
+                // 隐藏授权按钮
+                const headerAuthBtn = document.getElementById("header-toolbar-btn-auth");
+                if (headerAuthBtn) {
+                    headerAuthBtn.classList.add("hidden");
+                }
                 this.open_admin_page(null, true);
             } else {
                 const loading_mark = new LoadingMark(document.body);
@@ -24864,6 +25979,27 @@
                 if (!logged_user) return this.switch_panel_to_login();
                 this.dashboard_chat.classList.add("active");
                 history.replaceState(history.state, null, join_path(root_url(), appnames.chat).toString());
+
+                // 聊天页面加载时，重新获取完整的用户信息（包括权限字段）
+                // 这确保刷新页面后社交功能按钮能正确显示
+                fetch(`${top_level_path}/api/get_current_user`, {
+                    method: 'GET',
+                    credentials: 'include'
+                })
+                .then(response => response.json())
+                .then(result => {
+                    if (result && result.uid) {
+                        // 更新 logged_user 为完整的用户信息
+                        logged_user = result;
+                        // 检查社交功能按钮权限
+                        this.check_social_buttons_permissions();
+                    }
+                })
+                .catch(error => {
+                    // 即使失败也尝试检查权限（使用现有数据）
+                    this.check_social_buttons_permissions();
+                });
+
                 this._switch_panel_to_chat();
             } else if (btn === this.header_btn_forum) {
                 if (!logged_user) return this.switch_panel_to_login();
