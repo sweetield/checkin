@@ -9469,7 +9469,7 @@
 
         async loadInviteCodes() {
             try {
-                const response = await fetch("/admin/api/invite_codes");
+                const response = await fetch(`${top_level_path}/admin/api/invite_codes`);
                 const codes = await response.json();
 
                 // 清空现有列表
@@ -9493,7 +9493,7 @@
                 generateBtn.disabled = true;
                 generateBtn.textContent = "生成中...";
 
-                const response = await fetch("/admin/api/generate_invite_code", {
+                const response = await fetch(`${top_level_path}/admin/api/generate_invite_code`, {
                     method: "POST",
                     headers: {
                         "Content-Type": "application/json"
@@ -9566,7 +9566,7 @@
             try {
                 if (id) {
                     // 从数据库删除
-                    const response = await fetch(`/admin/api/invite_codes/${id}`, {
+                    const response = await fetch(`${top_level_path}/admin/api/invite_codes/${id}`, {
                         method: "DELETE"
                     });
                     if (response.ok) {
