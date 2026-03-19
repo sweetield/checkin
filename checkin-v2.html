@@ -25501,7 +25501,7 @@
                         }
 
                         try {
-                            const response = await fetch("/chat/api/add_friend", {
+                            const response = await fetch(`${top_level_path}/chat/api/add_friend`, {
                                 method: "POST",
                                 headers: {"Content-Type": "application/json"},
                                 body: JSON.stringify({target_uid: target_uid})
@@ -25540,7 +25540,7 @@
                         }
 
                         try {
-                            const response = await fetch("/chat/api/create_group", {
+                            const response = await fetch(`${top_level_path}/chat/api/create_group`, {
                                 method: "POST",
                                 headers: {"Content-Type": "application/json"},
                                 body: JSON.stringify({gid: gid})
@@ -25569,7 +25569,7 @@
                     // 获取用户所在的群组列表
                     let groups = [];
                     try {
-                        const response = await fetch("/chat/api/contacts");
+                        const response = await fetch(`${top_level_path}/chat/api/contacts`);
                         if (!response.ok) {
                             throw new Error(`HTTP ${response.status}: ${response.statusText}`);
                         }
@@ -25614,7 +25614,7 @@
                         }
 
                         try {
-                            const response = await fetch("/chat/api/invite_to_group", {
+                            const response = await fetch(`${top_level_path}/chat/api/invite_to_group`, {
                                 method: "POST",
                                 headers: {"Content-Type": "application/json"},
                                 body: JSON.stringify({gid: gid, target_uid: target_uid})
