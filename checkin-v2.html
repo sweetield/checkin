@@ -7986,7 +7986,7 @@
 
             <div style="height: 20px;"></div>
 
-            <!-- 网盘 + 聊天（左右） -->
+            <!-- 网盘 + 聊天 + 任务（左右） -->
             <div class="apps-item-row">
                 <div class="apps-item main-app" id="apps-item-drive">
                     <p class="apps-item-name"><i class="bi bi-folder"></i> 网盘</p>
@@ -7994,6 +7994,10 @@
 
                 <div class="apps-item main-app" id="apps-item-chat">
                     <p class="apps-item-name"><i class="bi bi-chat-dots"></i> 聊天</p>
+                </div>
+
+                <div class="apps-item main-app" id="apps-item-task">
+                    <p class="apps-item-name"><i class="bi bi-check2-square"></i> 任务</p>
                 </div>
             </div>
 
@@ -26877,6 +26881,8 @@
             checkin.apps_item_drive.click();
         } else if (jumpto.appname === appnames.chat) {
             checkin.apps_item_chat.click();
+        } else if (jumpto.appname === appnames.task) {
+            checkin.header_btn_task.click();
         }
         window.addEventListener('popstate', (event) => {
             console.log('popstate:', event.state);
