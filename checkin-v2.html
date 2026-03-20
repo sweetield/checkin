@@ -7882,6 +7882,7 @@
     <button id="header-btn-mail" class="hidden">收发</button>
     <button id="header-btn-drive" class="hidden"><i class="bi bi-folder"></i> 网盘</button>
     <button id="header-btn-chat" class="hidden"><i class="bi bi-chat-dots"></i> 聊天</button>
+    <button id="header-btn-task" class="hidden"><i class="bi bi-check2-square"></i> 任务</button>
     <button id="header-btn-forum" class="hidden">讨论</button>
 
     <button id="header-btn-more-left" class="menu-btn">&nbsp;</button>
@@ -25749,9 +25750,10 @@
             this.header_btn_mail.classList.add("hidden");
             this.header_btn_drive = document.getElementById("header-btn-drive");
             this.header_btn_chat = document.getElementById("header-btn-chat");
+            this.header_btn_task = document.getElementById("header-btn-task");
             this.header_btn_forum = document.getElementById("header-btn-forum");
             this.header_btn_startpage = document.getElementById("header-btn-startpage");
-            this.header_btns = [this.header_btn_startpage, this.header_btn_mail, this.header_btn_drive, this.header_btn_chat, this.header_btn_forum,];
+            this.header_btns = [this.header_btn_startpage, this.header_btn_mail, this.header_btn_drive, this.header_btn_chat, this.header_btn_task, this.header_btn_forum,];
             for (const headerBtn of this.header_btns) {
                 // if (headerBtn !== this.header_btn_startpage) continue;
                 headerBtn.addEventListener("click", (event) => {
@@ -25886,9 +25888,10 @@
             this.dashboard_mail = document.getElementById("dashboard-mail");
             this.dashboard_drive = document.getElementById("dashboard-drive");
             this.dashboard_chat = document.getElementById("dashboard-chat");
+            this.dashboard_task = document.getElementById("dashboard-task");
             this.dashboard_forum = document.getElementById("dashboard-forum");
             this.backend_panel = document.getElementById("backend-panel");
-            this.panels = [this.login_panel, this.apps_panel, this.dashboard_mail, this.dashboard_drive, this.dashboard_chat, this.dashboard_forum, this.backend_panel,];
+            this.panels = [this.login_panel, this.apps_panel, this.dashboard_mail, this.dashboard_drive, this.dashboard_chat, this.dashboard_task, this.dashboard_forum, this.backend_panel,];
             for (const panel of this.panels) {
                 if (panel === this.dashboard_chat) {
                     panel.wrapper = new dashboardwrappers.ChatDashboardWrapper(panel);
@@ -26656,6 +26659,11 @@
                 });
 
                 this._switch_panel_to_chat();
+            } else if (btn === this.header_btn_task) {
+                if (!logged_user) return this.switch_panel_to_login();
+                this.dashboard_task.classList.add("active");
+                history.replaceState(history.state, null, join_path(root_url(), appnames.task).toString());
+                this._switch_panel_to_task();
             } else if (btn === this.header_btn_forum) {
                 if (!logged_user) return this.switch_panel_to_login();
                 this.dashboard_forum.classList.add("active");
@@ -26761,6 +26769,12 @@
                 }
             }
 
+        }
+
+        _switch_panel_to_task() {
+            if (typeof TaskApp !== 'undefined' && TaskApp.init) {
+                TaskApp.init();
+            }
         }
 
         _switch_panel_to_forum() {
