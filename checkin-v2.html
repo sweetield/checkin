@@ -24718,7 +24718,13 @@
                 } else {
                     // 处理服务器推送的通知
                     console.log("[WebSocket] 收到非回调消息:", json);
-                    if (json.action === 14 || (json.type && (json.type === "friend_added" || json.type === "group_invited"))) {
+                    // 检查是否是联系人变化通知
+                    const contactChangedTypes = [
+                        "friend_added", "friend_removed",
+                        "group_created", "group_deleted", "group_invited", "group_updated",
+                        "member_removed", "removed_from_group"
+                    ];
+                    if (json.action === 14 || (json.type && contactChangedTypes.includes(json.type))) {
                         console.log("[WebSocket] 收到联系人变化通知，准备刷新:", json);
                         // 刷新联系人列表
                         this.sync_contacts();
@@ -24979,11 +24985,12 @@
                     this.ws_onerror(event);
                 });
                 this.ws_client.addEventListener("message", (event) => {
-                    // console.log("websocket 收到消息", event.data);
+                    console.log("[WebSocket] 收到消息:", event.data);
                     let json;
                     try {
                         json = JSON.parse(event.data);
                     } catch (e) {
+                        console.log("[WebSocket] 解析消息失败:", e);
                         return;
                     }
                     this.ws_receive(json);
@@ -25123,7 +25130,13 @@
                 } else {
                     // 处理服务器推送的通知
                     console.log("[WebSocket] 收到非回调消息:", json);
-                    if (json.action === 14 || (json.type && (json.type === "friend_added" || json.type === "group_invited"))) {
+                    // 检查是否是联系人变化通知
+                    const contactChangedTypes = [
+                        "friend_added", "friend_removed",
+                        "group_created", "group_deleted", "group_invited", "group_updated",
+                        "member_removed", "removed_from_group"
+                    ];
+                    if (json.action === 14 || (json.type && contactChangedTypes.includes(json.type))) {
                         console.log("[WebSocket] 收到联系人变化通知，准备刷新:", json);
                         // 刷新联系人列表
                         if (this.sync_contacts) {
