@@ -24689,6 +24689,45 @@
                     MessageMark.report(error);
                 }
             }
+            
+            // 覆盖ws_receive方法，处理服务器推送的通知
+            ws_receive(json) {
+                const counter = json.counter?.toString();
+                if (Object.keys(this.ws_callbacks).includes(counter)) {
+                    const callback = this.ws_callbacks[counter];
+                    delete this.ws_callbacks[counter];
+                    this.ws_pending_count = Math.max(0, this.ws_pending_count - 1);
+                    
+                    // 处理队列中的下一个请求
+                    if (this.ws_send_queue.length > 0 && this.ws_pending_count < this.ws_max_pending) {
+                        const next = this.ws_send_queue.shift();
+                        this.ws_send(next.json, next.callback);
+                    }
+                    
+                    if (json.error) {
+                        const error = new Error(JSON.stringify(json));
+                        if (json.error.message.includes("Too many API requests by single Worker invocation")) {
+                            console.log("[WebSocket] 检测到 API 请求限制错误，将自动重试");
+                            this.ws_close();
+                            error.auto_retry = true;
+                        }
+                        callback.onfetcherror(error);
+                    } else {
+                        callback.onfetchload(json.result);
+                    }
+                } else {
+                    // 处理服务器推送的通知
+                    console.log("[WebSocket] 收到非回调消息:", json);
+                    if (json.action === 14 || (json.type && (json.type === "friend_added" || json.type === "group_invited"))) {
+                        console.log("[WebSocket] 收到联系人变化通知，准备刷新:", json);
+                        // 刷新联系人列表
+                        this.sync_contacts();
+                    } else {
+                        console.log("websocket 没有注册回调的消息。");
+                    }
+                }
+            }
+
 
             static online_status = "chat"; // 被服务端文本替换
             static activity_type = "chat";
@@ -25070,11 +25109,15 @@
                     }
                 } else {
                     // 处理服务器推送的通知
+                    console.log("[WebSocket] 收到非回调消息:", json);
                     if (json.action === 14 || (json.type && (json.type === "friend_added" || json.type === "group_invited"))) {
-                        console.log("[WebSocket] 收到联系人变化通知:", json);
+                        console.log("[WebSocket] 收到联系人变化通知，准备刷新:", json);
                         // 刷新联系人列表
                         if (this.sync_contacts) {
+                            console.log("[WebSocket] 调用sync_contacts刷新联系人列表");
                             this.sync_contacts();
+                        } else {
+                            console.log("[WebSocket] sync_contacts方法不可用，this:", this);
                         }
                     } else {
                         console.log("websocket 没有注册回调的消息。");
