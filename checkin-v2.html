@@ -25586,7 +25586,7 @@
                         {type: "title", label: "群组管理",},
                         {type: "combobox", label: "操作：", options: {"create": "创建群组", "delete": "删除群组"},},
                         {type: "linetext", label: "群组名称：", value: "", placeholder: "请输入要创建/移除的群组名称，多个请用英文逗号分隔",},
-                        {type: "noticing", label: "批量操作说明：多个名称用英文逗号分隔，如：前端组,后端组",},
+                        {type: "noticing", label: "批量操作说明：多个名称用英文逗号分隔，如：前端组,后端组"},
                     ];
                     
                     const confirm_callback = async (formmark,) => {
@@ -25693,7 +25693,7 @@
                         {type: "combobox", label: "群组名：", options: groupOptions,},
                         {type: "combobox", label: "操作：", options: {"invite": "邀请加入", "remove": "移出成员"},},
                         {type: "linetext", label: "用户名：", value: "", placeholder: "请输入要邀请/移出的好友名称，多个请用英文逗号分隔",},
-                        {type: "noticing", label: "批量操作说明：多个用户名用英文逗号分隔，如：张三,李四",},
+                        {type: "noticing", label: "批量操作说明：多个用户名用英文逗号分隔，如：张三,李四"},
                     ];
                     const confirm_callback = async (formmark,) => {
                         const rows = formmark.form;
