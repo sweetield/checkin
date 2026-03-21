@@ -25684,7 +25684,7 @@
                     // 构建群组选项（去掉[uid]前缀显示）
                     const groupOptions = {};
                     myGroups.forEach(group => {
-                        const displayName = group.gid.replace(/^\[(.+?)\]/, "");
+                        const displayName = group.gid.replace(/^「(.+?)」/, "");
                         groupOptions[group.gid] = displayName;
                     });
 
@@ -25735,7 +25735,7 @@
                                 formmark.remove();
                             } else if (action === "remove") {
                                 // 确认移出
-                                const displayName = gid.replace(/^\[(.+?)\]/, "");
+                                const displayName = gid.replace(/^「(.+?)」/, "");
                                 const confirmMsg = target_uids.length > 1 
                                     ? `确定要将 ${target_uids.join(",")} 从群组【${displayName}】中移出吗？`
                                     : `确定要将【${target_uids[0]}】从群组【${displayName}】中移出吗？`;
