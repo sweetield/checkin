@@ -25484,153 +25484,345 @@
         * 社交功能按钮绑定
         * */
         #bind_social_buttons() {
-            // 好友按钮
+
+            // 好友按钮 - 好友管理
             const btnAddFriend = document.getElementById("btn-add-friend");
             if (btnAddFriend) {
                 btnAddFriend.addEventListener("click", () => {
                     const form = [
-                        {type: "title", label: "添加好友",},
-                        {type: "linetext", label: "用户名：", value: "", placeholder: "请输入要添加的好友用户名",},
+                        {type: "title", label: "好友管理",},
+                        {type: "linetext", label: "用户名：", value: "", placeholder: "请输入要添加/移除的好友名称，多个请用英文逗号分隔",},
+                        {type: "hint", label: "批量操作说明：多个名称用英文逗号分隔，如：张三,李四",},
                     ];
                     const confirm_callback = async (formmark,) => {
                         const rows = formmark.form;
-                        const target_uid = rows[1].input_element.value.trim();
-                        if (!target_uid) {
+                        const input_value = rows[1].input_element.value.trim();
+                        if (!input_value) {
                             MessageMark.report("请输入用户名", null, null, null, MessageMark.colors.yellow);
                             return;
                         }
 
-                        try {
-                            const response = await fetch(`${top_level_path}/chat/api/add_friend`, {
-                                method: "POST",
-                                headers: {"Content-Type": "application/json"},
-                                body: JSON.stringify({target_uid: target_uid})
-                            });
-                            const result = await response.json();
-                            if (result.success) {
-                                MessageMark.report(result.message || "添加好友成功！", null, null, null, MessageMark.colors.green);
-                                formmark.remove();
-                                // 刷新联系人列表
-                                this.dashboard_chat.wrapper.sync_contacts();
-                            } else {
-                                MessageMark.report(result.message || "添加好友失败", null, null, null, MessageMark.colors.red);
-                            }
-                        } catch (error) {
-                            MessageMark.report("网络错误：" + error.message, null, null, null, MessageMark.colors.red);
-                        }
-                    };
-                    FormMark.get_global_input(form, confirm_callback);
-                });
-            }
-
-            // 建群按钮
-            const btnCreateGroup = document.getElementById("btn-create-group");
-            if (btnCreateGroup) {
-                btnCreateGroup.addEventListener("click", () => {
-                    const form = [
-                        {type: "title", label: "创建群组",},
-                        {type: "linetext", label: "群组名称：", value: "", placeholder: "请输入新群组的名称",},
-                    ];
-                    const confirm_callback = async (formmark,) => {
-                        const rows = formmark.form;
-                        const gid = rows[1].input_element.value.trim();
-                        if (!gid) {
-                            MessageMark.report("请输入群组名称", null, null, null, MessageMark.colors.yellow);
+                        // 添加好友
+                        const target_uids = input_value.split(",").map(uid => uid.trim()).filter(uid => uid);
+                        if (target_uids.length === 0) {
+                            MessageMark.report("请输入有效的用户名", null, null, null, MessageMark.colors.yellow);
                             return;
                         }
 
                         try {
-                            const response = await fetch(`${top_level_path}/chat/api/create_group`, {
+                            // 添加好友
+                            for (const target_uid of target_uids) {
+                                const response = await fetch(`${top_level_path}/chat/api/add_friend`, {
+                                    method: "POST",
+                                    headers: {"Content-Type": "application/json"},
+                                    body: JSON.stringify({target_uid: target_uid})
+                                });
+                                const result = await response.json();
+                                if (!result.success) {
+                                    MessageMark.report(result.message || `添加好友【${target_uid}】失败`, null, null, null, MessageMark.colors.red);
+                                    return;
+                                }
+                            }
+                            MessageMark.report("添加好友成功！", null, null, null, MessageMark.colors.green);
+                            formmark.remove();
+                            // 刷新联系人列表
+                            this.dashboard_chat.wrapper.sync_contacts();
+                        } catch (error) {
+                            MessageMark.report("网络错误：" + error.message, null, null, null, MessageMark.colors.red);
+                        }
+                    };
+                    
+                    const cancel_callback = async (formmark) => {
+                        const rows = formmark.form;
+                        const input_value = rows[1].input_element.value.trim();
+                        if (!input_value) {
+                            formmark.remove();
+                            return;
+                        }
+
+                        const target_uids = input_value.split(",").map(uid => uid.trim()).filter(uid => uid);
+                        if (target_uids.length === 0) {
+                            formmark.remove();
+                            return;
+                        }
+
+                        // 显示二次确认
+                        const confirmMsg = target_uids.length > 1 
+                            ? `确定要删除好友 ${target_uids.join(",")} 吗？\n此操作不可恢复！`
+                            : `确定要删除好友【${target_uids[0]}】吗？\n此操作不可恢复！`;
+                        
+                        if (!confirm(confirmMsg)) {
+                            return;
+                        }
+
+                        try {
+                            const response = await fetch(`${top_level_path}/chat/api/remove_friend`, {
                                 method: "POST",
                                 headers: {"Content-Type": "application/json"},
-                                body: JSON.stringify({gid: gid})
+                                body: JSON.stringify({target_uids: target_uids.join(",")})
                             });
                             const result = await response.json();
                             if (result.success) {
-                                MessageMark.report(result.message || "群组创建成功！", null, null, null, MessageMark.colors.green);
+                                MessageMark.report(result.message || "删除好友成功！", null, null, null, MessageMark.colors.green);
                                 formmark.remove();
                                 // 刷新联系人列表
                                 this.dashboard_chat.wrapper.sync_contacts();
                             } else {
-                                MessageMark.report(result.message || "创建群组失败", null, null, null, MessageMark.colors.red);
+                                MessageMark.report(result.message || "删除好友失败", null, null, null, MessageMark.colors.red);
                             }
                         } catch (error) {
                             MessageMark.report("网络错误：" + error.message, null, null, null, MessageMark.colors.red);
                         }
                     };
-                    FormMark.get_global_input(form, confirm_callback);
+                    
+                    FormMark.get_global_input(form, confirm_callback, cancel_callback, "添加", "删除", "取消");
                 });
             }
 
-            // 邀请按钮
-            const btnInviteToGroup = document.getElementById("btn-invite-to-group");
-            if (btnInviteToGroup) {
-                btnInviteToGroup.addEventListener("click", async () => {
-                    // 获取用户所在的群组列表
-                    let groups = [];
+
+
+            // 建群按钮 - 群组管理
+            const btnCreateGroup = document.getElementById("btn-create-group");
+            if (btnCreateGroup) {
+                btnCreateGroup.addEventListener("click", async () => {
+                    // 获取自己创建的群组列表
+                    let myGroups = [];
                     try {
-                        const response = await fetch(`${top_level_path}/chat/api/contacts`);
-                        if (!response.ok) {
-                            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-                        }
-                        const result = await response.json();
-                        if (result && Array.isArray(result)) {
-                            groups = result.filter(item => item.type === 2); // type=2 表示群组
+                        const response = await fetch(`${top_level_path}/chat/api/my_created_groups`);
+                        if (response.ok) {
+                            myGroups = await response.json();
                         }
                     } catch (error) {
                         console.error("获取群组列表失败:", error);
-                        MessageMark.report("获取群组列表失败: " + error.message, null, null, null, MessageMark.colors.red);
+                    }
+
+                    const form = [
+                        {type: "title", label: "群组管理",},
+                        {type: "linetext", label: "群组名称：", value: "", placeholder: "请输入要创建/移除的群组名称，多个请用英文逗号分隔",},
+                        {type: "hint", label: "批量操作说明：多个名称用英文逗号分隔，如：前端组,后端组",},
+                    ];
+                    
+                    // 如果有自己创建的群组，显示列表
+                    let groupListHtml = "";
+                    if (myGroups.length > 0) {
+                        groupListHtml = "<div style='margin-top:8px;padding:8px;background:#f5f5f5;border-radius:4px;'>";
+                        groupListHtml += "<div style='font-weight:bold;margin-bottom:6px;'>我创建的群组：</div>";
+                        myGroups.forEach(group => {
+                            // 去掉[uid]前缀显示
+                            const displayName = group.gid.replace(/^\[(.+?)\]/, "");
+                            groupListHtml += `<div style='padding:4px 0;'>• ${displayName}</div>`;
+                        });
+                        groupListHtml += "</div>";
+                    }
+                    
+                    const confirm_callback = async (formmark,) => {
+                        const rows = formmark.form;
+                        const input_value = rows[1].input_element.value.trim();
+                        if (!input_value) {
+                            MessageMark.report("请输入群组名称", null, null, null, MessageMark.colors.yellow);
+                            return;
+                        }
+
+                        const gids = input_value.split(",").map(gid => gid.trim()).filter(gid => gid);
+                        if (gids.length === 0) {
+                            MessageMark.report("请输入有效的群组名称", null, null, null, MessageMark.colors.yellow);
+                            return;
+                        }
+
+                        try {
+                            for (const gid of gids) {
+                                const response = await fetch(`${top_level_path}/chat/api/create_group`, {
+                                    method: "POST",
+                                    headers: {"Content-Type": "application/json"},
+                                    body: JSON.stringify({gid: gid})
+                                });
+                                const result = await response.json();
+                                if (!result.success) {
+                                    MessageMark.report(result.message || `创建群组【${gid}】失败`, null, null, null, MessageMark.colors.red);
+                                    return;
+                                }
+                            }
+                            MessageMark.report("群组创建成功！", null, null, null, MessageMark.colors.green);
+                            formmark.remove();
+                            // 刷新联系人列表
+                            this.dashboard_chat.wrapper.sync_contacts();
+                        } catch (error) {
+                            MessageMark.report("网络错误：" + error.message, null, null, null, MessageMark.colors.red);
+                        }
+                    };
+                    
+                    const cancel_callback = async (formmark) => {
+                        const rows = formmark.form;
+                        const input_value = rows[1].input_element.value.trim();
+                        if (!input_value) {
+                            formmark.remove();
+                            return;
+                        }
+
+                        const gids = input_value.split(",").map(gid => gid.trim()).filter(gid => gid);
+                        if (gids.length === 0) {
+                            formmark.remove();
+                            return;
+                        }
+
+                        // 显示二次确认
+                        const confirmMsg = gids.length > 1 
+                            ? `确定要解散群组 ${gids.join(",")} 吗？\n此操作不可恢复！`
+                            : `确定要解散群组【${gids[0]}】吗？\n此操作不可恢复！`;
+                        
+                        if (!confirm(confirmMsg)) {
+                            return;
+                        }
+
+                        try {
+                            const response = await fetch(`${top_level_path}/chat/api/delete_group`, {
+                                method: "POST",
+                                headers: {"Content-Type": "application/json"},
+                                body: JSON.stringify({gids: gids.join(",")})
+                            });
+                            const result = await response.json();
+                            if (result.success) {
+                                MessageMark.report(result.message || "解散群组成功！", null, null, null, MessageMark.colors.green);
+                                formmark.remove();
+                                // 刷新联系人列表
+                                this.dashboard_chat.wrapper.sync_contacts();
+                            } else {
+                                MessageMark.report(result.message || "解散群组失败", null, null, null, MessageMark.colors.red);
+                            }
+                        } catch (error) {
+                            MessageMark.report("网络错误：" + error.message, null, null, null, MessageMark.colors.red);
+                        }
+                    };
+                    
+                    FormMark.get_global_input(form, confirm_callback, cancel_callback, "创建", "删除", "取消");
+                });
+            }
+
+
+
+            // 邀请按钮 - 邀请管理
+            const btnInviteToGroup = document.getElementById("btn-invite-to-group");
+            if (btnInviteToGroup) {
+                btnInviteToGroup.addEventListener("click", async () => {
+                    // 获取自己创建的群组列表
+                    let myGroups = [];
+                    try {
+                        const response = await fetch(`${top_level_path}/chat/api/my_created_groups`);
+                        if (response.ok) {
+                            myGroups = await response.json();
+                        }
+                    } catch (error) {
+                        console.error("获取群组列表失败:", error);
+                    }
+
+                    if (myGroups.length === 0) {
+                        MessageMark.report("您还没有创建任何群组，无法使用邀请功能", null, null, null, MessageMark.colors.yellow);
                         return;
                     }
 
-                    if (groups.length === 0) {
-                        MessageMark.report("您还没有加入任何群组", null, null, null, MessageMark.colors.yellow);
-                        return;
-                    }
-
-                    // 构建群组选项
+                    // 构建群组选项（去掉[uid]前缀显示）
                     const groupOptions = {};
-                    groups.forEach(group => {
-                        groupOptions[group.gid] = group.gid;
+                    myGroups.forEach(group => {
+                        const displayName = group.gid.replace(/^\[(.+?)\]/, "");
+                        groupOptions[group.gid] = displayName;
                     });
 
                     const form = [
-                        {type: "title", label: "邀请用户",},
+                        {type: "title", label: "邀请管理",},
                         {type: "combobox", label: "群组名：", options: groupOptions,},
-                        {type: "linetext", label: "用户名：", value: "", placeholder: "请输入要邀请的用户名",},
+                        {type: "linetext", label: "用户名：", value: "", placeholder: "请输入要邀请/移出的好友名称，多个请用英文逗号分隔",},
+                        {type: "hint", label: "批量操作说明：多个用户名用英文逗号分隔，如：张三,李四",},
                     ];
                     const confirm_callback = async (formmark,) => {
                         const rows = formmark.form;
                         const gid = rows[1].input_element.value.trim();
-                        const target_uid = rows[2].input_element.value.trim();
+                        const input_value = rows[2].input_element.value.trim();
 
                         if (!gid) {
                             MessageMark.report("请选择群组", null, null, null, MessageMark.colors.yellow);
                             return;
                         }
-                        if (!target_uid) {
+                        if (!input_value) {
                             MessageMark.report("请输入用户名", null, null, null, MessageMark.colors.yellow);
                             return;
                         }
 
+                        const target_uids = input_value.split(",").map(uid => uid.trim()).filter(uid => uid);
+                        if (target_uids.length === 0) {
+                            MessageMark.report("请输入有效的用户名", null, null, null, MessageMark.colors.yellow);
+                            return;
+                        }
+
                         try {
-                            const response = await fetch(`${top_level_path}/chat/api/invite_to_group`, {
+                            for (const target_uid of target_uids) {
+                                const response = await fetch(`${top_level_path}/chat/api/invite_to_group`, {
+                                    method: "POST",
+                                    headers: {"Content-Type": "application/json"},
+                                    body: JSON.stringify({gid: gid, target_uid: target_uid})
+                                });
+                                const result = await response.json();
+                                if (!result.success) {
+                                    MessageMark.report(result.message || `邀请用户【${target_uid}】失败`, null, null, null, MessageMark.colors.red);
+                                    return;
+                                }
+                            }
+                            MessageMark.report("邀请成功！", null, null, null, MessageMark.colors.green);
+                            formmark.remove();
+                        } catch (error) {
+                            MessageMark.report("网络错误：" + error.message, null, null, null, MessageMark.colors.red);
+                        }
+                    };
+                    
+                    const cancel_callback = async (formmark) => {
+                        const rows = formmark.form;
+                        const gid = rows[1].input_element.value.trim();
+                        const input_value = rows[2].input_element.value.trim();
+                        
+                        if (!input_value) {
+                            formmark.remove();
+                            return;
+                        }
+
+                        const target_uids = input_value.split(",").map(uid => uid.trim()).filter(uid => uid);
+                        if (target_uids.length === 0) {
+                            formmark.remove();
+                            return;
+                        }
+
+                        if (!gid) {
+                            MessageMark.report("请选择群组", null, null, null, MessageMark.colors.yellow);
+                            return;
+                        }
+
+                        // 显示二次确认
+                        const displayName = gid.replace(/^\[(.+?)\]/, "");
+                        const confirmMsg = target_uids.length > 1 
+                            ? `确定要将 ${target_uids.join(",")} 从群组【${displayName}】中移出吗？`
+                            : `确定要将【${target_uids[0]}】从群组【${displayName}】中移出吗？`;
+                        
+                        if (!confirm(confirmMsg)) {
+                            return;
+                        }
+
+                        try {
+                            const response = await fetch(`${top_level_path}/chat/api/remove_from_group`, {
                                 method: "POST",
                                 headers: {"Content-Type": "application/json"},
-                                body: JSON.stringify({gid: gid, target_uid: target_uid})
+                                body: JSON.stringify({gid: gid, target_uids: target_uids.join(",")})
                             });
                             const result = await response.json();
                             if (result.success) {
-                                MessageMark.report(result.message || "邀请成功！", null, null, null, MessageMark.colors.green);
+                                MessageMark.report(result.message || "移出成功！", null, null, null, MessageMark.colors.green);
                                 formmark.remove();
                             } else {
-                                MessageMark.report(result.message || "邀请失败", null, null, null, MessageMark.colors.red);
+                                MessageMark.report(result.message || "移出失败", null, null, null, MessageMark.colors.red);
                             }
                         } catch (error) {
                             MessageMark.report("网络错误：" + error.message, null, null, null, MessageMark.colors.red);
                         }
                     };
-                    FormMark.get_global_input(form, confirm_callback);
+                    
+                    FormMark.get_global_input(form, confirm_callback, cancel_callback, "加入", "移出", "取消");
                 });
             }
         }
