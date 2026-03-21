@@ -16748,7 +16748,7 @@
 
 						        let text;
 						        if (dashboardwrappers.ChatDashboardWrapper.is_group(mainaction.contact_attr)) {
-						            text = `群组：${dashboardwrappers.ChatDashboardWrapper.get_contact_xxid(mainaction.contact_attr)}`;
+						            text = `群组：${mainaction.contact_attr.gid.replace(/^「(.+?)」/, "")}`;
 						        } else {
 						            text = `个人：${dashboardwrappers.ChatDashboardWrapper.get_contact_xxid(mainaction.contact_attr)}`;
 						        }
@@ -23914,7 +23914,9 @@
             * */
             add_contact_item(attr,) {
                 if (attr.type === subviews.Chat.receiver_type.group) {
-                    const mainaction = {text: attr.gid, pagetype: contentpages.dashboard_chat.group,};
+                    // 去掉群组名称中的「用户名」前缀
+                    const group_name = attr.gid.replace(/^「(.+?)」/, "");
+                    const mainaction = {text: group_name, pagetype: contentpages.dashboard_chat.group,};
                     mainaction.contact_attr = attr;
 
                     mainaction.status_attr = {};
@@ -24053,7 +24055,8 @@
 
             static get_contact_xxid(contact_attr) {
                 if (contact_attr.type === subviews.Chat.receiver_type.group) {
-                    return contact_attr.gid;
+                    // 去掉群组名称中的「用户名」前缀
+                    return contact_attr.gid.replace(/^「(.+?)」/, "");
                 } else {
                     return contact_attr.uid;
                 }
