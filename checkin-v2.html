@@ -25665,10 +25665,10 @@
             const btnInviteToGroup = document.getElementById("btn-invite-to-group");
             if (btnInviteToGroup) {
                 btnInviteToGroup.addEventListener("click", async () => {
-                    // 获取自己创建的群组列表
+                    // 获取用户所在的群组列表
                     let myGroups = [];
                     try {
-                        const response = await fetch(`${top_level_path}/chat/api/my_created_groups`);
+                        const response = await fetch(`${top_level_path}/chat/api/my_groups`);
                         if (response.ok) {
                             myGroups = await response.json();
                         }
@@ -25677,7 +25677,7 @@
                     }
 
                     if (myGroups.length === 0) {
-                        MessageMark.report("您还没有创建任何群组，无法使用邀请功能", null, null, null, MessageMark.colors.yellow);
+                        MessageMark.report("您还没有加入任何群组", null, null, null, MessageMark.colors.yellow);
                         return;
                     }
 
