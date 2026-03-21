@@ -24931,6 +24931,19 @@
                 } else if (status_attr.type === subviews.Chat.receiver_type.user) {
                     item = items.find(i => i.contact_attr.uid === status_attr.uid);
                 }
+                // 如果找不到联系人，先刷新列表
+                if (!item) {
+                    console.log("[Update] 找不到联系人，准备刷新:", status_attr);
+                    await this.sync_contacts();
+                    // 再次查找
+                    const new_items = this.contact_items();
+                    if (status_attr.type === subviews.Chat.receiver_type.group) {
+                        item = new_items.find(i => i.contact_attr.gid === status_attr.gid);
+                    } else if (status_attr.type === subviews.Chat.receiver_type.user) {
+                        item = new_items.find(i => i.contact_attr.uid === status_attr.uid);
+                    }
+                }
+                if (!item) return; // 仍然找不到，直接返回
                 await this._update_contact_item_status(item, status_attr);
             }
 
