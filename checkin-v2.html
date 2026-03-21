@@ -25736,6 +25736,7 @@
                                 }
                                 MessageMark.report("邀请成功！", null, null, null, MessageMark.colors.green);
                                 formmark.remove();
+                                this.dashboard_chat.wrapper.sync_contacts();
                             } else if (action === "remove") {
                                 // 确认移出
                                 const displayName = gid.replace(/^「(.+?)」/, "");
@@ -25756,6 +25757,7 @@
                                             if (result.success) {
                                                 MessageMark.report(result.message || "移出成功！", null, null, null, MessageMark.colors.green);
                                                 formmark.remove();
+                                                this.dashboard_chat.wrapper.sync_contacts();
                                             } else {
                                                 MessageMark.report(result.message || "移出失败", null, null, null, MessageMark.colors.red);
                                             }
