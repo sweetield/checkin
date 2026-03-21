@@ -7580,13 +7580,13 @@
                 <!-- 社交功能按钮 -->
                 <div id="social-buttons-container" style="display: none; gap: 8px; padding: 0 10px;">
                     <button id="btn-add-friend" class="social-button" style="display: none; flex: 1; padding: 6px; font-size: 12px; background: transparent; border: 1px solid #3498db; border-radius: 4px; cursor: pointer; color: #3498db; transition: all 0.2s;" onmouseover="this.style.background='#3498db'; this.style.color='#fff'" onmouseout="this.style.background='transparent'; this.style.color='#3498db'" data-permission="can_add_friend">
-                        好友管理
+                        好友
                     </button>
                     <button id="btn-create-group" class="social-button" style="display: none; flex: 1; padding: 6px; font-size: 12px; background: transparent; border: 1px solid #3498db; border-radius: 4px; cursor: pointer; color: #3498db; transition: all 0.2s;" onmouseover="this.style.background='#3498db'; this.style.color='#fff'" onmouseout="this.style.background='transparent'; this.style.color='#3498db'" data-permission="can_create_group">
-                        群组管理
+                        群组
                     </button>
                     <button id="btn-invite-to-group" class="social-button" style="display: none; flex: 1; padding: 6px; font-size: 12px; background: transparent; border: 1px solid #3498db; border-radius: 4px; cursor: pointer; color: #3498db; transition: all 0.2s;" onmouseover="this.style.background='#3498db'; this.style.color='#fff'" onmouseout="this.style.background='transparent'; this.style.color='#3498db'" data-permission="can_invite_to_group">
-                        邀请管理
+                        邀请
                     </button>
                 </div>
                 <!-- 搜索框 -->
@@ -25483,7 +25483,7 @@
         /*
         * 社交功能按钮绑定
         * */
-        #bind_social_buttons() {
+        bind_social_buttons() {
 
             // 好友按钮 - 好友管理
             const btnAddFriend = document.getElementById("btn-add-friend");
