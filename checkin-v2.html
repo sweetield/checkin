@@ -24965,6 +24965,7 @@
             * websocket
             * */
             ws_connect() {
+                console.log("[WebSocket] 尝试连接...");
                 this.ws_lasttime_connecting = Date.now();
                 this.ws_close();
                 
@@ -24974,18 +24975,21 @@
                 const url = join_path(checkin.subviews.chat.api_url(), "ws",);
                 if (url.protocol === 'https:') url.protocol = 'wss:';
                 else if (url.protocol === 'http:') url.protocol = 'ws:';
+                console.log("[WebSocket] 连接地址:", url);
                 this.ws_client = new WebSocket(url);
                 this.ws_client.addEventListener("open", (event) => {
-                    console.log("websocket 已连接", event);
+                    console.log("[WebSocket] ✅ 连接成功！", event);
                 });
                 this.ws_client.addEventListener("close", (event) => {
+                    console.log("[WebSocket] ❌ 连接关闭", event);
                     this.ws_onclose(event);
                 });
                 this.ws_client.addEventListener("error", (event) => {
+                    console.log("[WebSocket] ❌ 连接错误", event);
                     this.ws_onerror(event);
                 });
                 this.ws_client.addEventListener("message", (event) => {
-                    console.log("[WebSocket] 收到消息:", event.data);
+                    console.log("[WebSocket] 📩 收到消息:", event.data);
                     let json;
                     try {
                         json = JSON.parse(event.data);
