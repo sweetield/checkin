@@ -25069,7 +25069,16 @@
                         callback.onfetchload(json.result);
                     }
                 } else {
-                    console.log("websocket 没有注册回调的消息。");
+                    // 处理服务器推送的通知
+                    if (json.action === 14 || (json.type && (json.type === "friend_added" || json.type === "group_invited"))) {
+                        console.log("[WebSocket] 收到联系人变化通知:", json);
+                        // 刷新联系人列表
+                        if (this.sync_contacts) {
+                            this.sync_contacts();
+                        }
+                    } else {
+                        console.log("websocket 没有注册回调的消息。");
+                    }
                 }
             }
         }
