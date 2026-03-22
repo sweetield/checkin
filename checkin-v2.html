@@ -12453,24 +12453,25 @@
                 const cb = this.selecting_checkbox_input;
                 this.selecting_checkbox.state = 0; // 0 未选中, 1 已选中, 2 不确定
                 this.selecting_checkbox.addEventListener("click", (event) => {
+                    const visible_items = this.get_visible_items();
                     this.selecting_checkbox.state = (this.selecting_checkbox.state + 1) % 2;
                     cb.checked = this.selecting_checkbox.state === 1;
                     cb.indeterminate = this.selecting_checkbox.state === 2;
 
                     if (cb.checked) {
-                        for (const driveItem of this.drive_items) {
+                        for (const driveItem of visible_items) {
                             driveItem.raw_header.selecting_checkbox.state = 1;
                             driveItem.raw_header.selecting_checkbox_input.checked = true;
                             driveItem.raw_header.selecting_checkbox_input.indeterminate = false;
                         }
                     } else if (cb.indeterminate) {
-                        for (const driveItem of this.drive_items) {
+                        for (const driveItem of visible_items) {
                             driveItem.raw_header.selecting_checkbox.state = 2;
                             driveItem.raw_header.selecting_checkbox_input.checked = false;
                             driveItem.raw_header.selecting_checkbox_input.indeterminate = true;
                         }
                     } else {
-                        for (const driveItem of this.drive_items) {
+                        for (const driveItem of visible_items) {
                             driveItem.raw_header.selecting_checkbox.state = 0;
                             driveItem.raw_header.selecting_checkbox_input.checked = false;
                             driveItem.raw_header.selecting_checkbox_input.indeterminate = false;
@@ -12997,6 +12998,16 @@
                 this._update_selecting_checkbox_state();
             }
 
+            get_visible_items() {
+                const items = [];
+                for (const driveItem of this.drive_items) {
+                    if (!driveItem.summary.classList.contains("hidden")) {
+                        items.push(driveItem);
+                    }
+                }
+                return items;
+            }
+
             get_selected_items() {
                 const items = [];
                 for (const driveItem of this.drive_items) {
@@ -13007,13 +13018,24 @@
                 return items;
             }
 
+            get_visible_selected_items() {
+                const items = [];
+                for (const driveItem of this.drive_items) {
+                    if (!driveItem.summary.classList.contains("hidden") && driveItem.raw_header.selecting_checkbox.state === 1) {
+                        items.push(driveItem);
+                    }
+                }
+                return items;
+            }
+
             _update_selecting_checkbox_state() {
-                let checked_count = this.get_selected_items().length;
-                if (checked_count === 0) {
+                const visible_items = this.get_visible_items();
+                const visible_selected_count = this.get_visible_selected_items().length;
+                if (visible_selected_count === 0) {
                     this.selecting_checkbox.state = 0;
                     this.selecting_checkbox_input.checked = false;
                     this.selecting_checkbox_input.indeterminate = false;
-                } else if (checked_count === this.drive_items.length) {
+                } else if (visible_selected_count === visible_items.length) {
                     this.selecting_checkbox.state = 1;
                     this.selecting_checkbox_input.checked = true;
                     this.selecting_checkbox_input.indeterminate = false;
@@ -13188,7 +13210,7 @@
 
             switch_action_btns__batch() {
                 const path_item = this.current_path_item();
-                const selected_items = this.get_selected_items();
+                const selected_items = this.get_visible_selected_items();
                 if (selected_items.length > 0) {
                     this.drive_action_btn_upload.classList.add("hidden-btn");
                     this.drive_action_btn_newfolder.classList.add("hidden-btn");
@@ -13698,9 +13720,9 @@
             }
 
             movetotrash_batch() {
-                const selected_items = this.get_selected_items();
+                const selected_items = this.get_visible_selected_items();
                 if (selected_items.length === 0) return;
-                MessageMark.confirm(`移到垃圾桶“${selected_items.length}”项？`, null, null, () => {
+                MessageMark.confirm(`移到垃圾桶"${selected_items.length}"项？`, null, null, () => {
                     this._movetotrash_batch(selected_items);
                 },)
             }
@@ -13744,9 +13766,9 @@
             }
 
             restore_batch() {
-                const selected_items = this.get_selected_items();
+                const selected_items = this.get_visible_selected_items();
                 if (selected_items.length === 0) return;
-                MessageMark.confirm(`移出垃圾桶“${selected_items.length}”项？`, null, null, () => {
+                MessageMark.confirm(`移出垃圾桶"${selected_items.length}"项？`, null, null, () => {
                     this._restore_batch(selected_items);
                 },)
             }
@@ -13790,9 +13812,9 @@
             }
 
             delete_batch() {
-                const selected_items = this.get_selected_items();
+                const selected_items = this.get_visible_selected_items();
                 if (selected_items.length === 0) return;
-                MessageMark.confirm(`永久删除“${selected_items.length}”项？`, null, null, () => {
+                MessageMark.confirm(`永久删除"${selected_items.length}"项？`, null, null, () => {
                     this._delete_batch(selected_items);
                 },)
             }
@@ -13815,7 +13837,7 @@
             }
 
             download_batch() {
-                const selected_items = this.get_selected_items();
+                const selected_items = this.get_visible_selected_items();
                 if (selected_items.length === 0) return;
                 
                 for (const item of selected_items) {
