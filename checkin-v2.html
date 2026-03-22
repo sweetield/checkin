@@ -94,6 +94,18 @@
             margin-bottom: 4px;
         }
 
+        /* 社交功能按钮暗色主题适配 */
+        .theme-dark .social-button,
+        body.dark-mode .social-button {
+            color: #fff !important;
+            border-color: #fff !important;
+        }
+        .theme-dark .social-button:hover,
+        body.dark-mode .social-button:hover {
+            background: #fff !important;
+            color: #3498db !important;
+        }
+
         .chat-contact-type-private .chat-contact-title {
             flex-shrink: 0;
         }
@@ -7579,13 +7591,13 @@
             <aside class="aside-left tiny-scrollbar">
                 <!-- 社交功能按钮 -->
                 <div id="social-buttons-container" style="display: none; gap: 8px; padding: 0 10px;">
-                    <button id="btn-add-friend" class="social-button" style="display: none; flex: 1; padding: 6px; font-size: 12px; background: transparent; border: 1px solid #3498db; border-radius: 4px; cursor: pointer; color: #3498db; transition: all 0.2s;" onmouseover="this.style.background='#3498db'; this.style.color='#fff'" onmouseout="this.style.background='transparent'; this.style.color='#3498db'" data-permission="can_add_friend">
+                    <button id="btn-add-friend" class="social-button" style="display: none; flex: 1; padding: 6px; font-size: 12px; background: transparent; border: 1px solid #3498db; border-radius: 4px; cursor: pointer; color: #3498db; transition: all 0.2s;" onmouseover="this.style.background='#3498db'; this.style.color='#fff'" onmouseout="this.style.background='transparent'; this.style.color=document.body.classList.contains('dark-mode')?'#fff':'#3498db'" data-permission="can_add_friend">
                         好友
                     </button>
-                    <button id="btn-create-group" class="social-button" style="display: none; flex: 1; padding: 6px; font-size: 12px; background: transparent; border: 1px solid #3498db; border-radius: 4px; cursor: pointer; color: #3498db; transition: all 0.2s;" onmouseover="this.style.background='#3498db'; this.style.color='#fff'" onmouseout="this.style.background='transparent'; this.style.color='#3498db'" data-permission="can_create_group">
+                    <button id="btn-create-group" class="social-button" style="display: none; flex: 1; padding: 6px; font-size: 12px; background: transparent; border: 1px solid #3498db; border-radius: 4px; cursor: pointer; color: #3498db; transition: all 0.2s;" onmouseover="this.style.background='#3498db'; this.style.color='#fff'" onmouseout="this.style.background='transparent'; this.style.color=document.body.classList.contains('dark-mode')?'#fff':'#3498db'" data-permission="can_create_group">
                         群组
                     </button>
-                    <button id="btn-invite-to-group" class="social-button" style="display: none; flex: 1; padding: 6px; font-size: 12px; background: transparent; border: 1px solid #3498db; border-radius: 4px; cursor: pointer; color: #3498db; transition: all 0.2s;" onmouseover="this.style.background='#3498db'; this.style.color='#fff'" onmouseout="this.style.background='transparent'; this.style.color='#3498db'" data-permission="can_invite_to_group">
+                    <button id="btn-invite-to-group" class="social-button" style="display: none; flex: 1; padding: 6px; font-size: 12px; background: transparent; border: 1px solid #3498db; border-radius: 4px; cursor: pointer; color: #3498db; transition: all 0.2s;" onmouseover="this.style.background='#3498db'; this.style.color='#fff'" onmouseout="this.style.background='transparent'; this.style.color=document.body.classList.contains('dark-mode')?'#fff':'#3498db'" data-permission="can_invite_to_group">
                         邀请
                     </button>
                 </div>
@@ -19816,7 +19828,7 @@
                         }
                     } catch (error) {
                         console.error("保存公告失败:", error);
-                        alert("保存公告失败，请重试");
+                        alert("保存公告失败：(您不是该群组的创建者，无权执行操作)");
                     } finally {
                         saveBtn.disabled = false;
                     }
@@ -24884,7 +24896,10 @@
                     // 计算总未读消息数量
                     totalUnreadCount += status_attr.unread_count;
 
-                    await this._update_contact_item_status(item, status_attr);
+                    // 只更新存在的联系人
+                    if (item) {
+                        await this._update_contact_item_status(item, status_attr);
+                    }
                 }
 
                 this.stop_timer__sync();
@@ -25711,8 +25726,8 @@
                             } else if (action === "delete") {
                                 // 确认删除
                                 const confirmMsg = gids.length > 1 
-                                    ? `确定要解散群组 ${gids.join(",")} 吗？\n此操作不可恢复！`
-                                    : `确定要解散群组【${gids[0]}】吗？\n此操作不可恢复！`;
+                                    ? `确定要删除群组 ${gids.join(",")} 吗？\n此操作不可恢复！`
+                                    : `确定要删除群组【${gids[0]}】吗？\n此操作不可恢复！`;
                                 
                                 const mm = new MessageMark(document.body, confirmMsg, MessageMark.btnFlags.close | MessageMark.btnFlags.confirm, MessageMark.colors.red, 
                                     () => formmark.remove(),
@@ -25725,11 +25740,11 @@
                                             });
                                             const result = await response.json();
                                             if (result.success) {
-                                                MessageMark.report(result.message || "解散群组成功！", null, null, null, MessageMark.colors.green);
+                                                MessageMark.report(result.message || "删除群组成功！", null, null, null, MessageMark.colors.green);
                                                 formmark.remove();
                                                 this.dashboard_chat.wrapper.sync_contacts();
                                             } else {
-                                                MessageMark.report(result.message || "解散群组失败", null, null, null, MessageMark.colors.red);
+                                                MessageMark.report(result.message || "删除群组失败", null, null, null, MessageMark.colors.red);
                                             }
                                         } catch (error) {
                                             MessageMark.report("网络错误：" + error.message, null, null, null, MessageMark.colors.red);
@@ -25775,7 +25790,7 @@
 
                     const form = [
                         {type: "title", label: "邀请管理",},
-                        {type: "combobox", label: "群组名：", options: groupOptions,},
+                        {type: "combobox", label: "群组：", options: groupOptions,},
                         {type: "combobox", label: "操作：", options: {"invite": "邀请加入", "remove": "移出成员"},},
                         {type: "linetext", label: "用户名：", value: "", placeholder: "请输入要邀请/移出的好友名称，多个请用英文逗号分隔",},
                         {type: "noticing", label: "", text: "批量操作说明：多个用户名用英文逗号分隔，如：张三,李四"},
