@@ -25671,108 +25671,42 @@
             const btnCreateGroup = document.getElementById("btn-create-group");
             if (btnCreateGroup) {
                 btnCreateGroup.addEventListener("click", async () => {
-                    const isContactAny = logged_user && logged_user.contact_any;
-                    
                     // 获取自己创建的群组列表
-                    let myCreatedGroups = [];
+                    let myGroups = [];
                     try {
                         const response = await fetch(`${top_level_path}/chat/api/my_created_groups`);
                         if (response.ok) {
-                            myCreatedGroups = await response.json();
+                            myGroups = await response.json();
                         }
                     } catch (error) {
                         console.error("获取群组列表失败:", error);
                     }
-                    
-                    // 获取所有群组（contact_any用户可见）
-                    let allGroups = [];
-                    if (isContactAny) {
-                        try {
-                            const response = await fetch(`${top_level_path}/chat/api/my_groups`);
-                            if (response.ok) {
-                                allGroups = await response.json();
-                            }
-                        } catch (error) {
-                            console.error("获取所有群组失败:", error);
-                        }
-                    }
-                    
-                    // 构建可删除的群组选项
-                    const deletableGroups = isContactAny ? allGroups : myCreatedGroups;
-                    
-                    // 根据操作类型显示不同表单
+
                     const form = [
                         {type: "title", label: "群组管理",},
                         {type: "combobox", label: "操作：", options: {"create": "创建群组", "delete": "删除群组"},},
-                        {type: "linetext", label: "群名：", value: "", placeholder: "请输入要创建的群组名称", class: "create-field"},
-                        {type: "noticing", label: "", text: "批量操作说明：多个名称用英文逗号分隔，如：前端组,后端组", class: "create-field"},
-                        {type: "noticing", label: "", text: "提示：勾选要删除的群组后点击确定", class: "delete-field", style: "display:none"},
-                        {type: "custom", add_element: (formmark, row) => {
-                            row.input_element.innerHTML = `<div class="group-checkbox-list" style="max-height:200px;overflow-y:auto;border:1px solid #ccc;padding:10px;border-radius:4px;"></div>`;
-                            row.checkbox_container = row.input_element.querySelector('.group-checkbox-list');
-                            row.checkbox_container.style.display = "none";
-                            row.checkbox_container.classList.add('delete-field');
-                            
-                            // 生成复选框
-                            deletableGroups.forEach(g => {
-                                const item = document.createElement('label');
-                                item.style.display = "block";
-                                item.style.marginBottom = "5px";
-                                item.style.cursor = "pointer";
-                                item.innerHTML = `<input type="checkbox" value="${g.gid}" style="margin-right:8px;">${g.gid}`;
-                                item.querySelector('input').addEventListener('change', () => {
-                                    row.selected = Array.from(row.checkbox_container.querySelectorAll('input:checked')).map(cb => cb.value);
-                                });
-                                row.checkbox_container.appendChild(item);
-                            });
-                            
-                            // 全选复选框
-                            const selectAll = document.createElement('label');
-                            selectAll.style.display = "block";
-                            selectAll.style.marginBottom = "10px";
-                            selectAll.style.fontWeight = "bold";
-                            selectAll.style.borderBottom = "1px solid #ddd";
-                            selectAll.style.paddingBottom = "5px";
-                            selectAll.innerHTML = `<input type="checkbox" class="select-all" style="margin-right:8px;">全选`;
-                            selectAll.querySelector('input').addEventListener('change', (e) => {
-                                row.checkbox_container.querySelectorAll('input:not(.select-all)').forEach(cb => cb.checked = e.target.checked);
-                                row.selected = e.target.checked ? deletableGroups.map(g => g.gid) : [];
-                            });
-                            row.checkbox_container.insertBefore(selectAll, row.checkbox_container.firstChild);
-                        }, class: "delete-field", style: "display:none"},
+                        {type: "linetext", label: "群名：", value: "", placeholder: "请输入要创建/移除的群组名称，多个请用英文逗号分隔",},
+                        {type: "noticing", label: "", text: "批量操作说明：多个名称用英文逗号分隔，如：前端组,后端组"},
                     ];
-                    
-                    // 切换表单显示
-                    const setupFormFields = (formmark, action) => {
-                        const createFields = formmark.div.querySelectorAll('.create-field');
-                        const deleteFields = formmark.div.querySelectorAll('.delete-field');
-                        
-                        createFields.forEach(el => el.style.display = action === "create" ? "" : "none");
-                        deleteFields.forEach(el => el.style.display = action === "delete" ? "" : "none");
-                    };
                     
                     const confirm_callback = async (formmark,) => {
                         const rows = formmark.form;
                         const action = rows[1].input_element.value;
+                        const input_value = rows[2].input_element.value.trim();
                         
+                        if (!input_value) {
+                            MessageMark.report("请输入群组名称", null, null, null, MessageMark.colors.yellow);
+                            return;
+                        }
+
+                        const gids = input_value.split(",").map(gid => gid.trim()).filter(gid => gid);
+                        if (gids.length === 0) {
+                            MessageMark.report("请输入有效的群组名称", null, null, null, MessageMark.colors.yellow);
+                            return;
+                        }
+
                         try {
                             if (action === "create") {
-                                const linetextRow = rows.find(r => r.type === "linetext");
-                                console.log("linetextRow:", linetextRow);
-                                console.log("input_element:", linetextRow?.input_element);
-                                console.log("input_value:", linetextRow?.input_element?.value);
-                                const input_value = linetextRow ? linetextRow.input_element.value.trim() : "";
-                                if (!input_value) {
-                                    MessageMark.report("请输入群组名称", null, null, null, MessageMark.colors.yellow);
-                                    return;
-                                }
-
-                                const gids = input_value.split(",").map(gid => gid.trim()).filter(gid => gid);
-                                if (gids.length === 0) {
-                                    MessageMark.report("请输入有效的群组名称", null, null, null, MessageMark.colors.yellow);
-                                    return;
-                                }
-
                                 // 创建群组
                                 for (const gid of gids) {
                                     const response = await fetch(`${top_level_path}/chat/api/create_group`, {
@@ -25790,19 +25724,10 @@
                                 formmark.remove();
                                 this.dashboard_chat.wrapper.sync_contacts();
                             } else if (action === "delete") {
-                                // 获取选中的群组
-                                const customRow = rows.find(r => r.type === "custom" && r.checkbox_container);
-                                const selectedGids = customRow?.selected || [];
-                                
-                                if (selectedGids.length === 0) {
-                                    MessageMark.report("请选择要删除的群组", null, null, null, MessageMark.colors.yellow);
-                                    return;
-                                }
-                                
                                 // 确认删除
-                                const confirmMsg = selectedGids.length > 1 
-                                    ? `确定要删除以下 ${selectedGids.length} 个群组吗？\n${selectedGids.join("\n")}\n此操作不可恢复！`
-                                    : `确定要删除群组【${selectedGids[0]}】吗？\n此操作不可恢复！`;
+                                const confirmMsg = gids.length > 1 
+                                    ? `确定要删除群组 ${gids.join(",")} 吗？\n此操作不可恢复！`
+                                    : `确定要删除群组【${gids[0]}】吗？\n此操作不可恢复！`;
                                 
                                 const mm = new MessageMark(document.body, confirmMsg, MessageMark.btnFlags.close | MessageMark.btnFlags.confirm, MessageMark.colors.red, 
                                     () => formmark.remove(),
@@ -25811,7 +25736,7 @@
                                             const response = await fetch(`${top_level_path}/chat/api/delete_group`, {
                                                 method: "POST",
                                                 headers: {"Content-Type": "application/json"},
-                                                body: JSON.stringify({gids: selectedGids.join(",")})
+                                                body: JSON.stringify({gids: gids.join(",")})
                                             });
                                             const result = await response.json();
                                             if (result.success) {
@@ -25832,22 +25757,7 @@
                             MessageMark.report("网络错误：" + error.message, null, null, null, MessageMark.colors.red);
                         }
                     };
-                    
-                    FormMark.get_global_input(form, async (formmark) => {
-                        // 初始设置
-                        setupFormFields(formmark, "create");
-                        
-                        // 监听操作切换
-                        const actionCombobox = formmark.form[1].input_element;
-                        if (actionCombobox) {
-                            actionCombobox.addEventListener("change", () => {
-                                setupFormFields(formmark, actionCombobox.value);
-                            });
-                        }
-                        
-                        // 调用确认回调
-                        await confirm_callback(formmark);
-                    });
+                    FormMark.get_global_input(form, confirm_callback);
                 });
             }
 
