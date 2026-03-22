@@ -9358,7 +9358,7 @@
 
         #add_input_element_password(row, input_group) {
             let html = `
-<label>${row.label}<input type="password"></label>
+<label>${row.label}<input type="text"></label>
 `;
             input_group.insertAdjacentHTML("beforeend", html);
             row.label_element = input_group.querySelector(":scope > label:last-of-type");
@@ -25264,7 +25264,7 @@
                                 },
                                 {
                                     type: "password",
-                                    label: "确认密码",
+                                    label: "用户密码",
                                     placeholder: "请输入当前密码以确认身份",
                                 },
                                 {
