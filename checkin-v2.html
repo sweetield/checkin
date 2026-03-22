@@ -9209,6 +9209,9 @@
             }//
             else if (row.type === "noticing") {
                 this.#add_input_element_noticing(row, input_group);
+            } //
+            else if (row.type === "password") {
+                this.#add_input_element_password(row, input_group);
             }
         }
 
@@ -9353,6 +9356,19 @@
             row.input_element = row.label_element.querySelector(":scope > span");
         }
 
+        #add_input_element_password(row, input_group) {
+            let html = `
+<label>${row.label}<input type="password"></label>
+`;
+            input_group.insertAdjacentHTML("beforeend", html);
+            row.label_element = input_group.querySelector(":scope > label:last-of-type");
+            row.input_element = row.label_element.querySelector(":scope > input");
+
+            row.input_element.value = row.value || "";
+            row.input_element.placeholder = row.placeholder || "";
+            row.input_element.style.width = `50ch`;
+        }
+
         collect_data(form = undefined) {
             if (!form) form = this.form;
             for (const row of form) {
@@ -9376,6 +9392,8 @@
                     row.collect_data(this, row);
                 } else if (row.type === "number") {
                     row.value = parseInt(row.input_element.value);
+                } else if (row.type === "password") {
+                    row.value = row.input_element.value;
                 }
             }
 
