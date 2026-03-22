@@ -15376,6 +15376,11 @@
                 // 关闭按钮隐藏写字板并清空历史记录（在 init_writeboard 外部绑定，避免重复绑定）
                 this.e_writeboard_close.addEventListener("click", () => {
                     this.e_writeboard.classList.add("hidden");
+                    // 清除定时器
+                    if (this.writeboard_typing_timer) {
+                        clearInterval(this.writeboard_typing_timer);
+                        this.writeboard_typing_timer = null;
+                    }
                     this.update_activity(
                         dashboardwrappers.ChatDashboardWrapper.activity_type.none
                     );
@@ -15409,6 +15414,11 @@
                     // 从临时 canvas 生成 blob
                     tempCanvas.toBlob((blob) => {
                         const file = new File([blob], "手写的图片.jpg", { type: "image/jpg" });
+                        // 清除定时器
+                        if (this.writeboard_typing_timer) {
+                            clearInterval(this.writeboard_typing_timer);
+                            this.writeboard_typing_timer = null;
+                        }
                         this.start__send_msg_image(file); // 调用你现有发图片逻辑
                         this.e_writeboard.classList.add("hidden");
                         this.update_activity(
@@ -15431,6 +15441,12 @@
                     this.update_activity(
                         dashboardwrappers.ChatDashboardWrapper.activity_type.typing
                     );
+                    // 启动定时器持续发送正在输入状态
+                    this.writeboard_typing_timer = setInterval(() => {
+                        this.update_activity(
+                            dashboardwrappers.ChatDashboardWrapper.activity_type.typing
+                        );
+                    }, 4000);
                     // 重置工具状态为画笔
                     this.write_tool_type = 'pen';
                     this.e_writeboard_tool_toggle.innerHTML = '<i class="bi bi-eraser"></i> 橡皮';
