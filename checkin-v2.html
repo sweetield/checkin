@@ -14777,6 +14777,22 @@
                     }
                 });
 
+                // 写字板（输入法）状态
+                this.e_inputarea_textarea.addEventListener('compositionstart', () => {
+                    this.update_activity(
+                        dashboardwrappers.ChatDashboardWrapper.activity_type.typing
+                    );
+                });
+
+                this.e_inputarea_textarea.addEventListener('compositionend', () => {
+                    const text = this.e_inputarea_textarea.value;
+                    if (text.length === 0) {
+                        this.update_activity(
+                            dashboardwrappers.ChatDashboardWrapper.activity_type.none
+                        );
+                    }
+                });
+
                 // =============================
                 // 新增：格式化悬浮工具条
                 // =============================
