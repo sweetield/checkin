@@ -25245,6 +25245,11 @@
                                     value: currentName,
                                 },
                                 {
+                                    type: "password",
+                                    label: "确认密码",
+                                    placeholder: "请输入当前密码以确认身份",
+                                },
+                                {
                                     type: "noticing",
                                     label: "",
                                     text: "重要提醒：修改用户名后下次登录必须使用新名称！",
@@ -25255,9 +25260,15 @@
                                 // 收集表单数据
                                 form_mark.collect_data();
                                 const newName = form[1].value.trim();
+                                const password = form[2].value;
 
                                 if (!newName) {
                                     MessageMark.report("新名称不能为空", null, null, null, MessageMark.colors.red);
+                                    return;
+                                }
+
+                                if (!password) {
+                                    MessageMark.report("请输入当前密码以确认身份", null, null, null, MessageMark.colors.red);
                                     return;
                                 }
 
@@ -25270,11 +25281,13 @@
                                 // 调用后端API
                                 try {
                                     const response = await net_fetcher.nf_post_json(`${top_level_path}/chat/api/rename_me`, {
-                                        new_uid: newName
+                                        new_uid: newName,
+                                        password: password
                                     });
 
-                                    if (response.status === 200) {
-                                        const result = await response.json();
+                                    const result = await response.json();
+                                    
+                                    if (result.success) {
                                         MessageMark.report(result.message || "修改成功！", null, null, null, MessageMark.colors.green);
                                         form_mark.remove();
                                         // 延迟刷新页面，让用户看到成功消息
@@ -25282,8 +25295,7 @@
                                             location.reload();
                                         }, 1500);
                                     } else {
-                                        const errorData = await response.json();
-                                        MessageMark.report(errorData.message || "修改失败", null, null, null, MessageMark.colors.red);
+                                        MessageMark.report(result.message || "修改失败", null, null, null, MessageMark.colors.red);
                                     }
                                 } catch (error) {
                                     console.error("修改名称失败:", error);
