@@ -15376,6 +15376,9 @@
                 // 关闭按钮隐藏写字板并清空历史记录（在 init_writeboard 外部绑定，避免重复绑定）
                 this.e_writeboard_close.addEventListener("click", () => {
                     this.e_writeboard.classList.add("hidden");
+                    this.update_activity(
+                        dashboardwrappers.ChatDashboardWrapper.activity_type.none
+                    );
                     if (this.write_ctx) {
                         this.write_ctx.clearRect(0, 0, this.e_writeboard_canvas.width, this.e_writeboard_canvas.height);
                     }
@@ -15408,6 +15411,9 @@
                         const file = new File([blob], "手写的图片.jpg", { type: "image/jpg" });
                         this.start__send_msg_image(file); // 调用你现有发图片逻辑
                         this.e_writeboard.classList.add("hidden");
+                        this.update_activity(
+                            dashboardwrappers.ChatDashboardWrapper.activity_type.none
+                        );
 
                         // 清空画布，下一次打开是空白
                         this.write_ctx.fillStyle = "#fff";
@@ -15422,6 +15428,9 @@
                 // 点击按钮打开写字板
                 this.e_writeboard_btn.addEventListener("click", () => {
                     this.e_writeboard.classList.remove("hidden");
+                    this.update_activity(
+                        dashboardwrappers.ChatDashboardWrapper.activity_type.typing
+                    );
                     // 重置工具状态为画笔
                     this.write_tool_type = 'pen';
                     this.e_writeboard_tool_toggle.innerHTML = '<i class="bi bi-eraser"></i> 橡皮';
