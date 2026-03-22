@@ -25757,7 +25757,11 @@
                         
                         try {
                             if (action === "create") {
-                                const input_value = rows[2].input_element.value.trim();
+                                const linetextRow = rows.find(r => r.type === "linetext");
+                                console.log("linetextRow:", linetextRow);
+                                console.log("input_element:", linetextRow?.input_element);
+                                console.log("input_value:", linetextRow?.input_element?.value);
+                                const input_value = linetextRow ? linetextRow.input_element.value.trim() : "";
                                 if (!input_value) {
                                     MessageMark.report("请输入群组名称", null, null, null, MessageMark.colors.yellow);
                                     return;
