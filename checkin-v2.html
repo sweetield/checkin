@@ -4929,6 +4929,56 @@
             background-color: rgba(255, 255, 0, 0.35) !important;
         }
 
+        .drive-search {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 6px 4px;
+            margin-bottom: 4px;
+        }
+
+        .drive-search-input {
+            flex: 1;
+            padding: 6px 10px;
+            font-size: 14px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+
+        .drive-search-input:focus {
+            border-color: #007bff;
+        }
+
+        .theme-dark .drive-search-input {
+            background: #3d3d3d;
+            border-color: #555;
+            color: #e0e0e0;
+        }
+
+        .theme-dark .drive-search-input:focus {
+            border-color: #63b3ed;
+        }
+
+        .theme-dark .drive-search-input::placeholder {
+            color: #888;
+        }
+
+        .drive-search-count {
+            font-size: 12px;
+            color: #666;
+            white-space: nowrap;
+        }
+
+        .theme-dark .drive-search-count {
+            color: #aaa;
+        }
+
+        .drive-items .hidden {
+            display: none !important;
+        }
+
         .drive-actions {
             display: flex;
             flex-direction: row;
@@ -12363,6 +12413,10 @@
                 let html = `
 <div class="drive-rect">
 <div class="drive-header"><button class="drive-header-btn-close">⮌</button><div class="drive-path"></div></div>
+<div class="drive-search">
+    <input type="text" class="drive-search-input" placeholder="搜索文件（支持正则）">
+    <span class="drive-search-count"></span>
+</div>
 <div class="drive-actions">
     <label class="checkbox"><input type="checkbox"></label>
     <button class="drive-action-btn no-width">${full_width_space}</button>
@@ -12601,6 +12655,12 @@
 
                 this.add_top_level_path_item()
 
+                this.drive_search_input = this.drive_rect.querySelector(":scope input.drive-search-input");
+                this.drive_search_count = this.drive_rect.querySelector(":scope span.drive-search-count");
+                this.drive_search_input.addEventListener("input", (event) => {
+                    this.filter_items();
+                });
+
                 this.refresh();
             }
 
@@ -12695,6 +12755,7 @@
                         if (this.closed) return;
                         if (result.length === 0) this.element_drive_items_nothings_tip.classList.remove("hidden");
                         for (const resultElement of result) this.add_item(resultElement);
+                        this.filter_items();
                         this.remove_loading_mark();
                     }).catch(error => {
                     if (this.closed) return;
@@ -13053,6 +13114,62 @@
                 const path_item = this.current_path_item();
                 this.switch_action_btns__root(path_item);
                 this.fetch_list(path_item);
+            }
+
+            filter_items() {
+                const keyword = this.drive_search_input.value.trim();
+                let visible_count = 0;
+                let has_regex_error = false;
+
+                if (keyword === "") {
+                    for (const item of this.drive_items) {
+                        item.summary.classList.remove("hidden");
+                        visible_count++;
+                    }
+                    this.drive_search_count.textContent = "";
+                    this.element_drive_items_nothings_tip.classList.add("hidden");
+                    return;
+                }
+
+                let regex = null;
+                try {
+                    regex = new RegExp(keyword, "i");
+                } catch (e) {
+                    has_regex_error = true;
+                }
+
+                for (const item of this.drive_items) {
+                    const name = this.get_item_display_name(item);
+                    if (has_regex_error) {
+                        if (name.includes(keyword)) {
+                            item.summary.classList.remove("hidden");
+                            visible_count++;
+                        } else {
+                            item.summary.classList.add("hidden");
+                        }
+                    } else {
+                        if (regex.test(name)) {
+                            item.summary.classList.remove("hidden");
+                            visible_count++;
+                        } else {
+                            item.summary.classList.add("hidden");
+                        }
+                    }
+                }
+
+                if (has_regex_error) {
+                    this.drive_search_count.textContent = `正则错误`;
+                    this.drive_search_count.style.color = "#dc3545";
+                } else {
+                    this.drive_search_count.textContent = `${visible_count}/${this.drive_items.length}`;
+                    this.drive_search_count.style.color = "";
+                }
+
+                if (visible_count === 0) {
+                    this.element_drive_items_nothings_tip.classList.remove("hidden");
+                } else {
+                    this.element_drive_items_nothings_tip.classList.add("hidden");
+                }
             }
 
             switch_action_btns__root(path_item) {
