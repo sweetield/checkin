@@ -14405,11 +14405,10 @@
                     const cached = localStorage.getItem(cacheKey);
                     if (cached) {
                         try {
-                            const link = document.createElement('link');
-                            link.id = `plugin-style-${pluginId}`;
-                            link.rel = 'stylesheet';
-                            link.textContent = cached;
-                            document.head.appendChild(link);
+                            const style = document.createElement('style');
+                            style.id = `plugin-style-${pluginId}`;
+                            style.textContent = cached;
+                            document.head.appendChild(style);
                             console.log(`✓ 从缓存加载样式: ${pluginId}`);
                             resolve();
                             return;
