@@ -14405,11 +14405,10 @@
                     const cached = localStorage.getItem(cacheKey);
                     if (cached) {
                         try {
-                            const link = document.createElement('link');
-                            link.id = `plugin-style-${pluginId}`;
-                            link.rel = 'stylesheet';
-                            link.textContent = cached;
-                            document.head.appendChild(link);
+                            const style = document.createElement('style');
+                            style.id = `plugin-style-${pluginId}`;
+                            style.textContent = cached;
+                            document.head.appendChild(style);
                             console.log(`✓ 从缓存加载样式: ${pluginId}`);
                             resolve();
                             return;
@@ -24391,6 +24390,7 @@
                     memberListContainer.style.maxHeight = "250px";
                     memberListContainer.style.overflowY = "auto";
                     memberListContainer.style.padding = "4px 8px";
+                    memberListContainer.style.border-bottom = "border-bottom: 1px solid #757575";
                     this.e_online_members_wrapper.appendChild(memberListContainer);
                     this.e_member_list_container = memberListContainer;
 
