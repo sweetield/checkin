@@ -9721,28 +9721,34 @@
                 return;
             }
 
-            try {
-                const response = await fetch(`${top_level_path}/api/plugins/batch/install`, {
-                    method: 'POST',
-                    credentials: 'same-origin',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({ pluginIds })
-                });
-                const data = await response.json();
+            let installed = 0;
+            const errors = [];
 
-                if (data.success) {
-                    alert(data.message);
-                    this.loadPluginList();
-                    this.selectedPlugins.clear();
-                } else {
-                    alert(`批量安装失败: ${data.message || '未知错误'}`);
+            for (const pluginId of pluginIds) {
+                try {
+                    const response = await fetch(`${top_level_path}/api/plugins/${pluginId}/install`, {
+                        method: 'POST',
+                        credentials: 'same-origin'
+                    });
+                    const data = await response.json();
+                    if (data.success) {
+                        installed++;
+                    } else {
+                        errors.push(`${pluginId}: ${data.message || '安装失败'}`);
+                    }
+                } catch (error) {
+                    errors.push(`${pluginId}: ${error.message}`);
                 }
-            } catch (error) {
-                console.error('批量安装失败:', error);
-                alert('批量安装失败: 网络错误');
             }
+
+            if (installed > 0) {
+                alert(`成功安装 ${installed} 个插件`);
+            }
+            if (errors.length > 0) {
+                alert(`部分安装失败:\n${errors.join('\n')}`);
+            }
+            this.loadPluginList();
+            this.selectedPlugins.clear();
         },
 
         // 批量卸载
@@ -9759,28 +9765,34 @@
                 return;
             }
 
-            try {
-                const response = await fetch(`${top_level_path}/api/plugins/batch/uninstall`, {
-                    method: 'POST',
-                    credentials: 'same-origin',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({ pluginIds })
-                });
-                const data = await response.json();
+            let uninstalled = 0;
+            const errors = [];
 
-                if (data.success) {
-                    alert(data.message);
-                    this.loadPluginList();
-                    this.selectedPlugins.clear();
-                } else {
-                    alert(`批量卸载失败: ${data.message || '未知错误'}`);
+            for (const pluginId of pluginIds) {
+                try {
+                    const response = await fetch(`${top_level_path}/api/plugins/${pluginId}/uninstall`, {
+                        method: 'POST',
+                        credentials: 'same-origin'
+                    });
+                    const data = await response.json();
+                    if (data.success) {
+                        uninstalled++;
+                    } else {
+                        errors.push(`${pluginId}: ${data.message || '卸载失败'}`);
+                    }
+                } catch (error) {
+                    errors.push(`${pluginId}: ${error.message}`);
                 }
-            } catch (error) {
-                console.error('批量卸载失败:', error);
-                alert('批量卸载失败: 网络错误');
             }
+
+            if (uninstalled > 0) {
+                alert(`成功卸载 ${uninstalled} 个插件`);
+            }
+            if (errors.length > 0) {
+                alert(`部分卸载失败:\n${errors.join('\n')}`);
+            }
+            this.loadPluginList();
+            this.selectedPlugins.clear();
         },
 
         // 打开插件详情
