@@ -14399,44 +14399,18 @@
                     return;
                 }
 
-                const cacheKey = `plugin-style-${pluginId}`;
                 const loadStyle = (retryCount = 0) => {
-                    // 尝试从 localStorage 读取缓存
-                    const cached = localStorage.getItem(cacheKey);
-                    if (cached) {
-                        try {
-                            const link = document.createElement('link');
-                            link.id = `plugin-style-${pluginId}`;
-                            link.rel = 'stylesheet';
-                            link.textContent = cached;
-                            document.head.appendChild(link);
-                            console.log(`✓ 从缓存加载样式: ${pluginId}`);
-                            resolve();
-                            return;
-                        } catch (e) {
-                            console.warn(`缓存样式加载失败，尝试网络加载: ${pluginId}`, e);
-                            localStorage.removeItem(cacheKey);
-                        }
-                    }
+                    // 清除旧缓存（如果存在）
+                    localStorage.removeItem(`plugin-style-${pluginId}`);
 
-                    // 从网络加载
+                    // 从网络加载，添加时间戳避免浏览器缓存
                     const link = document.createElement('link');
                     link.id = `plugin-style-${pluginId}`;
                     link.rel = 'stylesheet';
-                    link.href = url;
+                    link.href = url + (url.includes('?') ? '&' : '?') + '_t=' + Date.now();
 
                     link.onload = () => {
-                        // 保存到缓存
-                        fetch(url).then(res => res.text()).then(text => {
-                            try {
-                                localStorage.setItem(cacheKey, text);
-                                console.log(`✓ 样式已缓存: ${pluginId}`);
-                            } catch (e) {
-                                console.warn(`样式缓存失败: ${pluginId}`, e);
-                            }
-                        }).catch(() => {
-                            console.warn(`获取样式内容失败: ${url}`);
-                        });
+                        console.log(`✓ 样式加载成功: ${pluginId}`);
                         resolve();
                     };
 
