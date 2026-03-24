@@ -15326,23 +15326,28 @@
     }
 
     // DOM 加载完成后执行
-    document.addEventListener('DOMContentLoaded', () => {
-        // 清理旧的脚本缓存
-        const keys = Object.keys(localStorage);
-        let clearedCount = 0;
-        keys.forEach(key => {
-            if (key.startsWith('plugin-script-')) {
-                localStorage.removeItem(key);
-                clearedCount++;
+        document.addEventListener('DOMContentLoaded', () => {
+            // 清理旧的插件缓存（脚本和样式）
+            const keys = Object.keys(localStorage);
+            let scriptCleared = 0;
+            let styleCleared = 0;
+            keys.forEach(key => {
+                if (key.startsWith('plugin-script-')) {
+                    localStorage.removeItem(key);
+                    scriptCleared++;
+                } else if (key.startsWith('plugin-style-')) {
+                    localStorage.removeItem(key);
+                    styleCleared++;
+                }
+            });
+            const totalCleared = scriptCleared + styleCleared;
+            if (totalCleared > 0) {
+                console.log(`✓ 已清理 ${scriptCleared} 个旧脚本缓存和 ${styleCleared} 个旧样式缓存`);
             }
-        });
-        if (clearedCount > 0) {
-            console.log(`✓ 已清理 ${clearedCount} 个旧脚本缓存`);
-        }
 
-        // 延迟执行，确保其他初始化完成
-        setTimeout(autoLoadEnabledPlugins, 500);
-    });
+            // 延迟执行，确保其他初始化完成
+            setTimeout(autoLoadEnabledPlugins, 500);
+        });
 
     // 创建插件管理实例并暴露到全局
     window.pluginManager = new PluginMark(document.querySelector("main"));
