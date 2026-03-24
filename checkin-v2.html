@@ -14110,28 +14110,35 @@
                 null,
                 null,
                 async () => {
-                    try {
-                        // 调用批量安装API
-                        const pluginIds = uninstalledPlugins.map(p => p.plugin_id);
-                        const response = await fetch(`${top_level_path}/api/plugins/batch/install`, {
-                            method: 'POST',
-                            credentials: 'same-origin',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({ pluginIds })
-                        });
-                        const data = await response.json();
-                        
-                        if (!data.success) {
-                            throw new Error(data.message || '批量安装失败');
+                    let installed = 0;
+                    const errors = [];
+                    
+                    for (const plugin of uninstalledPlugins) {
+                        try {
+                            const response = await fetch(`${top_level_path}/api/plugins/${plugin.plugin_id}/install`, {
+                                method: 'POST',
+                                credentials: 'same-origin'
+                            });
+                            const data = await response.json();
+                            if (data.success) {
+                                installed++;
+                            } else {
+                                errors.push(`${plugin.name}: ${data.message || '安装失败'}`);
+                            }
+                        } catch (error) {
+                            errors.push(`${plugin.name}: ${error.message}`);
                         }
-
-                        showToast(`成功安装 ${uninstalledPlugins.length} 个插件`, 'success');
-                        this.selectedPlugins.clear();
-                        await this.loadPlugins(); // 重新从服务器加载
-                        this.updateBatchButtons(isInstalledTab);
-                    } catch (error) {
-                        showToast(`批量安装失败: ${error.message}`, 'error');
                     }
+
+                    if (installed > 0) {
+                        showToast(`成功安装 ${installed} 个插件`, 'success');
+                    }
+                    if (errors.length > 0) {
+                        showToast(`部分安装失败: ${errors.join(', ')}`, 'error');
+                    }
+                    this.selectedPlugins.clear();
+                    await this.loadPlugins();
+                    this.updateBatchButtons(isInstalledTab);
                 },
                 MessageMark.colors.blue
             );
@@ -14151,55 +14158,57 @@
             }
 
             // 构建确认消息
-            let message = '';
-            const allPlugins = [];
-
-            if (uninstalledPlugins.length > 0) {
-                allPlugins.push(...uninstalledPlugins);
-            }
-            if (updatablePlugins.length > 0) {
-                allPlugins.push(...updatablePlugins);
-            }
-
+            const allPlugins = [...uninstalledPlugins, ...updatablePlugins];
             const pluginNames = allPlugins.map(p => p.name).join('、');
-            message = `确定要${uninstalledPlugins.length > 0 ? '安装' : '更新'}以下 ${allPlugins.length} 个插件吗？<br><br><strong>${pluginNames}</strong>`;
+            const action = uninstalledPlugins.length > 0 && updatablePlugins.length > 0 ? '安装/更新' :
+                          uninstalledPlugins.length > 0 ? '安装' : '更新';
 
             // 二次确认
             MessageMark.confirm(
-                message,
+                `确定要${action}以下 ${allPlugins.length} 个插件吗？<br><br><strong>${pluginNames}</strong>`,
                 null,
                 null,
                 async () => {
-                    const action = uninstalledPlugins.length > 0 && updatablePlugins.length > 0 ? '安装/更新' :
-                                  uninstalledPlugins.length > 0 ? '安装' : '更新';
-                    try {
-                        // 调用批量安装API
-                        if (uninstalledPlugins.length > 0) {
-                            const pluginIds = uninstalledPlugins.map(p => p.plugin_id);
-                            const response = await fetch(`${top_level_path}/api/plugins/batch/install`, {
+                    let successCount = 0;
+                    const errors = [];
+
+                    // 安装未安装的插件
+                    for (const plugin of uninstalledPlugins) {
+                        try {
+                            const response = await fetch(`${top_level_path}/api/plugins/${plugin.plugin_id}/install`, {
                                 method: 'POST',
-                                credentials: 'same-origin',
-                                headers: { 'Content-Type': 'application/json' },
-                                body: JSON.stringify({ pluginIds })
+                                credentials: 'same-origin'
                             });
                             const data = await response.json();
-                            if (!data.success) {
-                                throw new Error(data.message || '批量安装失败');
+                            if (data.success) {
+                                successCount++;
+                            } else {
+                                errors.push(`${plugin.name}: ${data.message || '安装失败'}`);
                             }
+                        } catch (error) {
+                            errors.push(`${plugin.name}: ${error.message}`);
                         }
-
-                        // 更新可更新的插件（本地状态更新，实际更新逻辑待实现）
-                        for (const plugin of updatablePlugins) {
-                            plugin.installed_version = plugin.version;
-                        }
-
-                        showToast(`成功${action} ${allPlugins.length} 个插件`, 'success');
-                        this.selectedPlugins.clear();
-                        await this.loadPlugins(); // 重新从服务器加载
-                        this.updateBatchButtons(isInstalledTab);
-                    } catch (error) {
-                        showToast(`批量${action}失败: ${error.message}`, 'error');
                     }
+
+                    // 更新可更新的插件
+                    for (const plugin of updatablePlugins) {
+                        try {
+                            plugin.installed_version = plugin.version;
+                            successCount++;
+                        } catch (error) {
+                            errors.push(`${plugin.name}: ${error.message}`);
+                        }
+                    }
+
+                    if (successCount > 0) {
+                        showToast(`成功${action} ${successCount} 个插件`, 'success');
+                    }
+                    if (errors.length > 0) {
+                        showToast(`部分操作失败: ${errors.join(', ')}`, 'error');
+                    }
+                    this.selectedPlugins.clear();
+                    await this.loadPlugins();
+                    this.updateBatchButtons(isInstalledTab);
                 },
                 MessageMark.colors.blue
             );
@@ -14222,30 +14231,35 @@
                 null,
                 null,
                 async () => {
-                    try {
-                        // 显示加载提示
-                        showToast('卸载中...', 'info', 0);
+                    let uninstalled = 0;
+                    const errors = [];
 
-                        // 调用批量卸载API
-                        const pluginIds = installedPlugins.map(p => p.plugin_id);
-                        const response = await fetch(`${top_level_path}/api/plugins/batch/uninstall`, {
-                            method: 'POST',
-                            credentials: 'same-origin',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({ pluginIds })
-                        });
-                        const data = await response.json();
-                        if (!data.success) {
-                            throw new Error(data.message || '批量卸载失败');
+                    for (const plugin of installedPlugins) {
+                        try {
+                            const response = await fetch(`${top_level_path}/api/plugins/${plugin.plugin_id}/uninstall`, {
+                                method: 'POST',
+                                credentials: 'same-origin'
+                            });
+                            const data = await response.json();
+                            if (data.success) {
+                                uninstalled++;
+                            } else {
+                                errors.push(`${plugin.name}: ${data.message || '卸载失败'}`);
+                            }
+                        } catch (error) {
+                            errors.push(`${plugin.name}: ${error.message}`);
                         }
-
-                        showToast(`成功卸载 ${installedPlugins.length} 个插件`, 'success');
-                        this.selectedPlugins.clear();
-                        await this.loadPlugins(); // 重新从服务器加载
-                        this.updateBatchButtons(isInstalledTab);
-                    } catch (error) {
-                        showToast(`批量卸载失败: ${error.message}`, 'error');
                     }
+
+                    if (uninstalled > 0) {
+                        showToast(`成功卸载 ${uninstalled} 个插件`, 'success');
+                    }
+                    if (errors.length > 0) {
+                        showToast(`部分卸载失败: ${errors.join(', ')}`, 'error');
+                    }
+                    this.selectedPlugins.clear();
+                    await this.loadPlugins();
+                    this.updateBatchButtons(isInstalledTab);
                 },
                 MessageMark.colors.red
             );
@@ -14267,29 +14281,37 @@
             // 如果所有选中的都是启用的，则全部停用；否则全部启用
             const shouldEnable = enabledCount !== selectedPlugins.length;
             const action = shouldEnable ? '启用' : '停用';
+            const endpoint = shouldEnable ? 'activate' : 'deactivate';
 
-            try {
-                // 调用批量启用/停用API
-                const pluginIds = selectedPlugins.map(p => p.plugin_id);
-                const endpoint = shouldEnable ? 'activate' : 'deactivate';
-                const response = await fetch(`${top_level_path}/api/plugins/batch/${endpoint}`, {
-                    method: 'POST',
-                    credentials: 'same-origin',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ pluginIds })
-                });
-                const data = await response.json();
-                if (!data.success) {
-                    throw new Error(data.message || `批量${action}失败`);
+            let successCount = 0;
+            const errors = [];
+
+            for (const plugin of selectedPlugins) {
+                try {
+                    const response = await fetch(`${top_level_path}/api/plugins/${plugin.plugin_id}/${endpoint}`, {
+                        method: 'POST',
+                        credentials: 'same-origin'
+                    });
+                    const data = await response.json();
+                    if (data.success) {
+                        successCount++;
+                    } else {
+                        errors.push(`${plugin.name}: ${data.message || action + '失败'}`);
+                    }
+                } catch (error) {
+                    errors.push(`${plugin.name}: ${error.message}`);
                 }
-
-                showToast(`成功${action} ${selectedPlugins.length} 个插件`, 'success');
-                this.selectedPlugins.clear();
-                await this.loadPlugins(); // 重新从服务器加载
-                this.updateBatchButtons(isInstalledTab);
-            } catch (error) {
-                showToast(`批量${action}失败: ${error.message}`, 'error');
             }
+
+            if (successCount > 0) {
+                showToast(`成功${action} ${successCount} 个插件`, 'success');
+            }
+            if (errors.length > 0) {
+                showToast(`部分${action}失败: ${errors.join(', ')}`, 'error');
+            }
+            this.selectedPlugins.clear();
+            await this.loadPlugins();
+            this.updateBatchButtons(isInstalledTab);
         }
 
         async updatePlugin(plugin) {
