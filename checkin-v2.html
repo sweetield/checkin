@@ -14208,13 +14208,8 @@
                     // 加载样式文件（如果有）
                     if (plugin.styles) {
                         const styleUrl = this._resolveUrl(plugin.styles, baseUrl);
-                        // 添加时间戳参数强制获取最新CSS
-                        const timestamp = Date.now();
-                        const finalUrl = styleUrl.includes('?') 
-                            ? `${styleUrl}&_t=${timestamp}` 
-                            : `${styleUrl}?_t=${timestamp}`;
                         try {
-                            await this._loadStyles(finalUrl, pluginId);
+                            await this._loadStyles(styleUrl, pluginId);
                         } catch (styleError) {
                             console.warn(`[PluginLoader] 样式加载失败，继续加载插件:`, styleError.message);
                         }
@@ -14223,12 +14218,7 @@
                     // 加载主脚本
                     if (plugin.entry_point) {
                         const scriptUrl = this._resolveUrl(plugin.entry_point, baseUrl);
-                        // 添加时间戳参数强制获取最新脚本
-                        const timestamp = Date.now();
-                        const finalUrl = scriptUrl.includes('?') 
-                            ? `${scriptUrl}&_t=${timestamp}` 
-                            : `${scriptUrl}?_t=${timestamp}`;
-                        await this._loadScript(finalUrl, pluginId);
+                        await this._loadScript(scriptUrl, pluginId);
                     }
                 }
 
@@ -14411,9 +14401,13 @@
 
                 const loadStyle = async (retryCount = 0) => {
                     try {
-                        // 直接使用 fetch 获取 CSS 内容（每次都从服务器获取，不使用缓存）
-                        const response = await fetch(url, { 
-                            cache: 'no-store' // 强制不使用缓存，直接从服务器获取
+                        // 添加时间戳参数防止缓存
+                        const noCacheUrl = url.includes('?') 
+                            ? `${url}&_t=${Date.now()}` 
+                            : `${url}?_t=${Date.now()}`;
+                        
+                        const response = await fetch(noCacheUrl, {
+                            credentials: 'same-origin'
                         });
                         
                         if (!response.ok) {
@@ -14432,16 +14426,17 @@
                         style.textContent = cssText;
                         document.head.appendChild(style);
                         
-                        console.log(`✓ 样式加载成功: ${pluginId}`);
+                        console.log(`✓ 样式加载成功: ${pluginId} (${cssText.length} 字节)`);
                         resolve();
                     } catch (error) {
+                        console.warn(`样式加载失败 (${retryCount + 1}/${maxRetries}): ${url}`, error.message);
+                        
                         // 重试逻辑
                         if (retryCount < maxRetries - 1) {
                             const delay = 1000 * Math.pow(2, retryCount);
-                            console.warn(`样式加载失败，${delay}ms 后重试 (${retryCount + 1}/${maxRetries}): ${url}`, error.message);
                             setTimeout(() => loadStyle(retryCount + 1), delay);
                         } else {
-                            reject(new Error(`加载样式失败（重试 ${maxRetries} 次）: ${url}\n${error.message}`));
+                            reject(new Error(`加载样式失败: ${url}\n${error.message}`));
                         }
                     }
                 };
@@ -14456,31 +14451,32 @@
          */
         async _loadScript(url, pluginId, maxRetries = 3) {
             return new Promise((resolve, reject) => {
-                // 检查是否已存在
-                if (document.getElementById(`plugin-script-${pluginId}`)) {
-                    resolve();
-                    return;
+                // 移除已存在的脚本
+                const existingScript = document.getElementById(`plugin-script-${pluginId}`);
+                if (existingScript) {
+                    existingScript.remove();
                 }
 
                 const loadScript = (retryCount = 0) => {
-                    // 从网络加载
                     const script = document.createElement('script');
                     script.id = `plugin-script-${pluginId}`;
-                    script.src = url;
-                    script.crossOrigin = 'anonymous';
+                    // 添加时间戳参数防止缓存
+                    script.src = url.includes('?') 
+                        ? `${url}&_t=${Date.now()}` 
+                        : `${url}?_t=${Date.now()}`;
 
                     script.onload = () => {
                         console.log(`✓ 脚本加载成功: ${pluginId}`);
                         resolve();
                     };
 
-                    script.onerror = () => {
+                    script.onerror = (e) => {
+                        console.warn(`脚本加载失败 (${retryCount + 1}/${maxRetries}): ${url}`);
                         if (retryCount < maxRetries - 1) {
                             const delay = 1000 * Math.pow(2, retryCount);
-                            console.warn(`脚本加载失败，${delay}ms 后重试 (${retryCount + 1}/${maxRetries}): ${url}`);
                             setTimeout(() => loadScript(retryCount + 1), delay);
                         } else {
-                            reject(new Error(`加载脚本失败（重试 ${maxRetries} 次）: ${url}\n\n请确保插件文件已正确部署到服务器。`));
+                            reject(new Error(`加载脚本失败: ${url}`));
                         }
                     };
 
