@@ -14282,15 +14282,6 @@
                 return url.origin + url.pathname.substring(0, url.pathname.lastIndexOf('/') + 1);
             }
             
-            // 如果 entry_point 是以 /api/plugins/file/ 开头的路径
-            if (plugin.entry_point && plugin.entry_point.startsWith('/api/plugins/file/')) {
-                // 提取基础路径 /api/plugins/file/{pluginId}/
-                const match = plugin.entry_point.match(/^(\/api\/plugins\/file\/[^/]+\/)/);
-                if (match) {
-                    return window.location.origin + match[1];
-                }
-            }
-            
             // 如果有 repository，使用它作为基础 URL
             if (plugin.repository) {
                 // GitHub 仓库转换为 CDN URL
@@ -14401,63 +14392,65 @@
          * @private
          */
         async _loadStyles(url, pluginId, maxRetries = 3) {
-            // 如果没有URL，直接跳过
-            if (!url) {
-                console.log(`[PluginLoader] ${pluginId} 没有CSS URL，跳过`);
-                return;
-            }
-            
             return new Promise((resolve, reject) => {
-                console.log(`[PluginLoader] 开始加载CSS: ${pluginId}, URL: ${url}`);
-                
-                // 移除已存在的样式（确保每次刷新都重新加载）
-                const existingStyle = document.getElementById(`plugin-style-${pluginId}`);
-                if (existingStyle) {
-                    existingStyle.remove();
+                // 检查是否已存在
+                if (document.getElementById(`plugin-style-${pluginId}`)) {
+                    resolve();
+                    return;
                 }
 
-                const loadStyle = async (retryCount = 0) => {
-                    try {
-                        // 添加时间戳参数防止缓存
-                        const noCacheUrl = url.includes('?') 
-                            ? `${url}&_t=${Date.now()}` 
-                            : `${url}?_t=${Date.now()}`;
-                        
-                        const response = await fetch(noCacheUrl, {
-                            credentials: 'same-origin'
-                        });
-                        
-                        if (!response.ok) {
-                            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-                        }
-                        
-                        const cssText = await response.text();
-                        
-                        if (!cssText || cssText.trim().length === 0) {
-                            throw new Error('CSS 内容为空');
-                        }
-                        
-                        // 创建 style 标签并注入 CSS
-                        const style = document.createElement('style');
-                        style.id = `plugin-style-${pluginId}`;
-                        style.textContent = cssText;
-                        document.head.appendChild(style);
-                        
-                        console.log(`✓ CSS加载成功: ${pluginId} (${cssText.length} 字节)`);
-                        resolve();
-                    } catch (error) {
-                        console.warn(`✗ CSS加载失败 (${retryCount + 1}/${maxRetries}): ${pluginId}`, error.message);
-                        
-                        // 重试逻辑
-                        if (retryCount < maxRetries - 1) {
-                            const delay = 1000 * Math.pow(2, retryCount);
-                            setTimeout(() => loadStyle(retryCount + 1), delay);
-                        } else {
-                            // 最终失败时，静默处理（不阻止插件加载）
-                            console.error(`✗ CSS加载彻底失败: ${pluginId}`);
-                            resolve(); // 使用resolve而不是reject，确保插件继续加载
+                const cacheKey = `plugin-style-${pluginId}`;
+                const loadStyle = (retryCount = 0) => {
+                    // 尝试从 localStorage 读取缓存
+                    const cached = localStorage.getItem(cacheKey);
+                    if (cached) {
+                        try {
+                            const link = document.createElement('link');
+                            link.id = `plugin-style-${pluginId}`;
+                            link.rel = 'stylesheet';
+                            link.textContent = cached;
+                            document.head.appendChild(link);
+                            console.log(`✓ 从缓存加载样式: ${pluginId}`);
+                            resolve();
+                            return;
+                        } catch (e) {
+                            console.warn(`缓存样式加载失败，尝试网络加载: ${pluginId}`, e);
+                            localStorage.removeItem(cacheKey);
                         }
                     }
+
+                    // 从网络加载
+                    const link = document.createElement('link');
+                    link.id = `plugin-style-${pluginId}`;
+                    link.rel = 'stylesheet';
+                    link.href = url;
+
+                    link.onload = () => {
+                        // 保存到缓存
+                        fetch(url).then(res => res.text()).then(text => {
+                            try {
+                                localStorage.setItem(cacheKey, text);
+                                console.log(`✓ 样式已缓存: ${pluginId}`);
+                            } catch (e) {
+                                console.warn(`样式缓存失败: ${pluginId}`, e);
+                            }
+                        }).catch(() => {
+                            console.warn(`获取样式内容失败: ${url}`);
+                        });
+                        resolve();
+                    };
+
+                    link.onerror = () => {
+                        if (retryCount < maxRetries - 1) {
+                            const delay = 1000 * Math.pow(2, retryCount);
+                            console.warn(`样式加载失败，${delay}ms 后重试 (${retryCount + 1}/${maxRetries}): ${url}`);
+                            setTimeout(() => loadStyle(retryCount + 1), delay);
+                        } else {
+                            reject(new Error(`加载样式失败（重试 ${maxRetries} 次）: ${url}`));
+                        }
+                    };
+
+                    document.head.appendChild(link);
                 };
 
                 loadStyle();
@@ -14470,32 +14463,31 @@
          */
         async _loadScript(url, pluginId, maxRetries = 3) {
             return new Promise((resolve, reject) => {
-                // 移除已存在的脚本
-                const existingScript = document.getElementById(`plugin-script-${pluginId}`);
-                if (existingScript) {
-                    existingScript.remove();
+                // 检查是否已存在
+                if (document.getElementById(`plugin-script-${pluginId}`)) {
+                    resolve();
+                    return;
                 }
 
                 const loadScript = (retryCount = 0) => {
+                    // 从网络加载
                     const script = document.createElement('script');
                     script.id = `plugin-script-${pluginId}`;
-                    // 添加时间戳参数防止缓存
-                    script.src = url.includes('?') 
-                        ? `${url}&_t=${Date.now()}` 
-                        : `${url}?_t=${Date.now()}`;
+                    script.src = url;
+                    script.crossOrigin = 'anonymous';
 
                     script.onload = () => {
                         console.log(`✓ 脚本加载成功: ${pluginId}`);
                         resolve();
                     };
 
-                    script.onerror = (e) => {
-                        console.warn(`脚本加载失败 (${retryCount + 1}/${maxRetries}): ${url}`);
+                    script.onerror = () => {
                         if (retryCount < maxRetries - 1) {
                             const delay = 1000 * Math.pow(2, retryCount);
+                            console.warn(`脚本加载失败，${delay}ms 后重试 (${retryCount + 1}/${maxRetries}): ${url}`);
                             setTimeout(() => loadScript(retryCount + 1), delay);
                         } else {
-                            reject(new Error(`加载脚本失败: ${url}`));
+                            reject(new Error(`加载脚本失败（重试 ${maxRetries} 次）: ${url}\n\n请确保插件文件已正确部署到服务器。`));
                         }
                     };
 
@@ -15286,6 +15278,9 @@
 
     // 页面加载时自动加载已启用的插件
     async function autoLoadEnabledPlugins() {
+        // 未登录时跳过
+        if (!logged_user) return;
+        
         try {
             const response = await fetch(`${top_level_path}/api/plugins/installed`, {
                 credentials: 'same-origin'
@@ -15306,25 +15301,28 @@
                 }
             }
         } catch (error) {
-            // 静默失败，不输出警告
+            console.warn('自动加载插件失败:', error);
         }
     }
 
     // DOM 加载完成后执行
-        document.addEventListener('DOMContentLoaded', () => {
-            // 清理旧的插件缓存（脚本缓存）
-            const keys = Object.keys(localStorage);
-            let scriptCleared = 0;
-            keys.forEach(key => {
-                if (key.startsWith('plugin-script-')) {
-                    localStorage.removeItem(key);
-                    scriptCleared++;
-                }
-            });
-            if (scriptCleared > 0) {
-                console.log(`✓ 已清理 ${scriptCleared} 个旧脚本缓存`);
+    document.addEventListener('DOMContentLoaded', () => {
+        // 清理旧的脚本缓存
+        const keys = Object.keys(localStorage);
+        let clearedCount = 0;
+        keys.forEach(key => {
+            if (key.startsWith('plugin-script-')) {
+                localStorage.removeItem(key);
+                clearedCount++;
             }
         });
+        if (clearedCount > 0) {
+            console.log(`✓ 已清理 ${clearedCount} 个旧脚本缓存`);
+        }
+
+        // 延迟执行，确保其他初始化完成
+        setTimeout(autoLoadEnabledPlugins, 500);
+    });
 
     // 创建插件管理实例并暴露到全局
     window.pluginManager = new PluginMark(document.querySelector("main"));
@@ -24393,7 +24391,6 @@
                     memberListContainer.style.maxHeight = "250px";
                     memberListContainer.style.overflowY = "auto";
                     memberListContainer.style.padding = "4px 8px";
-                    memberListContainer.style.border-bottom = "border-bottom: 1px solid #757575";
                     this.e_online_members_wrapper.appendChild(memberListContainer);
                     this.e_member_list_container = memberListContainer;
 
@@ -30921,14 +30918,8 @@
                 handlejumpto();
             }
         }
-        if (!switched) {
+        if (!switched)
             checkin.switch_panel_to_login();
-        }
-            
-        // 无论是否登录，都尝试加载插件（API会返回401如果未登录）
-        if (typeof autoLoadEnabledPlugins === 'function') {
-            autoLoadEnabledPlugins();
-        }
 
     }
 
