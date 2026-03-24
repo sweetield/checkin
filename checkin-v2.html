@@ -14208,8 +14208,13 @@
                     // 加载样式文件（如果有）
                     if (plugin.styles) {
                         const styleUrl = this._resolveUrl(plugin.styles, baseUrl);
+                        // 添加时间戳参数强制获取最新CSS
+                        const timestamp = Date.now();
+                        const finalUrl = styleUrl.includes('?') 
+                            ? `${styleUrl}&_t=${timestamp}` 
+                            : `${styleUrl}?_t=${timestamp}`;
                         try {
-                            await this._loadStyles(styleUrl, pluginId);
+                            await this._loadStyles(finalUrl, pluginId);
                         } catch (styleError) {
                             console.warn(`[PluginLoader] 样式加载失败，继续加载插件:`, styleError.message);
                         }
@@ -14218,7 +14223,12 @@
                     // 加载主脚本
                     if (plugin.entry_point) {
                         const scriptUrl = this._resolveUrl(plugin.entry_point, baseUrl);
-                        await this._loadScript(scriptUrl, pluginId);
+                        // 添加时间戳参数强制获取最新脚本
+                        const timestamp = Date.now();
+                        const finalUrl = scriptUrl.includes('?') 
+                            ? `${scriptUrl}&_t=${timestamp}` 
+                            : `${scriptUrl}?_t=${timestamp}`;
+                        await this._loadScript(finalUrl, pluginId);
                     }
                 }
 
