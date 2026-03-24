@@ -30919,15 +30919,15 @@
                 checkin.restore_selected_panel_id();
 
                 handlejumpto();
-                
-                // 加载已启用的插件
-                if (typeof autoLoadEnabledPlugins === 'function') {
-                    autoLoadEnabledPlugins();
-                }
             }
         }
         if (!switched)
             checkin.switch_panel_to_login();
+            
+        // 无论是否登录，都尝试加载插件（API会返回401如果未登录）
+        if (typeof autoLoadEnabledPlugins === 'function') {
+            autoLoadEnabledPlugins();
+        }
 
     }
 
