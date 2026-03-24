@@ -15276,9 +15276,6 @@
 
     // 页面加载时自动加载已启用的插件
     async function autoLoadEnabledPlugins() {
-        // 未登录时跳过
-        if (!logged_user) return;
-        
         try {
             const response = await fetch(`${top_level_path}/api/plugins/installed`, {
                 credentials: 'same-origin'
@@ -15299,7 +15296,7 @@
                 }
             }
         } catch (error) {
-            console.warn('自动加载插件失败:', error);
+            // 静默失败，不输出警告
         }
     }
 
@@ -15317,9 +15314,6 @@
             if (scriptCleared > 0) {
                 console.log(`✓ 已清理 ${scriptCleared} 个旧脚本缓存`);
             }
-
-            // 延迟执行，确保其他初始化完成
-            setTimeout(autoLoadEnabledPlugins, 500);
         });
 
     // 创建插件管理实例并暴露到全局
@@ -30914,6 +30908,11 @@
                 checkin.restore_selected_panel_id();
 
                 handlejumpto();
+                
+                // 加载已启用的插件
+                if (typeof autoLoadEnabledPlugins === 'function') {
+                    autoLoadEnabledPlugins();
+                }
             }
         }
         if (!switched)
