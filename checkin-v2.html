@@ -5602,6 +5602,57 @@
             50% { opacity: 0.5; }
         }
 
+        /* 插件安装进度条 */
+        .plugin-installing,
+        .plugin-batch-installing {
+            padding: 10px 0;
+        }
+
+        .plugin-installing-name,
+        .plugin-batch-installing-count {
+            font-size: 14px;
+            font-weight: 500;
+            margin-bottom: 8px;
+            color: var(--fc-normal);
+        }
+
+        .plugin-installing-progress {
+            width: 100%;
+            height: 8px;
+            background: #e0e0e0;
+            border-radius: 4px;
+            overflow: hidden;
+            margin-bottom: 8px;
+        }
+
+        .plugin-installing-progress-bar {
+            height: 100%;
+            width: 0%;
+            background: linear-gradient(90deg, #2088ee, #4facfe);
+            border-radius: 4px;
+            transition: width 0.3s ease;
+            animation: progress-animation 1.5s ease-in-out infinite;
+        }
+
+        @keyframes progress-animation {
+            0% { width: 0%; }
+            50% { width: 70%; }
+            100% { width: 100%; }
+        }
+
+        .plugin-installing-status {
+            font-size: 12px;
+            color: var(--fc-less);
+        }
+
+        .theme-dark .plugin-installing-progress {
+            background: #444;
+        }
+
+        .theme-dark .plugin-installing-progress-bar {
+            background: linear-gradient(90deg, #4facfe, #00f2fe);
+        }
+
         /* 隐藏类 */
         .hidden {
             display: none !important;
@@ -9866,12 +9917,14 @@
     }
 
 
-    function showChatToast({ title, content, onClick }) {
+    function showChatToast({ title, content, onClick, duration = 5000 }) {
         const container = document.getElementById("chat-toast-container");
-        if (!container) return;
+        if (!container) return null;
 
         const toast = document.createElement("div");
         toast.className = "chat-toast";
+        const toastId = `chat-toast-${Date.now()}`;
+        toast.id = toastId;
 
         toast.innerHTML = `
             <div class="sender">${title}</div>
@@ -9885,10 +9938,14 @@
 
         container.appendChild(toast);
 
-        // 5 秒自动消失
-        setTimeout(() => {
-            toast.remove();
-        }, 5000);
+        // 如果duration大于0，则自动消失
+        if (duration > 0) {
+            setTimeout(() => {
+                toast.remove();
+            }, duration);
+        }
+
+        return toastId;
     }
 
 
@@ -13733,6 +13790,19 @@
                 null,
                 null,
                 async () => {
+                    // 显示安装中的提示
+                    const toastId = showChatToast({
+                        title: '⏳ 安装中',
+                        content: `<div class="plugin-installing">
+                            <div class="plugin-installing-name">${plugin.name}</div>
+                            <div class="plugin-installing-progress">
+                                <div class="plugin-installing-progress-bar"></div>
+                            </div>
+                            <div class="plugin-installing-status">正在下载插件文件...</div>
+                        </div>`,
+                        duration: 0
+                    });
+
                     try {
                         // 调用后端 API 安装插件
                         const response = await fetch(`${top_level_path}/api/plugins/${plugin.plugin_id}/install`, {
@@ -13740,6 +13810,12 @@
                             credentials: 'same-origin'
                         });
                         const data = await response.json();
+                        
+                        // 关闭安装中的提示
+                        if (toastId) {
+                            const toastEl = document.getElementById(toastId);
+                            if (toastEl) toastEl.remove();
+                        }
                         
                         if (data.success) {
                             plugin.installed = true;
@@ -13758,6 +13834,11 @@
                             showToast(`安装失败: ${data.message || '未知错误'}`, 'error');
                         }
                     } catch (error) {
+                        // 关闭安装中的提示
+                        if (toastId) {
+                            const toastEl = document.getElementById(toastId);
+                            if (toastEl) toastEl.remove();
+                        }
                         showToast(`安装失败: ${error.message}`, 'error');
                     }
                 },
@@ -14022,26 +14103,76 @@
                 null,
                 null,
                 async () => {
+                    const action = uninstalledPlugins.length > 0 && updatablePlugins.length > 0 ? '安装/更新' :
+                                  uninstalledPlugins.length > 0 ? '安装' : '更新';
+                    // 显示批量安装进度提示
+                    const toastId = showChatToast({
+                        title: '⏳ 批量安装中',
+                        content: `<div class="plugin-batch-installing">
+                            <div class="plugin-batch-installing-count">正在安装 <span id="plugin-installed-count">0</span>/${allPlugins.length} 个插件</div>
+                            <div class="plugin-installing-progress">
+                                <div class="plugin-installing-progress-bar" id="plugin-batch-progress-bar"></div>
+                            </div>
+                            <div class="plugin-installing-status" id="plugin-batch-status">准备中...</div>
+                        </div>`,
+                        duration: 0
+                    });
+
                     try {
-                        // 安装未安装的插件
-                        for (const plugin of uninstalledPlugins) {
-                            plugin.installed = true;
-                            plugin.installed_version = plugin.version;
-                            plugin.enabled = true;
+                        // 调用批量安装API
+                        if (uninstalledPlugins.length > 0) {
+                            const pluginIds = uninstalledPlugins.map(p => p.plugin_id);
+                            
+                            // 更新进度条状态
+                            const statusEl = document.getElementById('plugin-batch-status');
+                            const progressBar = document.getElementById('plugin-batch-progress-bar');
+                            const countEl = document.getElementById('plugin-installed-count');
+                            
+                            // 模拟逐个安装的进度
+                            let installedCount = 0;
+                            for (const plugin of uninstalledPlugins) {
+                                if (statusEl) statusEl.textContent = `正在安装: ${plugin.name}`;
+                                
+                                // 调用单个插件安装API
+                                const response = await fetch(`${top_level_path}/api/plugins/${plugin.plugin_id}/install`, {
+                                    method: 'POST',
+                                    credentials: 'same-origin'
+                                });
+                                const data = await response.json();
+                                
+                                if (data.success) {
+                                    plugin.installed = true;
+                                    plugin.enabled = true;
+                                    plugin.installed_version = plugin.version;
+                                }
+                                
+                                installedCount++;
+                                if (countEl) countEl.textContent = installedCount;
+                                if (progressBar) progressBar.style.width = `${(installedCount / uninstalledPlugins.length) * 100}%`;
+                            }
                         }
 
-                        // 更新可更新的插件
+                        // 更新可更新的插件（本地状态更新，实际更新逻辑待实现）
                         for (const plugin of updatablePlugins) {
                             plugin.installed_version = plugin.version;
                         }
 
-                        const action = uninstalledPlugins.length > 0 && updatablePlugins.length > 0 ? '安装/更新' :
-                                      uninstalledPlugins.length > 0 ? '安装' : '更新';
+                        // 关闭进度提示
+                        if (toastId) {
+                            const toastEl = document.getElementById(toastId);
+                            if (toastEl) toastEl.remove();
+                        }
+
                         showToast(`成功${action} ${allPlugins.length} 个插件`, 'success');
                         this.selectedPlugins.clear();
                         this.renderPluginList();
                         this.updateBatchButtons(isInstalledTab);
                     } catch (error) {
+                        // 关闭进度提示
+                        if (toastId) {
+                            const toastEl = document.getElementById(toastId);
+                            if (toastEl) toastEl.remove();
+                        }
                         showToast(`批量${action}失败: ${error.message}`, 'error');
                     }
                 },
@@ -14067,11 +14198,22 @@
                 null,
                 async () => {
                     try {
-                        for (const plugin of installedPlugins) {
-                            plugin.installed = false;
-                            plugin.enabled = false;
-                            delete plugin.installed_version;
+                        // 显示加载提示
+                        showToast('卸载中...', 'info', 0);
+
+                        // 调用批量卸载API
+                        const pluginIds = installedPlugins.map(p => p.plugin_id);
+                        const response = await fetch(`${top_level_path}/api/plugins/batch/uninstall`, {
+                            method: 'POST',
+                            credentials: 'same-origin',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ pluginIds })
+                        });
+                        const data = await response.json();
+                        if (!data.success) {
+                            throw new Error(data.message || '批量卸载失败');
                         }
+
                         showToast(`成功卸载 ${installedPlugins.length} 个插件`, 'success');
                         this.selectedPlugins.clear();
                         if (isInstalledTab) {
@@ -14103,12 +14245,26 @@
 
             // 如果所有选中的都是启用的，则全部停用；否则全部启用
             const shouldEnable = enabledCount !== selectedPlugins.length;
+            const action = shouldEnable ? '启用' : '停用';
 
             try {
-                for (const plugin of selectedPlugins) {
-                    plugin.enabled = shouldEnable;
+                // 显示加载提示
+                showToast(`${action}中...`, 'info', 0);
+
+                // 调用批量启用/停用API
+                const pluginIds = selectedPlugins.map(p => p.plugin_id);
+                const endpoint = shouldEnable ? 'activate' : 'deactivate';
+                const response = await fetch(`${top_level_path}/api/plugins/batch/${endpoint}`, {
+                    method: 'POST',
+                    credentials: 'same-origin',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ pluginIds })
+                });
+                const data = await response.json();
+                if (!data.success) {
+                    throw new Error(data.message || `批量${action}失败`);
                 }
-                const action = shouldEnable ? '启用' : '停用';
+
                 showToast(`成功${action} ${selectedPlugins.length} 个插件`, 'success');
                 this.selectedPlugins.clear();
                 if (isInstalledTab) {
@@ -14119,7 +14275,7 @@
                     this.updateBatchButtons(false);
                 }
             } catch (error) {
-                showToast(`批量${shouldEnable ? '启用' : '停用'}失败: ${error.message}`, 'error');
+                showToast(`批量${action}失败: ${error.message}`, 'error');
             }
         }
 
