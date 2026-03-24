@@ -14403,20 +14403,17 @@
          */
         async _loadStyles(url, pluginId, maxRetries = 3) {
             return new Promise((resolve, reject) => {
-                // 检查是否已存在
+                // 移除已存在的样式（确保每次刷新都重新加载）
                 const existingStyle = document.getElementById(`plugin-style-${pluginId}`);
                 if (existingStyle) {
-                    resolve();
-                    return;
+                    existingStyle.remove();
                 }
 
-                const cacheKey = `plugin-style-${pluginId}`;
                 const loadStyle = async (retryCount = 0) => {
                     try {
-                        // 直接使用 fetch 获取 CSS 内容（避免 link 标签的 CORS 问题）
+                        // 直接使用 fetch 获取 CSS 内容（每次都从服务器获取，不使用缓存）
                         const response = await fetch(url, { 
-                            mode: 'cors',
-                            cache: 'no-cache' // 避免浏览器缓存问题
+                            cache: 'no-store' // 强制不使用缓存，直接从服务器获取
                         });
                         
                         if (!response.ok) {
@@ -14435,33 +14432,9 @@
                         style.textContent = cssText;
                         document.head.appendChild(style);
                         
-                        // 缓存到 localStorage
-                        try {
-                            localStorage.setItem(cacheKey, cssText);
-                            console.log(`✓ 样式加载成功并缓存: ${pluginId}`);
-                        } catch (e) {
-                            console.warn(`样式缓存失败: ${pluginId}`, e);
-                        }
-                        
+                        console.log(`✓ 样式加载成功: ${pluginId}`);
                         resolve();
                     } catch (error) {
-                        // 如果 fetch 失败，尝试从缓存加载
-                        const cached = localStorage.getItem(cacheKey);
-                        if (cached && retryCount === 0) {
-                            try {
-                                const style = document.createElement('style');
-                                style.id = `plugin-style-${pluginId}`;
-                                style.textContent = cached;
-                                document.head.appendChild(style);
-                                console.log(`✓ 从缓存加载样式: ${pluginId}`);
-                                resolve();
-                                return;
-                            } catch (e) {
-                                console.warn(`缓存样式加载失败: ${pluginId}`, e);
-                                localStorage.removeItem(cacheKey);
-                            }
-                        }
-                        
                         // 重试逻辑
                         if (retryCount < maxRetries - 1) {
                             const delay = 1000 * Math.pow(2, retryCount);
@@ -15327,22 +15300,17 @@
 
     // DOM 加载完成后执行
         document.addEventListener('DOMContentLoaded', () => {
-            // 清理旧的插件缓存（脚本和样式）
+            // 清理旧的插件缓存（脚本缓存）
             const keys = Object.keys(localStorage);
             let scriptCleared = 0;
-            let styleCleared = 0;
             keys.forEach(key => {
                 if (key.startsWith('plugin-script-')) {
                     localStorage.removeItem(key);
                     scriptCleared++;
-                } else if (key.startsWith('plugin-style-')) {
-                    localStorage.removeItem(key);
-                    styleCleared++;
                 }
             });
-            const totalCleared = scriptCleared + styleCleared;
-            if (totalCleared > 0) {
-                console.log(`✓ 已清理 ${scriptCleared} 个旧脚本缓存和 ${styleCleared} 个旧样式缓存`);
+            if (scriptCleared > 0) {
+                console.log(`✓ 已清理 ${scriptCleared} 个旧脚本缓存`);
             }
 
             // 延迟执行，确保其他初始化完成
