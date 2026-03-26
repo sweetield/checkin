@@ -12480,10 +12480,6 @@
                 <button id="auth-tab-invite" class="active">邀请</button>
                 <button id="auth-tab-batch">一键授权</button>
             </div>
-            <div class="auth-tabbar-right">
-                <button id="btn-grant-permissions" class="batch-auth-btn grant">赋予权限</button>
-                <button id="btn-revoke-permissions" class="batch-auth-btn revoke">移除权限</button>
-            </div>
         </div>
         <div class="auth-tabcontent">
             <!-- 邀请标签页 -->
@@ -12497,6 +12493,10 @@
                 <div class="batch-auth-container">
                     <div class="batch-auth-input-area">
                         <textarea id="batch-usernames" class="batch-usernames-input" placeholder="批量给用户添加邀请、添加好友、创建群组的权限。请输入用户名，多个用户名用英文逗号分隔&#10;例如: user1, user2, user3"></textarea>
+                    </div>
+                    <div class="batch-auth-buttons">
+                        <button id="btn-grant-permissions" class="batch-auth-btn grant">赋予权限</button>
+                        <button id="btn-revoke-permissions" class="batch-auth-btn revoke">移除权限</button>
                     </div>
                 </div>
             </div>
@@ -12526,7 +12526,6 @@
             this.batchUsernames = this.mark.querySelector("#batch-usernames");
             this.btnGrant = this.mark.querySelector("#btn-grant-permissions");
             this.btnRevoke = this.mark.querySelector("#btn-revoke-permissions");
-            this.authTabbarRight = this.mark.querySelector(".auth-tabbar-right");
 
             // 按钮组
             this.btnGroup = this.mark.querySelector("#form-mark-btn-group");
@@ -12565,15 +12564,10 @@
                 this.tabInvite.classList.add("active");
                 this.contentInvite.classList.add("active");
 
-                // 隐藏授权按钮
-                if (this.authTabbarRight) {
-                    this.authTabbarRight.style.display = "none";
-                }
-
                 // 自动加载邀请码列表
                 this.loadInviteCodes();
 
-                // 显示"生成"和"关闭"按钮
+                // 显示"生成"和"取消"按钮
                 this.btnGroup.insertAdjacentHTML("beforeend", `<button class="form-mark-btn" id="auth-generate-btn">生成</button>`);
                 const generateBtn = this.btnGroup.querySelector("#auth-generate-btn");
                 generateBtn.addEventListener("click", () => this.generateInviteCode());
@@ -12584,11 +12578,6 @@
             } else if (tabName === "batch") {
                 this.tabBatch.classList.add("active");
                 this.contentBatch.classList.add("active");
-
-                // 显示授权按钮
-                if (this.authTabbarRight) {
-                    this.authTabbarRight.style.display = "flex";
-                }
 
                 // 显示"关闭"按钮
                 this.btnGroup.insertAdjacentHTML("beforeend", `<button class="form-mark-btn">关闭</button>`);
