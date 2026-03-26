@@ -14810,14 +14810,7 @@
         _resolveUrl(path, baseUrl) {
             if (!path) return '';
             // 已经是完整 URL
-            if (path.startsWith('http://') || path.startsWith('https://')) {
-                return path;
-            }
-            // 绝对路径，需要添加首页路径前缀
-            if (path.startsWith('/')) {
-                if (top_level_path && !path.startsWith(top_level_path)) {
-                    return top_level_path + path;
-                }
+            if (path.startsWith('http://') || path.startsWith('https://') || path.startsWith('/')) {
                 return path;
             }
             // 相对路径
