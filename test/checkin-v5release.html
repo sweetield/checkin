@@ -14202,6 +14202,46 @@
             }
         }
 
+        currentUserIsPluginAdmin() {
+            return !!(
+                window.logged_admin ||
+                (
+                    window.logged_user &&
+                    (
+                        window.logged_user.contact_any === 1 ||
+                        window.logged_user.contact_any === true ||
+                        window.logged_user.is_plugin_admin === 1 ||
+                        window.logged_user.is_plugin_admin === true ||
+                        window.logged_user.is_admin === 1 ||
+                        window.logged_user.is_admin === true
+                    )
+                )
+            );
+        }
+
+        isAdminOnlyPlugin(plugin) {
+            if (!plugin) return false;
+
+            if (plugin.admin_only === true || plugin.admin_only === 1 || plugin.admin_only === '1') {
+                return true;
+            }
+
+            if (Array.isArray(plugin.permissions)) {
+                return plugin.permissions.includes('admin_only');
+            }
+
+            if (typeof plugin.permissions === 'string') {
+                try {
+                    const parsed = JSON.parse(plugin.permissions);
+                    return Array.isArray(parsed) && parsed.includes('admin_only');
+                } catch (e) {
+                    return plugin.permissions.includes('admin_only');
+                }
+            }
+
+            return false;
+        }
+
         fill() {
             // 检查是否已经存在 DOM 元素，避免重复插入
             if (this.mark.querySelector(":scope #plugin-mark-dialog")) {
@@ -14538,7 +14578,7 @@
 
         updateSelectAllCheckbox() {
             const list = this.currentTab === 'installed' ? this.installedPluginList : this.pluginList;
-            const checkboxes = list.querySelectorAll('.plugin-checkbox');
+            const checkboxes = list.querySelectorAll('.plugin-item-checkbox');
             const selectAllCheckbox = this.currentTab === 'installed' ? this.installedSelectAllCheckbox : this.selectAllCheckbox;
             
             if (checkboxes.length === 0) {
@@ -14573,7 +14613,7 @@
 
             div.innerHTML = `
                 <div class="plugin-item-header">
-                    <input type="checkbox" class="plugin-checkbox" data-plugin-id="${plugin.plugin_id}">
+                    <input type="checkbox" class="plugin-item-checkbox" data-plugin-id="${plugin.plugin_id}">
                     <div class="plugin-name-wrapper">
                         <span class="plugin-name">${plugin.name}</span>
                         <span class="${versionClass}">${versionText}</span>
@@ -14604,7 +14644,7 @@
             `;
 
             // 绑定事件
-            const checkbox = div.querySelector('.plugin-checkbox');
+            const checkbox = div.querySelector('.plugin-item-checkbox');
             checkbox.addEventListener('change', (e) => {
                 if (e.target.checked) {
                     this.selectedPlugins.add(plugin.plugin_id);
@@ -14952,7 +14992,7 @@
 
         toggleSelectAll(checked, isInstalledTab) {
             const list = isInstalledTab ? this.installedPluginList : this.pluginList;
-            const checkboxes = list.querySelectorAll('.plugin-checkbox');
+            const checkboxes = list.querySelectorAll('.plugin-item-checkbox');
             
             checkboxes.forEach(checkbox => {
                 checkbox.checked = checked;
