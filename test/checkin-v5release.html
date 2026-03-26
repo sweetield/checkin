@@ -14797,7 +14797,7 @@
             }
             
             // 使用本地插件路径
-            return `${window.location.origin}${window.top_level_path || ''}/plugins/${plugin.plugin_id}/`;
+            return `${window.location.origin}${top_level_path || ''}/plugins/${plugin.plugin_id}/`;
         }
 
         /**
@@ -17181,20 +17181,23 @@
                     cb.checked = this.selecting_checkbox.state === 1;
                     cb.indeterminate = this.selecting_checkbox.state === 2;
 
+                    // 只操作可见的项（筛选后未被隐藏的项）
+                    const visible_items = this.drive_items.filter(item => !item.summary.classList.contains("hidden"));
+
                     if (cb.checked) {
-                        for (const driveItem of this.drive_items) {
+                        for (const driveItem of visible_items) {
                             driveItem.raw_header.selecting_checkbox.state = 1;
                             driveItem.raw_header.selecting_checkbox_input.checked = true;
                             driveItem.raw_header.selecting_checkbox_input.indeterminate = false;
                         }
                     } else if (cb.indeterminate) {
-                        for (const driveItem of this.drive_items) {
+                        for (const driveItem of visible_items) {
                             driveItem.raw_header.selecting_checkbox.state = 2;
                             driveItem.raw_header.selecting_checkbox_input.checked = false;
                             driveItem.raw_header.selecting_checkbox_input.indeterminate = true;
                         }
                     } else {
-                        for (const driveItem of this.drive_items) {
+                        for (const driveItem of visible_items) {
                             driveItem.raw_header.selecting_checkbox.state = 0;
                             driveItem.raw_header.selecting_checkbox_input.checked = false;
                             driveItem.raw_header.selecting_checkbox_input.indeterminate = false;
@@ -17725,12 +17728,14 @@
             }
 
             _update_selecting_checkbox_state() {
-                let checked_count = this.get_selected_items().length;
+                // 只基于可见项来计算全选状态
+                const visible_items = this.drive_items.filter(item => !item.summary.classList.contains("hidden"));
+                let checked_count = visible_items.filter(item => item.raw_header.selecting_checkbox.state === 1).length;
                 if (checked_count === 0) {
                     this.selecting_checkbox.state = 0;
                     this.selecting_checkbox_input.checked = false;
                     this.selecting_checkbox_input.indeterminate = false;
-                } else if (checked_count === this.drive_items.length) {
+                } else if (checked_count === visible_items.length) {
                     this.selecting_checkbox.state = 1;
                     this.selecting_checkbox_input.checked = true;
                     this.selecting_checkbox_input.indeterminate = false;
@@ -30993,9 +30998,14 @@
                                         headers: {"Content-Type": "application/json"},
                                         body: JSON.stringify({target_uid: target_uid})
                                     });
-                                    const result = await response.json();
-                                    if (!result.success) {
-                                        MessageMark.report(`添加 ${target_uid} 失败：${result.message}`, null, null, null, MessageMark.colors.red);
+                                    if (response.ok) {
+                                        const result = await response.json();
+                                        if (!result.success) {
+                                            MessageMark.report(`添加 ${target_uid} 失败：${result.message}`, null, null, null, MessageMark.colors.red);
+                                        }
+                                    } else {
+                                        const errorText = await response.text();
+                                        MessageMark.report(`添加 ${target_uid} 失败：${errorText || "服务器错误"}`, null, null, null, MessageMark.colors.red);
                                     }
                                 } catch (error) {
                                     MessageMark.report(`添加 ${target_uid} 网络错误：${error.message}`, null, null, null, MessageMark.colors.red);
@@ -31022,7 +31032,12 @@
                                         });
                                         const result = await response.json();
                                         if (result.success) {
-                                            MessageMark.report(result.message || "删除好友成功！", null, null, null, MessageMark.colors.green);
+                                            if (result.failed && result.failed.length > 0) {
+                                                const failDetails = result.failed.map(f => `${f.uid}：${f.reason}`).join("\n");
+                                                MessageMark.report(`${result.message}\n${failDetails}`, null, null, null, MessageMark.colors.yellow);
+                                            } else {
+                                                MessageMark.report(result.message || "删除好友成功！", null, null, null, MessageMark.colors.green);
+                                            }
                                             formmark.remove();
                                             this.dashboard_chat.wrapper.sync_contacts();
                                         } else {
@@ -31209,9 +31224,14 @@
                                             headers: {"Content-Type": "application/json"},
                                             body: JSON.stringify({gid: gid, target_uid: target_uid})
                                         });
-                                        const result = await response.json();
-                                        if (!result.success) {
-                                            MessageMark.report(`邀请 ${target_uid} 到 ${gid} 失败：${result.message}`, null, null, null, MessageMark.colors.red);
+                                        if (response.ok) {
+                                            const result = await response.json();
+                                            if (!result.success) {
+                                                MessageMark.report(`邀请 ${target_uid} 到 ${gid} 失败：${result.message}`, null, null, null, MessageMark.colors.red);
+                                            }
+                                        } else {
+                                            const errorText = await response.text();
+                                            MessageMark.report(`邀请 ${target_uid} 到 ${gid} 失败：${errorText || "服务器错误"}`, null, null, null, MessageMark.colors.red);
                                         }
                                     } catch (error) {
                                         MessageMark.report(`邀请 ${target_uid} 到 ${gid} 网络错误：${error.message}`, null, null, null, MessageMark.colors.red);
@@ -31239,11 +31259,16 @@
                                                 headers: {"Content-Type": "application/json"},
                                                 body: JSON.stringify({gid: gid, target_uids: target_uids.join(",")})
                                             });
-                                            const result = await response.json();
-                                            if (result.success) {
-                                                successCount++;
+                                            if (response.ok) {
+                                                const result = await response.json();
+                                                if (result.success) {
+                                                    successCount++;
+                                                } else {
+                                                    failMessages.push(`从 ${gid} 移出成员失败：${result.message}`);
+                                                }
                                             } else {
-                                                failMessages.push(`从 ${gid} 移出成员失败：${result.message}`);
+                                                const errorText = await response.text();
+                                                failMessages.push(`从 ${gid} 移出成员失败：${errorText || "服务器错误"}`);
                                             }
                                         } catch (error) {
                                             failMessages.push(`从 ${gid} 移出成员网络错误：${error.message}`);
