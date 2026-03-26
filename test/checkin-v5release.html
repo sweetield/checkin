@@ -6043,6 +6043,73 @@
         color: #dc3545;
     }
 
+    .batch-auth-container {
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+        padding: 10px;
+    }
+
+    .batch-auth-input-area {
+        width: 100%;
+    }
+
+    .batch-usernames-input {
+        width: 100%;
+        min-height: 120px;
+        padding: 12px;
+        border: 1px solid #ddd;
+        border-radius: 6px;
+        font-size: 14px;
+        resize: vertical;
+        font-family: inherit;
+        box-sizing: border-box;
+    }
+
+    .batch-usernames-input:focus {
+        outline: none;
+        border-color: #007bff;
+        box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.25);
+    }
+
+    .batch-auth-buttons {
+        display: flex;
+        gap: 12px;
+        justify-content: center;
+    }
+
+    .batch-auth-btn {
+        padding: 10px 24px;
+        border: none;
+        border-radius: 6px;
+        font-size: 14px;
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+
+    .batch-auth-btn.grant {
+        background: #28a745;
+        color: white;
+    }
+
+    .batch-auth-btn.grant:hover {
+        background: #218838;
+    }
+
+    .batch-auth-btn.revoke {
+        background: #dc3545;
+        color: white;
+    }
+
+    .batch-auth-btn.revoke:hover {
+        background: #c82333;
+    }
+
+    .batch-auth-btn:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+    }
+
     .theme-dark .auth-invite-code-item {
         background: #3d3d3d;
         border-color: #555;
@@ -12120,12 +12187,25 @@
     <div id="auth-rect">
         <div class="auth-tabbar">
             <button id="auth-tab-invite" class="active">邀请</button>
+            <button id="auth-tab-batch">一键授权</button>
         </div>
         <div class="auth-tabcontent">
             <!-- 邀请标签页 -->
             <div id="auth-content-invite" class="auth-tab-pane active">
                 <div class="auth-input-row">
                     <div id="auth-invite-codes-list" class="auth-invite-codes-list"></div>
+                </div>
+            </div>
+            <!-- 一键授权标签页 -->
+            <div id="auth-content-batch" class="auth-tab-pane">
+                <div class="batch-auth-container">
+                    <div class="batch-auth-input-area">
+                        <textarea id="batch-usernames" class="batch-usernames-input" placeholder="请输入用户名，多个用户名用英文逗号分隔&#10;例如: user1, user2, user3"></textarea>
+                    </div>
+                    <div class="batch-auth-buttons">
+                        <button id="btn-grant-permissions" class="batch-auth-btn grant">一键授权</button>
+                        <button id="btn-revoke-permissions" class="batch-auth-btn revoke">取消授权</button>
+                    </div>
                 </div>
             </div>
         </div>
@@ -12143,10 +12223,17 @@
             this.tabBar = this.mark.querySelector(".auth-tabbar");
             this.tabContent = this.mark.querySelector(".auth-tabcontent");
             this.tabInvite = this.mark.querySelector("#auth-tab-invite");
+            this.tabBatch = this.mark.querySelector("#auth-tab-batch");
             this.contentInvite = this.mark.querySelector("#auth-content-invite");
+            this.contentBatch = this.mark.querySelector("#auth-content-batch");
 
             // 邀请功能元素
             this.inviteCodesList = this.mark.querySelector("#auth-invite-codes-list");
+
+            // 一键授权功能元素
+            this.batchUsernames = this.mark.querySelector("#batch-usernames");
+            this.btnGrant = this.mark.querySelector("#btn-grant-permissions");
+            this.btnRevoke = this.mark.querySelector("#btn-revoke-permissions");
 
             // 按钮组
             this.btnGroup = this.mark.querySelector("#form-mark-btn-group");
@@ -12158,6 +12245,14 @@
                 }
             });
 
+            // 标签页点击事件
+            this.tabInvite.addEventListener("click", () => this.switchTab("invite"));
+            this.tabBatch.addEventListener("click", () => this.switchTab("batch"));
+
+            // 一键授权按钮事件
+            this.btnGrant.addEventListener("click", () => this.batchSetPermissions("grant"));
+            this.btnRevoke.addEventListener("click", () => this.batchSetPermissions("revoke"));
+
             // 初始显示邀请标签页
             this.switchTab("invite");
         }
@@ -12165,7 +12260,9 @@
         switchTab(tabName) {
             // 移除所有激活状态
             this.tabInvite.classList.remove("active");
+            this.tabBatch.classList.remove("active");
             this.contentInvite.classList.remove("active");
+            this.contentBatch.classList.remove("active");
 
             // 清空按钮组
             this.btnGroup.innerHTML = "";
@@ -12186,9 +12283,65 @@
                 this.btnGroup.insertAdjacentHTML("beforeend", `<button class="form-mark-btn">取消</button>`);
                 const cancelBtn = this.btnGroup.querySelector("button:last-of-type");
                 cancelBtn.addEventListener("click", () => this.remove());
+            } else if (tabName === "batch") {
+                this.tabBatch.classList.add("active");
+                this.contentBatch.classList.add("active");
+
+                // 显示"关闭"按钮
+                this.btnGroup.insertAdjacentHTML("beforeend", `<button class="form-mark-btn">关闭</button>`);
+                const closeBtn = this.btnGroup.querySelector("button:last-of-type");
+                closeBtn.addEventListener("click", () => this.remove());
             }
 
             this.currentTab = tabName;
+        }
+
+        // 批量设置权限
+        async batchSetPermissions(action) {
+            const usernamesText = this.batchUsernames.value.trim();
+            if (!usernamesText) {
+                MessageMark.report("请输入用户名");
+                return;
+            }
+
+            const usernames = usernamesText.split(",").map(s => s.trim()).filter(s => s);
+            if (usernames.length === 0) {
+                MessageMark.report("请输入有效的用户名");
+                return;
+            }
+
+            const btn = action === "grant" ? this.btnGrant : this.btnRevoke;
+            const originalText = btn.textContent;
+            try {
+                btn.disabled = true;
+                btn.textContent = "处理中...";
+
+                const response = await fetch(`${top_level_path}/admin/api/batch_permissions`, {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify({ usernames, action })
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    showChatToast({
+                        title: action === "grant" ? "✓ 授权成功" : "✓ 已取消授权",
+                        content: result.message
+                    });
+                    this.batchUsernames.value = "";
+                } else {
+                    MessageMark.report(result.message || "操作失败");
+                }
+            } catch (error) {
+                console.error("批量设置权限错误:", error);
+                MessageMark.report("操作失败: " + error.message);
+            } finally {
+                btn.disabled = false;
+                btn.textContent = originalText;
+            }
         }
 
         async loadInviteCodes() {
