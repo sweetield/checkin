@@ -14550,7 +14550,7 @@
                     btn.addEventListener('click', () => {
                         console.log('详情按钮被点击, pluginId:', btn.dataset.pluginId);
                         const plugin = this.plugins.find(p => p.plugin_id === btn.dataset.pluginId);
-                        if (plugin) this.openPluginDetail(plugin);
+                        if (plugin) this.showPluginDetail(plugin);
                     });
                 });
 
@@ -14941,7 +14941,7 @@
         }
 
 
-        async togglePlugin(plugin) {
+        async         togglePlugin(plugin) {
             const newEnabled = !plugin.enabled;
             const endpoint = newEnabled ? 'activate' : 'deactivate';
             
@@ -14977,6 +14977,66 @@
             } catch (error) {
                 showToast(`${newEnabled ? '启用' : '停用'}失败: ${error.message}`, 'error');
             }
+        }
+
+        ensurePluginProgressEl(pluginId) {
+            const pluginItem = this.pluginList.querySelector(`.plugin-item[data-plugin-id="${pluginId}"]`) ||
+                              this.installedPluginList.querySelector(`.plugin-item[data-plugin-id="${pluginId}"]`);
+            if (!pluginItem) return null;
+
+            let progressEl = pluginItem.querySelector('.plugin-item-progress');
+            if (!progressEl) {
+                progressEl = document.createElement('div');
+                progressEl.className = 'plugin-item-progress hidden';
+                progressEl.setAttribute('data-plugin-id', pluginId);
+                progressEl.innerHTML = `
+                    <div class="plugin-progress-track">
+                        <div class="plugin-progress-bar"></div>
+                    </div>
+                    <div class="plugin-progress-text">准备中...</div>
+                `;
+                const contentEl = pluginItem.querySelector('.plugin-item-content');
+                if (contentEl) {
+                    contentEl.appendChild(progressEl);
+                } else {
+                    pluginItem.appendChild(progressEl);
+                }
+            }
+            return progressEl;
+        }
+
+        setPluginProgress(pluginId, percent, text, status = 'normal') {
+            const progressEl = this.ensurePluginProgressEl(pluginId);
+            if (!progressEl) return null;
+
+            progressEl.classList.remove('hidden');
+
+            const bar = progressEl.querySelector('.plugin-progress-bar');
+            const textEl = progressEl.querySelector('.plugin-progress-text');
+
+            if (bar) {
+                bar.style.width = `${Math.max(0, Math.min(100, percent))}%`;
+                if (status === 'error') {
+                    bar.style.background = '#dc3545';
+                } else if (status === 'success') {
+                    bar.style.background = 'linear-gradient(90deg, #28a745, #5dd39e)';
+                } else {
+                    bar.style.background = 'linear-gradient(90deg, #2196F3, #64B5F6)';
+                }
+            }
+
+            if (textEl) {
+                textEl.textContent = text;
+                if (status === 'error') {
+                    textEl.style.color = '#dc3545';
+                } else if (status === 'success') {
+                    textEl.style.color = '#28a745';
+                } else {
+                    textEl.style.color = '';
+                }
+            }
+
+            return progressEl;
         }
 
         showPluginDetail(plugin) {
@@ -30695,7 +30755,6 @@
                         }
                     }
 
-                    console.log("[sync_contacts] 联系人列表:", result);
 
                     // 比较两个集合，检测是否有变化（新增或删除）
                     const hasChanges =
