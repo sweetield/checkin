@@ -10399,7 +10399,7 @@
 
     // 页面加载完成后初始化插件管理器
     document.addEventListener('DOMContentLoaded', function() {
-        PluginManager.init();
+        // 旧版 PluginManager 已废弃，避免与新的 PluginMark 重复绑定事件
     });
 
     function update_attachment_list_item(msgattr) {
@@ -14386,15 +14386,17 @@
 
             this.currentTab = tabName;
             this.updateTheme();
+            this.updateSelectAllCheckbox();
         }
 
         async loadPlugins() {
+            this.selectedPlugins.clear();
             this.loadingElement.classList.remove("hidden");
+            this.installedLoadingElement.classList.remove("hidden");
             this.emptyElement.classList.add("hidden");
+            this.installedEmptyElement.classList.add("hidden");
 
             try {
-                // 模拟从后端获取插件列表
-                // 实际应用中应该调用 API: GET /api/plugins
                 this.plugins = await this.fetchPlugins();
                 this.renderPluginList();
             } catch (error) {
@@ -14403,6 +14405,8 @@
                 this.emptyElement.classList.remove("hidden");
             } finally {
                 this.loadingElement.classList.add("hidden");
+                this.installedLoadingElement.classList.add("hidden");
+                this.updateBatchButtons(this.currentTab === 'installed');
             }
         }
 
@@ -14495,6 +14499,15 @@
                                     <span class="plugin-item-version">v${plugin.version || '1.0.0'}</span>
                                 </div>
                                 <p class="plugin-item-description">${plugin.description || '暂无描述'}</p>
+                                ${isPluginAdmin ? `
+                                <div class="plugin-usage-meta">
+                                    <span class="plugin-usage-badge ${Number(plugin.usage_count || 0) === 0 ? 'zero' : 'nonzero'}">
+                                        使用人数：${Number(plugin.usage_count || 0)}
+                                    </span>
+                                    <span class="plugin-usage-badge">
+                                        缓存：${plugin.cache_exists ? '已缓存' : '未缓存'}
+                                    </span>
+                                </div>` : ''}
 
                                 <div class="plugin-item-progress hidden" data-plugin-id="${plugin.plugin_id}">
                                     <div class="plugin-progress-track">
@@ -14568,34 +14581,47 @@
                 });
 
                 container.querySelectorAll('.plugin-item-checkbox').forEach(cb => {
-                    cb.addEventListener('change', () => this.updateBatchButtons(cb.dataset.installed === '1'));
+                    cb.checked = this.selectedPlugins.has(cb.dataset.pluginId);
+                    cb.addEventListener('change', () => {
+                        const pluginId = cb.dataset.pluginId;
+                        if (cb.checked) {
+                            this.selectedPlugins.add(pluginId);
+                        } else {
+                            this.selectedPlugins.delete(pluginId);
+                        }
+                        this.updateSelectAllCheckbox();
+                    });
                 });
             };
 
             bindEvents(this.pluginList);
             bindEvents(this.installedPluginList);
+            this.updateSelectAllCheckbox();
         }
 
         updateSelectAllCheckbox() {
-            const list = this.currentTab === 'installed' ? this.installedPluginList : this.pluginList;
+            const isInstalledTab = this.currentTab === 'installed';
+            const list = isInstalledTab ? this.installedPluginList : this.pluginList;
             const checkboxes = list.querySelectorAll('.plugin-item-checkbox');
-            const selectAllCheckbox = this.currentTab === 'installed' ? this.installedSelectAllCheckbox : this.selectAllCheckbox;
-            
+            const selectAllCheckbox = isInstalledTab ? this.installedSelectAllCheckbox : this.selectAllCheckbox;
+
+            if (!selectAllCheckbox) return;
+
             if (checkboxes.length === 0) {
                 selectAllCheckbox.checked = false;
+                selectAllCheckbox.indeterminate = false;
                 selectAllCheckbox.disabled = true;
+                this.updateBatchButtons(isInstalledTab);
                 return;
             }
 
             selectAllCheckbox.disabled = false;
             const allChecked = Array.from(checkboxes).every(cb => cb.checked);
             const someChecked = Array.from(checkboxes).some(cb => cb.checked);
-            
+
             selectAllCheckbox.checked = allChecked;
             selectAllCheckbox.indeterminate = someChecked && !allChecked;
-
-            // 更新批量操作按钮状态
-            this.updateBatchButtons(this.currentTab === 'installed');
+            this.updateBatchButtons(isInstalledTab);
         }
 
         createPluginItem(plugin) {
@@ -14968,25 +14994,28 @@
             }
         }
 
+        openPluginDetail(plugin) {
+            return this.showPluginDetail(plugin);
+        }
+
         showPluginDetail(plugin) {
-            // 使用新的 PluginDetailMark 类显示插件详情
-            const detailMark = PluginDetailMark.show(
+            PluginDetailMark.show(
                 document.body,
                 {
+                    plugin_id: plugin.plugin_id,
                     name: plugin.name,
                     description: plugin.description,
                     author: plugin.author,
                     version: plugin.version,
                     permissions: plugin.permissions || '无特殊权限',
                     admin_only: plugin.admin_only || false,
+                    compatibility: plugin.compatibility || '未知',
+                    homepage: plugin.homepage || '',
+                    repository: plugin.repository || '',
                     updateTime: plugin.updateTime || '未知'
                 },
-                (pluginData) => {
-                    // 插件详情关闭
-                },
-                (pluginData) => {
-                    console.log('插件详情确定', pluginData);
-                }
+                () => {},
+                () => {}
             );
         }
 
