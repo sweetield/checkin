@@ -14810,7 +14810,14 @@
         _resolveUrl(path, baseUrl) {
             if (!path) return '';
             // 已经是完整 URL
-            if (path.startsWith('http://') || path.startsWith('https://') || path.startsWith('/')) {
+            if (path.startsWith('http://') || path.startsWith('https://')) {
+                return path;
+            }
+            // 绝对路径，需要添加首页路径前缀
+            if (path.startsWith('/')) {
+                if (top_level_path && !path.startsWith(top_level_path)) {
+                    return top_level_path + path;
+                }
                 return path;
             }
             // 相对路径
@@ -30991,6 +30998,8 @@
                         // 根据操作类型执行不同逻辑
                         if (action === "add") {
                             // 批量添加好友逻辑
+                            let addSuccessCount = 0;
+                            let addFailCount = 0;
                             for (const target_uid of target_uids) {
                                 try {
                                     const response = await fetch(`${top_level_path}/chat/api/add_friend`, {
@@ -31000,18 +31009,27 @@
                                     });
                                     if (response.ok) {
                                         const result = await response.json();
-                                        if (!result.success) {
+                                        if (result.success) {
+                                            addSuccessCount++;
+                                        } else {
+                                            addFailCount++;
                                             MessageMark.report(`添加 ${target_uid} 失败：${result.message}`, null, null, null, MessageMark.colors.red);
                                         }
                                     } else {
+                                        addFailCount++;
                                         const errorText = await response.text();
                                         MessageMark.report(`添加 ${target_uid} 失败：${errorText || "服务器错误"}`, null, null, null, MessageMark.colors.red);
                                     }
                                 } catch (error) {
+                                    addFailCount++;
                                     MessageMark.report(`添加 ${target_uid} 网络错误：${error.message}`, null, null, null, MessageMark.colors.red);
                                 }
                             }
-                            MessageMark.report(`批量操作完成，共处理 ${target_uids.length} 个好友`, null, null, null, MessageMark.colors.green);
+                            if (addSuccessCount > 0) {
+                                MessageMark.report(`成功添加 ${addSuccessCount} 个好友${addFailCount > 0 ? `，${addFailCount} 个失败` : ""}`, null, null, null, addFailCount > 0 ? MessageMark.colors.yellow : MessageMark.colors.green);
+                            } else if (addFailCount > 0) {
+                                MessageMark.report(`添加好友失败，共 ${addFailCount} 个失败`, null, null, null, MessageMark.colors.red);
+                            }
                             formmark.remove();
                             // 刷新联系人列表
                             this.dashboard_chat.wrapper.sync_contacts();
@@ -31216,6 +31234,8 @@
                         // 根据操作类型执行不同逻辑
                         if (action === "invite") {
                             // 批量邀请用户逻辑
+                            let inviteSuccessCount = 0;
+                            let inviteFailCount = 0;
                             for (const gid of selectedGids) {
                                 for (const target_uid of target_uids) {
                                     try {
@@ -31226,19 +31246,28 @@
                                         });
                                         if (response.ok) {
                                             const result = await response.json();
-                                            if (!result.success) {
+                                            if (result.success) {
+                                                inviteSuccessCount++;
+                                            } else {
+                                                inviteFailCount++;
                                                 MessageMark.report(`邀请 ${target_uid} 到 ${gid} 失败：${result.message}`, null, null, null, MessageMark.colors.red);
                                             }
                                         } else {
+                                            inviteFailCount++;
                                             const errorText = await response.text();
                                             MessageMark.report(`邀请 ${target_uid} 到 ${gid} 失败：${errorText || "服务器错误"}`, null, null, null, MessageMark.colors.red);
                                         }
                                     } catch (error) {
+                                        inviteFailCount++;
                                         MessageMark.report(`邀请 ${target_uid} 到 ${gid} 网络错误：${error.message}`, null, null, null, MessageMark.colors.red);
                                     }
                                 }
                             }
-                            MessageMark.report(`批量操作完成，共处理 ${selectedGids.length} 个群组、${target_uids.length} 个用户`, null, null, null, MessageMark.colors.green);
+                            if (inviteSuccessCount > 0) {
+                                MessageMark.report(`成功邀请 ${inviteSuccessCount} 次${inviteFailCount > 0 ? `，${inviteFailCount} 次失败` : ""}`, null, null, null, inviteFailCount > 0 ? MessageMark.colors.yellow : MessageMark.colors.green);
+                            } else if (inviteFailCount > 0) {
+                                MessageMark.report(`邀请失败，共 ${inviteFailCount} 次失败`, null, null, null, MessageMark.colors.red);
+                            }
                             formmark.remove();
                         } else if (action === "remove") {
                             // 确认移出
