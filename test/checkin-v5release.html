@@ -4596,6 +4596,10 @@
             /* -webkit-backdrop-filter: blur(2px); */
         }
 
+        .theme-dark div.blur-mark {
+            background: rgba(0, 0, 0, 0.59);
+        }
+
     </style>
 
     <!--遮罩内容 转圈动画-->
@@ -6355,6 +6359,105 @@
             padding: 0;
         }
 
+        /* 多选下拉组件样式 */
+        div.form-mark-multiselect {
+            position: relative;
+            display: inline-block;
+        }
+
+        input.form-mark-multiselect-header {
+            cursor: pointer;
+            min-width: 50ch;
+        }
+
+        div.form-mark-multiselect-dropdown {
+            display: none;
+            z-index: 10000;
+            background: #fff;
+            border: 1px solid #ccc;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            max-height: 250px;
+            overflow: hidden;
+        }
+
+        input.form-mark-multiselect-search {
+            width: 100%;
+            padding: 6px 8px;
+            border: none;
+            border-bottom: 1px solid #eee;
+            outline: none;
+            font-size: 14px;
+            box-sizing: border-box;
+        }
+
+        div.form-mark-multiselect-options {
+            max-height: 200px;
+            overflow-y: auto;
+        }
+
+        div.form-mark-multiselect-options::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        div.form-mark-multiselect-options::-webkit-scrollbar-track {
+            background: #f1f1f1;
+        }
+
+        div.form-mark-multiselect-options::-webkit-scrollbar-thumb {
+            background: #c1c1c1;
+            border-radius: 3px;
+        }
+
+        label.form-mark-multiselect-option {
+            display: flex;
+            flex-direction: row;
+            align-items: center;
+            gap: 8px;
+            padding: 6px 10px;
+            cursor: pointer;
+            transition: background 0.15s;
+        }
+
+        label.form-mark-multiselect-option:hover {
+            background: #f0f7ff;
+        }
+
+        label.form-mark-multiselect-option.selected {
+            background: #e8f4fc;
+        }
+
+        label.form-mark-multiselect-option.hidden {
+            display: none;
+        }
+
+        label.form-mark-multiselect-option input[type="checkbox"] {
+            cursor: pointer;
+        }
+
+        /* 暗色模式适配 */
+        body.dark-mode div.form-mark-multiselect-dropdown,
+        .theme-dark div.form-mark-multiselect-dropdown {
+            background: #2a2a2a;
+            border-color: #444;
+        }
+
+        body.dark-mode input.form-mark-multiselect-search,
+        .theme-dark input.form-mark-multiselect-search {
+            background: #333;
+            color: #fff;
+            border-color: #444;
+        }
+
+        body.dark-mode label.form-mark-multiselect-option:hover,
+        .theme-dark label.form-mark-multiselect-option:hover {
+            background: #3a3a3a;
+        }
+
+        body.dark-mode label.form-mark-multiselect-option.selected,
+        .theme-dark label.form-mark-multiselect-option.selected {
+            background: #1a3a4a;
+        }
+
     </style>
 
     <!--树-->
@@ -6595,6 +6698,54 @@
 
         .drive-action-btn:active {
             background-color: rgba(0, 123, 255, 0.4) !important;
+        }
+
+        .drive-search {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 4px 4px;
+            margin-left: auto;
+            flex: 1;
+            min-width: 0;
+        }
+
+        .drive-search-input {
+            flex: 1;
+            padding: 6px 10px;
+            font-size: 14px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+
+        .drive-search-input:focus {
+            border-color: #007bff;
+        }
+
+        .theme-dark .drive-search-input {
+            background: #3d3d3d;
+            border-color: #555;
+            color: #e0e0e0;
+        }
+
+        .theme-dark .drive-search-input:focus {
+            border-color: #63b3ed;
+        }
+
+        .theme-dark .drive-search-input::placeholder {
+            color: #888;
+        }
+
+        .drive-search-count {
+            font-size: 12px;
+            color: #666;
+            white-space: nowrap;
+        }
+
+        .theme-dark .drive-search-count {
+            color: #aaa;
         }
 
         .drive-items-wrap {
@@ -7063,6 +7214,17 @@
         }
 
         span.chat-contact-pin-icon.hidden {
+            display: none;
+        }
+
+        span.chat-contact-mute-icon {
+            font-size: 16px;
+            color: #f00;
+            margin-left: 2px;
+            margin-right: 2px;
+        }
+
+        span.chat-contact-mute-icon.hidden {
             display: none;
         }
 
@@ -11597,8 +11759,14 @@
             else if (row.type === "linetext") {
                 this.#add_input_element_linetext(row, input_group);
             } //
+            else if (row.type === "password") {
+                this.#add_input_element_password(row, input_group);
+            } //
             else if (row.type === "combobox") {
                 this.#add_input_element_combobox(row, input_group);
+            } //
+            else if (row.type === "checkboxlist") {
+                this.#add_input_element_checkboxlist(row, input_group);
             } //
             else if (row.type === "groupbox") {
                 this.#add_input_element_groupbox(row, input_group);
@@ -11657,7 +11825,20 @@
 
             // row.input_element.style.width = `fit-content`;
             // row.input_element.style.maxWidth = `300px`;
-            row.input_element.style.width = `30ch`;
+            row.input_element.style.width = `50ch`;
+        }
+
+        #add_input_element_password(row, input_group) {
+            let html = `
+<label>${row.label}<input type="text"></label>
+`;
+            input_group.insertAdjacentHTML("beforeend", html);
+            row.label_element = input_group.querySelector(":scope > label:last-of-type");
+            row.input_element = row.label_element.querySelector(":scope > input");
+
+            row.input_element.value = row.value || "";
+            row.input_element.placeholder = row.placeholder || "";
+            row.input_element.style.width = `50ch`;
         }
 
         #add_input_element_combobox(row, input_group) {
@@ -11677,6 +11858,124 @@
             }
 
             row.input_element.value = row.value;
+        }
+
+        #add_input_element_checkboxlist(row, input_group) {
+            // 创建多选下拉组件（放在label里，模拟select外观）
+            const containerId = `multiselect-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+            const dropdownId = `multiselect-dropdown-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+            let containerHtml = `
+<label>${row.label}<div class="form-mark-multiselect" id="${containerId}">
+    <input type="text" class="form-mark-multiselect-header" readonly placeholder="请选择要邀请/移除好友的群组，支持选择多个一并操作">
+</div></label>
+`;
+            input_group.insertAdjacentHTML("beforeend", containerHtml);
+            row.label_element = input_group.querySelector(":scope > label:last-of-type");
+            row.input_element = row.label_element.querySelector(`#${containerId}`);
+            row.checkboxes = [];
+            row.selectedValues = row.value || [];
+
+            const container = row.input_element;
+            const header = container.querySelector(".form-mark-multiselect-header");
+
+            // 下拉菜单放到body下，避免被容器裁剪
+            let dropdownHtml = `
+<div class="form-mark-multiselect-dropdown" id="${dropdownId}">
+    <input type="text" class="form-mark-multiselect-search" placeholder="搜索...">
+    <div class="form-mark-multiselect-options"></div>
+</div>
+`;
+            document.body.insertAdjacentHTML("beforeend", dropdownHtml);
+            const dropdown = document.body.querySelector(`#${dropdownId}`);
+            const searchInput = dropdown.querySelector(".form-mark-multiselect-search");
+            const optionsContainer = dropdown.querySelector(".form-mark-multiselect-options");
+
+            // 更新下拉菜单位置
+            const updateDropdownPosition = () => {
+                const rect = header.getBoundingClientRect();
+                dropdown.style.position = "fixed";
+                dropdown.style.top = `${rect.bottom}px`;
+                dropdown.style.left = `${rect.left}px`;
+                dropdown.style.width = `${rect.width}px`;
+            };
+
+            // 添加选项
+            for (const optionKey in row.options) {
+                const checkboxId = `cb-${optionKey}-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+                const isSelected = row.selectedValues.includes(optionKey);
+                let optionHtml = `
+<label class="form-mark-multiselect-option${isSelected ? ' selected' : ''}" data-value="${optionKey}" data-display="${row.options[optionKey]}">
+    <input type="checkbox" id="${checkboxId}" value="${optionKey}" ${isSelected ? 'checked' : ''}>
+    <span>${row.options[optionKey]}</span>
+</label>
+`;
+                optionsContainer.insertAdjacentHTML("beforeend", optionHtml);
+                const optionLabel = optionsContainer.querySelector(":scope > label:last-of-type");
+                const checkbox = optionLabel.querySelector(":scope > input");
+                row.checkboxes.push({key: optionKey, display: row.options[optionKey], element: checkbox, label: optionLabel});
+            }
+
+            // 更新显示的文本
+            const updateDisplay = () => {
+                const selected = row.checkboxes.filter(cb => cb.element.checked);
+                if (selected.length === 0) {
+                    header.value = "";
+                    header.placeholder = "请选择要邀请/移除好友的群组，支持选择多个一并操作";
+                } else {
+                    header.value = selected.map(cb => cb.display).join(", ");
+                }
+            };
+
+            // 初始化显示
+            updateDisplay();
+
+            // 点击头部展开/收起
+            header.addEventListener("click", () => {
+                const isOpen = container.classList.toggle("open");
+                if (isOpen) {
+                    updateDropdownPosition();
+                    dropdown.style.display = "block";
+                    searchInput.focus();
+                } else {
+                    dropdown.style.display = "none";
+                }
+            });
+
+            // 点击外部关闭
+            document.addEventListener("click", (e) => {
+                if (!container.contains(e.target) && !dropdown.contains(e.target)) {
+                    container.classList.remove("open");
+                    dropdown.style.display = "none";
+                }
+            });
+
+            // 搜索功能
+            searchInput.addEventListener("input", (e) => {
+                const keyword = e.target.value.toLowerCase();
+                row.checkboxes.forEach(cb => {
+                    const display = cb.display.toLowerCase();
+                    if (display.includes(keyword)) {
+                        cb.label.classList.remove("hidden");
+                    } else {
+                        cb.label.classList.add("hidden");
+                    }
+                });
+            });
+
+            // 选项点击
+            row.checkboxes.forEach(cb => {
+                cb.element.addEventListener("change", () => {
+                    if (cb.element.checked) {
+                        cb.label.classList.add("selected");
+                    } else {
+                        cb.label.classList.remove("selected");
+                    }
+                    // 更新 row.value 和 row.input_element.value
+                    row.value = row.checkboxes.filter(cb => cb.element.checked).map(cb => cb.key);
+                    row.input_element.value = row.value;
+                    updateDisplay();
+                });
+            });
         }
 
         #add_input_element_groupbox(row, input_group) {
@@ -11770,6 +12069,8 @@
                 if (row.type === "textarea") {
                     row.value = row.input_element.value;
                 } else if (row.type === "linetext") {
+                    row.value = row.input_element.value;
+                } else if (row.type === "password") {
                     row.value = row.input_element.value;
                 } else if (row.type === "combobox") {
                     row.value = row.input_element.value;
@@ -14496,7 +14797,7 @@
             }
             
             // 使用本地插件路径
-            return `${window.location.origin}${window.top_level_path || ''}/plugins/${plugin.plugin_id}/`;
+            return `${window.location.origin}${top_level_path || ''}/plugins/${plugin.plugin_id}/`;
         }
 
         /**
@@ -14509,7 +14810,14 @@
         _resolveUrl(path, baseUrl) {
             if (!path) return '';
             // 已经是完整 URL
-            if (path.startsWith('http://') || path.startsWith('https://') || path.startsWith('/')) {
+            if (path.startsWith('http://') || path.startsWith('https://')) {
+                return path;
+            }
+            // 绝对路径，需要添加首页路径前缀
+            if (path.startsWith('/')) {
+                if (top_level_path && !path.startsWith(top_level_path)) {
+                    return top_level_path + path;
+                }
                 return path;
             }
             // 相对路径
@@ -14813,7 +15121,7 @@
                 async getConfig() {
                     self.requirePermission('storage');
                     try {
-                        const response = await fetch(`/api/plugins/${self.pluginId}/config`, {
+                        const response = await fetch(`${top_level_path}/api/plugins/${self.pluginId}/config`, {
                             credentials: 'same-origin'
                         });
                         if (response.ok) {
@@ -14834,7 +15142,7 @@
                 async setConfig(config) {
                     self.requirePermission('storage');
                     try {
-                        const response = await fetch(`/api/plugins/${self.pluginId}/config`, {
+                        const response = await fetch(`${top_level_path}/api/plugins/${self.pluginId}/config`, {
                             method: 'POST',
                             credentials: 'same-origin',
                             headers: { 'Content-Type': 'application/json' },
@@ -16838,6 +17146,10 @@
     <button class="drive-action-btn hidden-btn" id="dab-batch-trash">移到垃圾桶</button>
     <button class="drive-action-btn hidden-btn" id="dab-batch-restore">移出垃圾桶</button>
     <button class="drive-action-btn hidden-btn" id="dab-batch-delete">永久删除</button>
+    <div class="drive-search">
+        <input type="text" class="drive-search-input" placeholder="搜索文件（支持正则）">
+        <span class="drive-search-count"></span>
+    </div>
 </div>
 <div class="drive-items-wrap">
     <p class="hidden">此处没有文件。</p>
@@ -16852,6 +17164,13 @@
                 this.element_drive_items_wrap = this.drive_rect.querySelector(":scope div.drive-items-wrap");
                 this.element_drive_items_nothings_tip = this.drive_rect.querySelector(":scope div.drive-items-wrap > p");
                 this.element_drive_items = this.drive_rect.querySelector(":scope div.drive-items");
+
+                // 搜索框
+                this.drive_search_input = this.drive_actions.querySelector(":scope input.drive-search-input");
+                this.drive_search_count = this.drive_actions.querySelector(":scope span.drive-search-count");
+                this.drive_search_input.addEventListener("input", (event) => {
+                    this.filter_items();
+                });
 
                 // 返回键
                 this.element_header_btn_close = this.drive_rect.querySelector(":scope button.drive-header-btn-close");
@@ -16869,20 +17188,23 @@
                     cb.checked = this.selecting_checkbox.state === 1;
                     cb.indeterminate = this.selecting_checkbox.state === 2;
 
+                    // 只操作可见的项（筛选后未被隐藏的项）
+                    const visible_items = this.drive_items.filter(item => !item.summary.classList.contains("hidden"));
+
                     if (cb.checked) {
-                        for (const driveItem of this.drive_items) {
+                        for (const driveItem of visible_items) {
                             driveItem.raw_header.selecting_checkbox.state = 1;
                             driveItem.raw_header.selecting_checkbox_input.checked = true;
                             driveItem.raw_header.selecting_checkbox_input.indeterminate = false;
                         }
                     } else if (cb.indeterminate) {
-                        for (const driveItem of this.drive_items) {
+                        for (const driveItem of visible_items) {
                             driveItem.raw_header.selecting_checkbox.state = 2;
                             driveItem.raw_header.selecting_checkbox_input.checked = false;
                             driveItem.raw_header.selecting_checkbox_input.indeterminate = true;
                         }
                     } else {
-                        for (const driveItem of this.drive_items) {
+                        for (const driveItem of visible_items) {
                             driveItem.raw_header.selecting_checkbox.state = 0;
                             driveItem.raw_header.selecting_checkbox_input.checked = false;
                             driveItem.raw_header.selecting_checkbox_input.indeterminate = false;
@@ -17413,12 +17735,14 @@
             }
 
             _update_selecting_checkbox_state() {
-                let checked_count = this.get_selected_items().length;
+                // 只基于可见项来计算全选状态
+                const visible_items = this.drive_items.filter(item => !item.summary.classList.contains("hidden"));
+                let checked_count = visible_items.filter(item => item.raw_header.selecting_checkbox.state === 1).length;
                 if (checked_count === 0) {
                     this.selecting_checkbox.state = 0;
                     this.selecting_checkbox_input.checked = false;
                     this.selecting_checkbox_input.indeterminate = false;
-                } else if (checked_count === this.drive_items.length) {
+                } else if (checked_count === visible_items.length) {
                     this.selecting_checkbox.state = 1;
                     this.selecting_checkbox_input.checked = true;
                     this.selecting_checkbox_input.indeterminate = false;
@@ -17519,6 +17843,85 @@
                 const path_item = this.current_path_item();
                 this.switch_action_btns__root(path_item);
                 this.fetch_list(path_item);
+            }
+
+            filter_items() {
+                const keyword = this.drive_search_input.value.trim();
+                let visible_count = 0;
+                let has_regex_error = false;
+
+                if (keyword === "") {
+                    for (const item of this.drive_items) {
+                        item.summary.classList.remove("hidden");
+                        visible_count++;
+                    }
+                    this.drive_search_count.textContent = "";
+                    this.element_drive_items_nothings_tip.classList.add("hidden");
+                    return;
+                }
+
+                let regex = null;
+                try {
+                    regex = new RegExp(keyword, "i");
+                } catch (e) {
+                    has_regex_error = true;
+                }
+
+                for (const item of this.drive_items) {
+                    const name = this.get_item_display_name(item);
+                    
+                    if (has_regex_error) {
+                        if (name.includes(keyword)) {
+                            item.summary.classList.remove("hidden");
+                            visible_count++;
+                        } else {
+                            item.summary.classList.add("hidden");
+                        }
+                    } else {
+                        if (regex.test(name)) {
+                            item.summary.classList.remove("hidden");
+                            visible_count++;
+                        } else {
+                            item.summary.classList.add("hidden");
+                        }
+                    }
+                }
+
+                if (has_regex_error) {
+                    this.drive_search_count.textContent = `正则错误`;
+                    this.drive_search_count.style.color = "#dc3545";
+                } else {
+                    this.drive_search_count.textContent = `${visible_count}/${this.drive_items.length}`;
+                    this.drive_search_count.style.color = "";
+                }
+
+                if (visible_count === 0) {
+                    this.element_drive_items_nothings_tip.classList.remove("hidden");
+                } else {
+                    this.element_drive_items_nothings_tip.classList.add("hidden");
+                }
+            }
+
+            get_item_display_name(item) {
+                if (!item) return "";
+                
+                // 优先使用解密后的明文文件名
+                if (item.attr && item.attr.plain_name) {
+                    return item.attr.plain_name;
+                }
+                
+                // 其次使用加密前的文件名（如果未加密）
+                if (item.attr && item.attr.name) {
+                    return item.attr.name;
+                }
+                
+                // 最后从 raw_header 中获取（可能是加密的）
+                if (item.raw_header) {
+                    const nameElement = item.raw_header.querySelector(":scope p.drive-item-info-name");
+                    return nameElement ? nameElement.textContent : "";
+                }
+                
+                return "";
             }
 
             switch_action_btns__root(path_item) {
@@ -18319,6 +18722,8 @@
                 super.open_page();
                 // 初始化置顶状态
                 this.chat_pin_status = this.li.bindmap.status_attr.editions && this.li.bindmap.status_attr.editions.includes(-999999);
+                // 初始化禁言状态
+                this.group_mute_status = false;
                 // 清空附件列表，确保切换会话时重新渲染
                 this.panel.attachments = [];
                 // 重新扫描当前会话的所有消息，将文件消息重新添加到附件列表
@@ -18623,6 +19028,28 @@
                             },
                         },
                         {type: "section", text: "",},
+                    );
+
+                    // 检查是否为群组会话且当前用户是否为群主
+                    const {xxid, contact_type} = this.current_contact_xxid();
+                    if (contact_type === subviews.Chat.receiver_type.group) {
+                        const isGroupOwner = this.is_group_owner(xxid);
+                        if (isGroupOwner) {
+                            items.push(
+                                {
+                                    type: "button",
+                                    text: this.group_mute_status ? "解除群组禁言" : "开启群组禁言",
+                                    icon: this.group_mute_status ? "bi-mic-mute-fill" : "bi-mic-fill",
+                                    callback: (function() {
+                                        this.toggle_group_mute();
+                                    }).bind(this),
+                                },
+                                {type: "section", text: "",},
+                            );
+                        }
+                    }
+
+                    items.push(
                         {
                             type: "button", text: "导出聊天记录", callback: event => {
                                 this.output_msgs();
@@ -20236,6 +20663,16 @@
 
                 console.log(`[消息加载] 本次加载了 ${result.messages.length} 条消息`);
 
+                // 初始化群组禁言状态
+                const {xxid, contact_type} = this.current_contact_xxid();
+                if (contact_type === subviews.Chat.receiver_type.group) {
+                    // 从 sync_result 中获取禁言状态
+                    if (result.sync && result.sync.muted !== undefined) {
+                        this.group_mute_status = result.sync.muted;
+                        this.update_input_state();
+                    }
+                }
+
                 let need_refresh_replies = false;
 
                 if (result.is_found_last_message) { // 按请求的起始消息
@@ -20423,8 +20860,8 @@
                         } else if (citeMessage.msg_type === 'file') {
                             citeText = `<i class="bi bi-file-earmark"></i> 文件 ${citeMessage.file_name}`;
                         } else {
-                            // 文本消息
-                            citeText = citeMessage.text.replace(/\n/g, "\n> ");
+                            // 文本消息 - 过滤掉引用内容，只提取纯回复文本
+                            citeText = this.extract_text_without_quotes(citeMessage.text);
                         }
 
                         // 将引用信息格式化为 Markdown blockquote 格式（以 > 开头）
@@ -24196,15 +24633,8 @@
                     })
                     .then(result => {
                         if (this.closed) return;
-                        if (result.announcement) {
-                            this.render_announcement(result);
-                        } else {
-                            this.render_announcement({
-                                announcement: "",
-                                editor_uid: null,
-                                updated_time: null
-                            });
-                        }
+                        // 无论公告是否有内容，都传递完整的 result 对象（包括 creator）
+                        this.render_announcement(result);
                     }).catch(error => {
                     if (this.closed) return;
                     console.error("获取群公告失败:", error);
@@ -24214,8 +24644,8 @@
 
             // 渲染群公告
             async render_announcement(data) {
-                const {announcement, editor_uid, updated_time} = data;
-                
+                const {announcement, editor_uid, updated_time, creator} = data;
+
                 // 只有在有公告内容时才解密
                 let plainAnnouncement = "";
                 if (announcement) {
@@ -24234,11 +24664,16 @@
                     formattedTime = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')} ${String(date.getHours()).padStart(2, '0')}:${String(date.getMinutes()).padStart(2, '0')}`;
                 }
 
+                // 判断当前用户是否为群主或管理员
+                const isCreator = creator && logged_user.uid === creator;
+                const isAdmin = logged_user.contact_any === 1;
+                const canEdit = isCreator || isAdmin;
+
                 // 渲染消息流顶部的公告（只有有公告内容时才显示）
                 if (this.e_announcement) {
                     if (plainAnnouncement) {
                         const displayMeta = `由 ${editor_uid || '未知'} 编辑于 ${formattedTime || '未知时间'}`;
-                        
+
                         // 使用与置顶消息相同的样式，布局：[公告图标|编辑者名称|分隔符|公告内容|时间戳|编辑按钮]
                         this.e_announcement.innerHTML = `
                             <div class="chat-message msg-pinned" style="background: rgba(155, 205, 255, 0.34); display: flex; flex-direction: row; align-items: center; gap: 8px; padding: 8px 12px; border-bottom: 1px solid rgba(74, 144, 226, 0.2); width: auto;">
@@ -24247,22 +24682,24 @@
                                 <span class="pinned-separator">|</span>
                                 <div class="chat-message-content-text chat-announcement-message-text" data-raw-content="${MarkdownResolver.escapeHTML(plainAnnouncement)}"></div>
                                 <span style="font-size: 11px; color: #999; flex-shrink: 0;">${formattedTime || ''}</span>
-                                <button class="chat-session-announcement-edit-btn" title="编辑公告" style="background: transparent; border: none; font-size: 13px; color: #4a90e2; cursor: pointer; padding: 2px 6px; border-radius: 4px; transition: all 0.2s; flex-shrink: 0; margin-left: 4px;">
+                                ${canEdit ? `<button class="chat-session-announcement-edit-btn" title="编辑公告" style="background: transparent; border: none; font-size: 13px; color: #4a90e2; cursor: pointer; padding: 2px 6px; border-radius: 4px; transition: all 0.2s; flex-shrink: 0; margin-left: 4px;">
                                     <i class="bi bi-pencil"></i>
-                                </button>
+                                </button>` : ''}
                             </div>
                         `;
-                        
+
                         // 使用 MarkdownResolver 解析 Markdown 和 HTML 语法，移除多余换行
                         const contentEl = this.e_announcement.querySelector(".chat-message-content-text");
                         const renderedHtml = MarkdownResolver.to_html(plainAnnouncement).replace(/\n/g, ' ');
                         contentEl.innerHTML = renderedHtml;
-                        
+
                         this.e_announcement.classList.remove("hidden");
 
-                        // 绑定编辑按钮事件
-                        const editBtn = this.e_announcement.querySelector(".chat-session-announcement-edit-btn");
-                        editBtn.addEventListener("click", () => this.open_announcement_editor());
+                        // 绑定编辑按钮事件（群主或管理员可以看到编辑按钮）
+                        if (canEdit) {
+                            const editBtn = this.e_announcement.querySelector(".chat-session-announcement-edit-btn");
+                            editBtn.addEventListener("click", () => this.open_announcement_editor());
+                        }
                     } else {
                         // 没有公告时隐藏
                         this.hide_announcement();
@@ -24271,12 +24708,12 @@
 
                 // 渲染扩展栏中的公告（只有当扩展栏已初始化时才渲染）
                 if (this.e_online_members_wrapper) {
-                    this.render_sidebar_announcement(plainAnnouncement, editor_uid, formattedTime);
+                    this.render_sidebar_announcement(plainAnnouncement, editor_uid, formattedTime, creator);
                 }
             }
 
             // 渲染扩展栏中的公告
-            render_sidebar_announcement(content, editor_uid, updated_time, gid = null) {
+            render_sidebar_announcement(content, editor_uid, updated_time, creator = null) {
                 // 检查扩展栏是否已初始化
                 if (!this.e_online_members_wrapper) {
                     return;
@@ -24289,9 +24726,14 @@
                 if (oldAnnouncementContent) oldAnnouncementContent.remove();
 
                 const displayContent = content || "暂无群公告";
-                const displayMeta = content 
+                const displayMeta = content
                     ? `由 ${editor_uid || '未知'} 编辑于 ${updated_time || '未知时间'}`
                     : "";
+
+                // 判断当前用户是否为群主或管理员
+                const isCreator = creator && logged_user.uid === creator;
+                const isAdmin = logged_user.contact_any === 1;
+                const canEdit = isCreator || isAdmin;
 
                 // 公告标题（使用与成员标题相同的样式）
                 const announcementTitle = document.createElement("div");
@@ -24302,24 +24744,22 @@
                 announcementTitleText.style.flexShrink = "0";
                 announcementTitle.appendChild(announcementTitleText);
 
-                // 总是添加编辑按钮到标题右侧
-                const editBtn = document.createElement("button");
-                editBtn.innerHTML = '<i class="bi bi-pencil"></i>';
-                editBtn.style.background = "transparent";
-                editBtn.style.border = "none";
-                editBtn.style.fontSize = "13px";
-                editBtn.style.color = "#4a90e2";
-                editBtn.style.cursor = "pointer";
-                editBtn.style.padding = "2px 6px";
-                editBtn.style.borderRadius = "4px";
-                editBtn.style.transition = "all 0.2s";
-                editBtn.style.marginLeft = "auto";
-                if (gid) {
-                    editBtn.addEventListener("click", () => this.open_announcement_editor_with_gid(gid));
-                } else {
+                // 只对群主或管理员添加编辑按钮到标题右侧
+                if (canEdit) {
+                    const editBtn = document.createElement("button");
+                    editBtn.innerHTML = '<i class="bi bi-pencil"></i>';
+                    editBtn.style.background = "transparent";
+                    editBtn.style.border = "none";
+                    editBtn.style.fontSize = "13px";
+                    editBtn.style.color = "#4a90e2";
+                    editBtn.style.cursor = "pointer";
+                    editBtn.style.padding = "2px 6px";
+                    editBtn.style.borderRadius = "4px";
+                    editBtn.style.transition = "all 0.2s";
+                    editBtn.style.marginLeft = "auto";
                     editBtn.addEventListener("click", () => this.open_announcement_editor());
+                    announcementTitle.appendChild(editBtn);
                 }
-                announcementTitle.appendChild(editBtn);
 
                 // 公告内容容器
                 const announcementContent = document.createElement("div");
@@ -24744,8 +25184,8 @@
                 } else if (msg_type === 'file') {
                     citeText = `<i class="bi bi-file-earmark"></i> 文件 ${file_name}`;
                 } else {
-                    // 文本消息
-                    citeText = text;
+                    // 文本消息 - 过滤掉引用内容，只显示纯回复文本
+                    citeText = this.extract_text_without_quotes(text);
                 }
 
                 citeContent.innerHTML = `<strong>${user_name}：</strong>${citeText}`;
@@ -24770,6 +25210,27 @@
                 const citeContainer = this.container.querySelector(".chat-session-inputarea-cite");
                 citeContainer.classList.add("hidden");
                 this.current_cite_message = null;
+            }
+
+            // 提取文本，过滤掉引用内容（以 > 开头的行）和 @ 提及，避免多级引用和冗余提及
+            extract_text_without_quotes(text) {
+                if (!text) return '';
+                // 按行分割文本
+                const lines = text.split('\n');
+                // 过滤掉以 > 开头的行（引用行）
+                const nonQuoteLines = lines.filter(line => {
+                    const trimmed = line.trimStart();
+                    return !trimmed.startsWith('>');
+                });
+                // 过滤掉连续的空行，只保留纯文本内容
+                const filteredLines = nonQuoteLines.filter(line => line.trim() !== '');
+                // 过滤掉 @ 提及（格式：@用户名）
+                const textWithoutMentions = filteredLines.map(line => {
+                    // 移除行首的 @提及（可能有空格）
+                    return line.replace(/^\s*@[\w\u4e00-\u9fa5]+(\s|$)/g, ' ');
+                }).join('\n');
+                // 清理多余空格
+                return textWithoutMentions.replace(/\s+/g, ' ').trim();
             }
 
 
@@ -24960,6 +25421,87 @@
                 } catch (error) {
                     console.error("切换会话置顶失败:", error);
                 }
+            }
+
+            /*
+            * 判断是否为群主
+            * */
+            is_group_owner(gid) {
+                // 通过群组名称前缀判断
+                const match = gid.match(/^「(.+?)」/);
+                if (!match) return false;
+
+                const creator = match[1];
+                // 获取当前用户名
+                const my_uid = logged_user.uid;
+                return creator === my_uid;
+            }
+
+            /*
+            * 切换群组禁言状态
+            * */
+            async toggle_group_mute() {
+                const {xxid, contact_type} = this.current_contact_xxid();
+                const apiUrl = `${top_level_path}/chat/api/toggle_group_mute`;
+
+                const body = { gid: xxid };
+
+                try {
+                    const response = await net_fetcher.nf_post_json(apiUrl, body);
+                    if (response.status === 200) {
+                        const result = await response.json();
+                        this.group_mute_status = result.muted;
+                        // 刷新UI
+                        this.refresh_chat_ui();
+                    } else {
+                        const error = await response.json();
+                        alert(error.message || "操作失败");
+                    }
+                } catch (error) {
+                    console.error("切换群组禁言失败:", error);
+                    alert("切换群组禁言失败");
+                }
+            }
+
+            /*
+            * 刷新聊天UI
+            * */
+            refresh_chat_ui() {
+                // 重新加载会话列表
+                if (this.contentpage && this.contentpage.aside_left) {
+                    this.contentpage.aside_left.refresh_contacts();
+                }
+                // 更新输入框状态
+                this.update_input_state();
+                // 更新头部状态
+                this.update_header_status();
+            }
+
+            /*
+            * 更新输入框状态
+            * */
+            update_input_state() {
+                const {xxid, contact_type} = this.current_contact_xxid();
+                if (contact_type === subviews.Chat.receiver_type.group && this.group_mute_status) {
+                    const isOwner = this.is_group_owner(xxid);
+                    if (!isOwner) {
+                        this.e_inputarea_textarea.disabled = true;
+                        this.e_inputarea_textarea.placeholder = "群组已禁言,仅群主可发送消息";
+                    } else {
+                        this.e_inputarea_textarea.disabled = false;
+                        this.e_inputarea_textarea.placeholder = "";
+                    }
+                } else {
+                    this.e_inputarea_textarea.disabled = false;
+                    this.e_inputarea_textarea.placeholder = "";
+                }
+            }
+
+            /*
+            * 更新头部状态
+            * */
+            update_header_status() {
+                // 可以在这里添加禁言图标显示
             }
 
             /*
@@ -28625,7 +29167,9 @@
             * */
             add_contact_item(attr,) {
                 if (attr.type === subviews.Chat.receiver_type.group) {
-                    const mainaction = {text: attr.gid, pagetype: contentpages.dashboard_chat.group,};
+                    // 去掉群组名称中的「用户名」前缀
+                    const group_name = attr.gid.replace(/^「(.+?)」/, "");
+                    const mainaction = {text: group_name, pagetype: contentpages.dashboard_chat.group,};
                     mainaction.contact_attr = attr;
 
                     mainaction.status_attr = {};
@@ -28728,6 +29272,7 @@
     <div class="chat-contact-session-status-top">
         <span class="chat-contact-session-status-top-name">${mainaction.text}</span>
         <span class="chat-contact-pin-icon hidden"><i class="bi bi-pin-fill"></i></span>
+        <span class="chat-contact-mute-icon hidden"><i class="bi bi-mic-mute-fill"></i></span>
         <span class="chat-contact-session-status-top-lastmsgtime">未知</span>
     </div>
       <div class="chat-contact-session-status-bottom">
@@ -28750,6 +29295,7 @@
                 mainaction.e_online_status.dataset.onlineStatus = "offline";
 
                 mainaction.e_pin_icon = li.querySelector(":scope .chat-contact-pin-icon");
+                mainaction.e_mute_icon = li.querySelector(":scope .chat-contact-mute-icon");
 
                 mainaction.e_sst_name = li.querySelector(":scope .chat-contact-session-status-top-name");
                 mainaction.e_sst_lastmsgtime = li.querySelector(":scope .chat-contact-session-status-top-lastmsgtime");
@@ -28764,7 +29310,8 @@
 
             static get_contact_xxid(contact_attr) {
                 if (contact_attr.type === subviews.Chat.receiver_type.group) {
-                    return contact_attr.gid;
+                    // 去掉群组名称中的「用户名」前缀
+                    return contact_attr.gid.replace(/^「(.+?)」/, "");
                 } else {
                     return contact_attr.uid;
                 }
@@ -28790,6 +29337,16 @@
                         item.e_pin_icon.classList.remove("hidden");
                     } else {
                         item.e_pin_icon.classList.add("hidden");
+                    }
+                }
+
+                // 检查是否禁言
+                const isMuted = status_attr.muted === 1;
+                if (item.e_mute_icon) {
+                    if (isMuted) {
+                        item.e_mute_icon.classList.remove("hidden");
+                    } else {
+                        item.e_mute_icon.classList.add("hidden");
                     }
                 }
 
@@ -29142,11 +29699,14 @@
                 let string = "";
 
                 const users__typing = [];
-                status_attr.activities.forEach(i => {
-                    if (i.type === ChatDashboardWrapper.activity_type.typing) {
-                        users__typing.push(i);
-                    }
-                });
+                // 添加空值检查，避免 status_attr.activities 为 undefined 时出错
+                if (status_attr.activities && Array.isArray(status_attr.activities)) {
+                    status_attr.activities.forEach(i => {
+                        if (i.type === ChatDashboardWrapper.activity_type.typing) {
+                            users__typing.push(i);
+                        }
+                    });
+                }
 
                 if (users__typing.length > 0) {
                     string = `正在输入...(${users__typing.map(i => i.sender).join(", ")})`
@@ -29377,19 +29937,114 @@
             /*
             * 同步联系人列表
             * 重新获取联系人列表并刷新界面
+            * 智能更新：有变化时全量更新（保留选中状态），无变化时不更新
             * */
             async sync_contacts() {
                 if (!this.is_active()) return;
-                
+
                 try {
-                    this.remove_all_contact_items();
-                    this.loading_mark.show();
-                    
+                    // 保存之前的联系人列表，用于检测变化
+                    const oldContacts = new Set();
+                    const contactItems = this.contact_items();
+                    contactItems.forEach(item => {
+                        if (item.contact_attr.type === subviews.Chat.receiver_type.user) {
+                            oldContacts.add(`user:${item.contact_attr.uid}`);
+                        } else if (item.contact_attr.type === subviews.Chat.receiver_type.group) {
+                            oldContacts.add(`group:${item.contact_attr.gid}`);
+                        }
+                    });
+
                     const result = await checkin.subviews.chat.fetch_contacts();
+
+                    // 检测新增的联系人
+                    const newContacts = [];
+                    const newContactsSet = new Set();
                     for (const resultElement of result) {
-                        this.add_contact_item(resultElement);
+                        const key = resultElement.type === subviews.Chat.receiver_type.user
+                            ? `user:${resultElement.uid}`
+                            : `group:${resultElement.gid}`;
+
+                        newContactsSet.add(key);
+
+                        if (!oldContacts.has(key)) {
+                            newContacts.push(resultElement);
+                        }
                     }
-                    
+
+                    console.log("[sync_contacts] 联系人列表:", result);
+
+                    // 比较两个集合，检测是否有变化（新增或删除）
+                    const hasChanges =
+                        newContactsSet.size !== oldContacts.size || // 数量不同
+                        ![...newContactsSet].every(key => oldContacts.has(key)); // 内容不同
+
+                    if (hasChanges) {
+                        // 有变化：全量更新，保存并恢复选中状态
+                        // 保存当前选中会话的信息
+                        let currentContactKey = null;
+                        let currentContactExists = false;
+                        if (checkin.current_content_page && checkin.current_content_page.li && checkin.current_content_page.li.bindmap) {
+                            const currentContact = checkin.current_content_page.li.bindmap.contact_attr;
+                            if (currentContact.type === subviews.Chat.receiver_type.user) {
+                                currentContactKey = `user:${currentContact.uid}`;
+                            } else if (currentContact.type === subviews.Chat.receiver_type.group) {
+                                currentContactKey = `group:${currentContact.gid}`;
+                            }
+                            // 检查当前联系人是否还在新列表中
+                            currentContactExists = newContactsSet.has(currentContactKey);
+                        }
+
+                        this.remove_all_contact_items();
+                        this.loading_mark.show();
+
+                        for (const resultElement of result) {
+                            this.add_contact_item(resultElement);
+                        }
+
+                        // 恢复之前选中的会话（如果还存在）
+                        if (currentContactKey && currentContactExists) {
+                            const restoredItems = this.contact_items();
+                            const restoredItem = restoredItems.find(item => {
+                                const itemContact = item.contact_attr;
+                                const itemKey = itemContact.type === subviews.Chat.receiver_type.user
+                                    ? `user:${itemContact.uid}`
+                                    : `group:${itemContact.gid}`;
+                                return itemKey === currentContactKey;
+                            });
+
+                            if (restoredItem) {
+                                restoredItem.element.click();
+                            }
+                        } else if (currentContactKey && !currentContactExists) {
+                            // 当前选中的联系人已被删除，关闭当前页面
+                            if (checkin.current_content_page) {
+                                checkin.current_content_page.close_page();
+                                checkin.current_content_page = null;
+                            }
+                        }
+                    } else {
+                        // 无变化：只显示新增联系人通知，不更新界面
+                    }
+
+                    // 显示新增联系人的通知
+                    if (newContacts.length > 0) {
+                        for (const contact of newContacts) {
+                            if (contact.type === subviews.Chat.receiver_type.user) {
+                                showChatToast({
+                                    title: "新好友",
+                                    content: `${contact.uid} 添加了您为好友`,
+                                    duration: 3000
+                                });
+                            } else if (contact.type === subviews.Chat.receiver_type.group) {
+                                showChatToast({
+                                    title: "新群组",
+                                    content: `您加入了群组 ${contact.gid.replace(/^「(.+?)」/, "")}`,
+                                    duration: 3000
+                                });
+                            }
+                        }
+                    }
+
                     this.remove_loading_mark();
                     this.start_timer__sync(false);
                 } catch (error) {
@@ -29444,7 +30099,23 @@
             sync() {
                 if (!this.is_active()) return;
                 const items = this.contact_items();
+
+                // 无论是否有现有联系人，都要定期检查是否有新联系人
+                // 这样可以确保新添加的好友/群组能及时显示，移除的好友也能及时消失
+                let shouldRefreshContacts = false;
+                
                 if (items.length === 0) {
+                    // 没有现有联系人，必须刷新
+                    shouldRefreshContacts = true;
+                } else if (Math.random() < 0.2) {
+                    // 20% 的概率强制刷新（定期检查）
+                    shouldRefreshContacts = true;
+                }
+                
+                if (shouldRefreshContacts) {
+                    // 没有现有联系人时，尝试获取新的联系人列表
+                    // 这样新添加的好友可以被显示出来，移除的好友也会消失
+                    this.sync_contacts();
                     if (this.is_active()) this.timer__sync = setTimeout(() => {
                         this.sync()
                     }, this.ws_isopen() ? this.interval__sync__ws : this.interval__sync);
@@ -29547,7 +30218,10 @@
                     // 计算总未读消息数量
                     totalUnreadCount += status_attr.unread_count;
 
-                    await this._update_contact_item_status(item, status_attr);
+                    // 只有当 item 存在时才更新状态
+                    if (item) {
+                        await this._update_contact_item_status(item, status_attr);
+                    }
                 }
 
                 this.stop_timer__sync();
@@ -29600,14 +30274,79 @@
                 } else if (status_attr.type === subviews.Chat.receiver_type.user) {
                     item = items.find(i => i.contact_attr.uid === status_attr.uid);
                 }
-                await this._update_contact_item_status(item, status_attr);
+                // 只有当 item 存在时才更新状态
+                if (item) {
+                    await this._update_contact_item_status(item, status_attr);
+                }
             }
 
             change_loading_status__syncing() {
-                if (this.is_processing__sync) {
-                    console.log('正在同步...');
-                } else {
-                    console.log('同步完成');
+                // 已移除控制台输出，保持日志简洁
+            }
+
+            /*
+            * 显示联系人变化通知
+            * */
+            showContactChangeNotification(json) {
+                const type = json.type;
+                let title = "联系人变化";
+                let content = "";
+
+                switch (type) {
+                    case "friend_added":
+                        if (json.from_uid) {
+                            title = "好友添加";
+                            content = `${json.from_uid} 添加了您为好友`;
+                        } else if (json.target_uid) {
+                            title = "好友添加";
+                            content = `您已添加 ${json.target_uid} 为好友`;
+                        }
+                        break;
+                    case "friend_removed":
+                        if (json.from_uid) {
+                            title = "好友移除";
+                            content = `${json.from_uid} 将您从好友列表中移除`;
+                        } else if (json.target_uid) {
+                            title = "好友移除";
+                            content = `您已将 ${json.target_uid} 从好友列表中移除`;
+                        }
+                        break;
+                    case "group_created":
+                        title = "群组创建";
+                        content = `您创建了群组 ${json.gid ? json.gid.replace(/^「(.+?)」/, "") : ""}`;
+                        break;
+                    case "group_deleted":
+                        title = "群组解散";
+                        content = `群组 ${json.gid ? json.gid.replace(/^「(.+?)」/, "") : ""} 已被解散`;
+                        break;
+                    case "group_invited":
+                        title = "群组邀请";
+                        content = `${json.from_uid} 邀请您加入群组 ${json.group_name || json.gid}`;
+                        break;
+                    case "group_updated":
+                        title = "群组更新";
+                        content = `群组 ${json.gid ? json.gid.replace(/^「(.+?)」/, "") : ""} 信息已更新`;
+                        break;
+                    case "member_removed":
+                        title = "成员移除";
+                        content = `您已被移出群组 ${json.gid ? json.gid.replace(/^「(.+?)」/, "") : ""}`;
+                        break;
+                    case "removed_from_group":
+                        title = "成员移除";
+                        content = `${json.target_uid} 已被移出群组 ${json.gid ? json.gid.replace(/^「(.+?)」/, "") : ""}`;
+                        break;
+                    case "group_mute_changed":
+                        title = json.muted ? "群组禁言" : "解除禁言";
+                        content = `群组 ${json.gid ? json.gid.replace(/^「(.+?)」/, "") : ""} ${json.muted ? "已开启禁言" : "已解除禁言"}`;
+                        break;
+                }
+
+                if (title && content) {
+                    showChatToast({
+                        title: title,
+                        content: content,
+                        duration: 5000
+                    });
                 }
             }
 
@@ -29758,13 +30497,13 @@
                     const callback = this.ws_callbacks[counter];
                     delete this.ws_callbacks[counter];
                     this.ws_pending_count = Math.max(0, this.ws_pending_count - 1);
-                    
+
                     // 处理队列中的下一个请求
                     if (this.ws_send_queue.length > 0 && this.ws_pending_count < this.ws_max_pending) {
                         const next = this.ws_send_queue.shift();
                         this.ws_send(next.json, next.callback);
                     }
-                    
+
                     if (json.error) {
                         const error = new Error(JSON.stringify(json));
                         if (json.error.message.includes("Too many API requests by single Worker invocation")) {
@@ -29777,7 +30516,29 @@
                         callback.onfetchload(json.result);
                     }
                 } else {
-                    console.log("websocket 没有注册回调的消息。");
+                    // 处理服务器推送的通知
+                    console.log("[WebSocket] 收到非回调消息:", json);
+                    console.log("[WebSocket] 消息详情 - action:", json.action, "type:", json.type);
+                    // 检查是否是联系人变化通知
+                    const contactChangedTypes = [
+                        "friend_added", "friend_removed",
+                        "group_created", "group_deleted", "group_invited", "group_updated", "group_mute_changed",
+                        "member_removed", "removed_from_group"
+                    ];
+                    console.log("[WebSocket] 联系人变化类型列表:", contactChangedTypes);
+                    console.log("[WebSocket] 是否匹配联系人变化:", json.action === 14 || (json.type && contactChangedTypes.includes(json.type)));
+                    if (json.action === 14 || (json.type && contactChangedTypes.includes(json.type))) {
+                        console.log("[WebSocket] 收到联系人变化通知，准备刷新:", json);
+                        console.log("[WebSocket] 当前聊天面板是否活跃:", this.is_active());
+                        
+                        // 显示通知
+                        this.showContactChangeNotification(json);
+                        
+                        // 刷新联系人列表
+                        this.sync_contacts();
+                    } else {
+                        console.log("websocket 没有注册回调的消息。");
+                    }
                 }
             }
         }
@@ -29852,9 +30613,14 @@
                                 },
                                 {
                                     type: "linetext",
-                                    label: "新名称",
+                                    label: "新的名称：",
                                     placeholder: "请输入新的用户名",
                                     value: currentName,
+                                },
+                                {
+                                    type: "password",
+                                    label: "用户密码：",
+                                    placeholder: "请输入当前密码以确认身份",
                                 },
                                 {
                                     type: "noticing",
@@ -29867,9 +30633,15 @@
                                 // 收集表单数据
                                 form_mark.collect_data();
                                 const newName = form[1].value.trim();
+                                const password = form[2].value;
 
                                 if (!newName) {
                                     MessageMark.report("新名称不能为空", null, null, null, MessageMark.colors.red);
+                                    return;
+                                }
+
+                                if (!password) {
+                                    MessageMark.report("请输入当前密码以确认身份", null, null, null, MessageMark.colors.red);
                                     return;
                                 }
 
@@ -29882,7 +30654,8 @@
                                 // 调用后端API
                                 try {
                                     const response = await net_fetcher.nf_post_json(`${top_level_path}/chat/api/rename_me`, {
-                                        new_uid: newName
+                                        new_uid: newName,
+                                        password: password
                                     });
 
                                     if (response.status === 200) {
@@ -30201,34 +30974,99 @@
             if (btnAddFriend) {
                 btnAddFriend.addEventListener("click", () => {
                     const form = [
-                        {type: "title", label: "添加好友",},
-                        {type: "linetext", label: "用户名：", value: "", placeholder: "请输入要添加的好友用户名",},
+                        {type: "title", label: "好友管理"},
+                        {type: "combobox", label: "操作：", options: {"add": "添加好友", "remove": "删除好友"}},
+                        {type: "linetext", label: "用户：", value: "", placeholder: "请输入要添加/移除的好友名称，多个请用英文逗号分隔"},
+                        {type: "noticing", label: "", text: "批量操作说明：多个名称用英文逗号分隔，如：张三,李四"},
                     ];
                     const confirm_callback = async (formmark,) => {
                         const rows = formmark.form;
-                        const target_uid = rows[1].input_element.value.trim();
-                        if (!target_uid) {
+                        const action = rows[1].input_element.value;
+                        const input_value = rows[2].input_element.value.trim();
+
+                        if (!input_value) {
                             MessageMark.report("请输入用户名", null, null, null, MessageMark.colors.yellow);
                             return;
                         }
 
-                        try {
-                            const response = await fetch(`${top_level_path}/chat/api/add_friend`, {
-                                method: "POST",
-                                headers: {"Content-Type": "application/json"},
-                                body: JSON.stringify({target_uid: target_uid})
-                            });
-                            const result = await response.json();
-                            if (result.success) {
-                                MessageMark.report(result.message || "添加好友成功！", null, null, null, MessageMark.colors.green);
-                                formmark.remove();
-                                // 刷新联系人列表
-                                this.dashboard_chat.wrapper.sync_contacts();
-                            } else {
-                                MessageMark.report(result.message || "添加好友失败", null, null, null, MessageMark.colors.red);
+                        const target_uids = input_value.split(",").map(uid => uid.trim()).filter(uid => uid);
+                        if (target_uids.length === 0) {
+                            MessageMark.report("请输入有效的用户名", null, null, null, MessageMark.colors.yellow);
+                            return;
+                        }
+
+                        // 根据操作类型执行不同逻辑
+                        if (action === "add") {
+                            // 批量添加好友逻辑
+                            let addSuccessCount = 0;
+                            let addFailCount = 0;
+                            for (const target_uid of target_uids) {
+                                try {
+                                    const response = await fetch(`${top_level_path}/chat/api/add_friend`, {
+                                        method: "POST",
+                                        headers: {"Content-Type": "application/json"},
+                                        body: JSON.stringify({target_uid: target_uid})
+                                    });
+                                    if (response.ok) {
+                                        const result = await response.json();
+                                        if (result.success) {
+                                            addSuccessCount++;
+                                        } else {
+                                            addFailCount++;
+                                            MessageMark.report(`添加 ${target_uid} 失败：${result.message}`, null, null, null, MessageMark.colors.red);
+                                        }
+                                    } else {
+                                        addFailCount++;
+                                        const errorText = await response.text();
+                                        MessageMark.report(`添加 ${target_uid} 失败：${errorText || "服务器错误"}`, null, null, null, MessageMark.colors.red);
+                                    }
+                                } catch (error) {
+                                    addFailCount++;
+                                    MessageMark.report(`添加 ${target_uid} 网络错误：${error.message}`, null, null, null, MessageMark.colors.red);
+                                }
                             }
-                        } catch (error) {
-                            MessageMark.report("网络错误：" + error.message, null, null, null, MessageMark.colors.red);
+                            if (addSuccessCount > 0) {
+                                MessageMark.report(`成功添加 ${addSuccessCount} 个好友${addFailCount > 0 ? `，${addFailCount} 个失败` : ""}`, null, null, null, addFailCount > 0 ? MessageMark.colors.yellow : MessageMark.colors.green);
+                            } else if (addFailCount > 0) {
+                                MessageMark.report(`添加好友失败，共 ${addFailCount} 个失败`, null, null, null, MessageMark.colors.red);
+                            }
+                            formmark.remove();
+                            // 刷新联系人列表
+                            this.dashboard_chat.wrapper.sync_contacts();
+                        } else if (action === "remove") {
+                            // 确认删除
+                            const confirmMsg = target_uids.length > 1
+                                ? `确定要删除好友 ${target_uids.join(",")} 吗？\n此操作不可恢复！`
+                                : `确定要删除好友【${target_uids[0]}】吗？\n此操作不可恢复！`;
+                            
+                            const mm = new MessageMark(document.body, confirmMsg, MessageMark.btnFlags.close | MessageMark.btnFlags.confirm, MessageMark.colors.red,
+                                () => formmark.remove(), // 取消回调
+                                async () => { // 确认回调
+                                    try {
+                                        const response = await fetch(`${top_level_path}/chat/api/remove_friend`, {
+                                            method: "POST",
+                                            headers: {"Content-Type": "application/json"},
+                                            body: JSON.stringify({target_uids: target_uids.join(",")})
+                                        });
+                                        const result = await response.json();
+                                        if (result.success) {
+                                            if (result.failed && result.failed.length > 0) {
+                                                const failDetails = result.failed.map(f => `${f.uid}：${f.reason}`).join("\n");
+                                                MessageMark.report(`${result.message}\n${failDetails}`, null, null, null, MessageMark.colors.yellow);
+                                            } else {
+                                                MessageMark.report(result.message || "删除好友成功！", null, null, null, MessageMark.colors.green);
+                                            }
+                                            formmark.remove();
+                                            this.dashboard_chat.wrapper.sync_contacts();
+                                        } else {
+                                            MessageMark.report(result.message || "删除好友失败", null, null, null, MessageMark.colors.red);
+                                        }
+                                    } catch (error) {
+                                        MessageMark.report("网络错误：" + error.message, null, null, null, MessageMark.colors.red);
+                                    }
+                                }
+                            );
+                            mm.show();
                         }
                     };
                     FormMark.get_global_input(form, confirm_callback);
@@ -30238,36 +31076,92 @@
             // 建群按钮
             const btnCreateGroup = document.getElementById("btn-create-group");
             if (btnCreateGroup) {
-                btnCreateGroup.addEventListener("click", () => {
+                btnCreateGroup.addEventListener("click", async () => {
+                    // 获取自己创建的群组列表
+                    let myGroups = [];
+                    try {
+                        const response = await fetch(`${top_level_path}/chat/api/my_created_groups`);
+                        if (response.ok) {
+                            myGroups = await response.json();
+                        }
+                    } catch (error) {
+                        console.error("获取群组列表失败:", error);
+                    }
+
                     const form = [
-                        {type: "title", label: "创建群组",},
-                        {type: "linetext", label: "群组名称：", value: "", placeholder: "请输入新群组的名称",},
+                        {type: "title", label: "群组管理"},
+                        {type: "combobox", label: "操作：", options: {"create": "创建群组", "delete": "删除群组"}},
+                        {type: "linetext", label: "群名：", value: "", placeholder: "请输入要创建/移除的群组名称，多个请用英文逗号分隔"},
+                        {type: "noticing", label: "", text: "批量操作说明：多个名称用英文逗号分隔，如：前端组,后端组"},
                     ];
+
                     const confirm_callback = async (formmark,) => {
                         const rows = formmark.form;
-                        const gid = rows[1].input_element.value.trim();
-                        if (!gid) {
+                        const action = rows[1].input_element.value;
+                        const input_value = rows[2].input_element.value.trim();
+
+                        if (!input_value) {
                             MessageMark.report("请输入群组名称", null, null, null, MessageMark.colors.yellow);
                             return;
                         }
 
-                        try {
-                            const response = await fetch(`${top_level_path}/chat/api/create_group`, {
-                                method: "POST",
-                                headers: {"Content-Type": "application/json"},
-                                body: JSON.stringify({gid: gid})
-                            });
-                            const result = await response.json();
-                            if (result.success) {
-                                MessageMark.report(result.message || "群组创建成功！", null, null, null, MessageMark.colors.green);
-                                formmark.remove();
-                                // 刷新联系人列表
-                                this.dashboard_chat.wrapper.sync_contacts();
-                            } else {
-                                MessageMark.report(result.message || "创建群组失败", null, null, null, MessageMark.colors.red);
+                        const gids = input_value.split(",").map(gid => gid.trim()).filter(gid => gid);
+                        if (gids.length === 0) {
+                            MessageMark.report("请输入有效的群组名称", null, null, null, MessageMark.colors.yellow);
+                            return;
+                        }
+
+                        // 根据操作类型执行不同逻辑
+                        if (action === "create") {
+                            // 批量创建群组逻辑
+                            for (const gid of gids) {
+                                try {
+                                    const response = await fetch(`${top_level_path}/chat/api/create_group`, {
+                                        method: "POST",
+                                        headers: {"Content-Type": "application/json"},
+                                        body: JSON.stringify({gid: gid})
+                                    });
+                                    const result = await response.json();
+                                    if (!result.success) {
+                                        MessageMark.report(`创建 ${gid} 失败：${result.message}`, null, null, null, MessageMark.colors.red);
+                                    }
+                                } catch (error) {
+                                    MessageMark.report(`创建 ${gid} 网络错误：${error.message}`, null, null, null, MessageMark.colors.red);
+                                }
                             }
-                        } catch (error) {
-                            MessageMark.report("网络错误：" + error.message, null, null, null, MessageMark.colors.red);
+                            MessageMark.report(`批量操作完成，共处理 ${gids.length} 个群组`, null, null, null, MessageMark.colors.green);
+                            formmark.remove();
+                            // 刷新联系人列表
+                            this.dashboard_chat.wrapper.sync_contacts();
+                        } else if (action === "delete") {
+                            // 确认删除
+                            const confirmMsg = gids.length > 1
+                                ? `确定要删除群组 ${gids.join(",")} 吗？\n此操作不可恢复！`
+                                : `确定要删除群组【${gids[0]}】吗？\n此操作不可恢复！`;
+                            
+                            const mm = new MessageMark(document.body, confirmMsg, MessageMark.btnFlags.close | MessageMark.btnFlags.confirm, MessageMark.colors.red,
+                                () => formmark.remove(), // 取消回调
+                                async () => { // 确认回调
+                                    try {
+                                        const response = await fetch(`${top_level_path}/chat/api/delete_group`, {
+                                            method: "POST",
+                                            headers: {"Content-Type": "application/json"},
+                                            body: JSON.stringify({gids: gids.join(",")})
+                                        });
+                                        const result = await response.json();
+                                        if (result.success) {
+                                            MessageMark.report(result.message || "删除群组成功！", null, null, null, MessageMark.colors.green);
+                                            formmark.remove();
+                                            this.dashboard_chat.wrapper.sync_contacts();
+                                        } else {
+                                            MessageMark.report(result.message || "删除群组失败", null, null, null, MessageMark.colors.red);
+                                        }
+                                    } catch (error) {
+                                        MessageMark.report("网络错误：" + error.message, null, null, null, MessageMark.colors.red);
+                                    }
+                                }
+                            );
+                            mm.show();
                         }
                     };
                     FormMark.get_global_input(form, confirm_callback);
@@ -30279,7 +31173,7 @@
             if (btnInviteToGroup) {
                 btnInviteToGroup.addEventListener("click", async () => {
                     // 获取用户所在的群组列表
-                    let groups = [];
+                    let myGroups = [];
                     try {
                         const response = await fetch(`${top_level_path}/chat/api/contacts`);
                         if (!response.ok) {
@@ -30287,7 +31181,7 @@
                         }
                         const result = await response.json();
                         if (result && Array.isArray(result)) {
-                            groups = result.filter(item => item.type === 2); // type=2 表示群组
+                            myGroups = result.filter(item => item.type === 2); // type=2 表示群组
                         }
                     } catch (error) {
                         console.error("获取群组列表失败:", error);
@@ -30295,51 +31189,129 @@
                         return;
                     }
 
-                    if (groups.length === 0) {
+                    if (!Array.isArray(myGroups) || myGroups.length === 0) {
                         MessageMark.report("您还没有加入任何群组", null, null, null, MessageMark.colors.yellow);
                         return;
                     }
 
-                    // 构建群组选项
+                    // 构建群组选项（去掉[uid]前缀显示）
                     const groupOptions = {};
-                    groups.forEach(group => {
-                        groupOptions[group.gid] = group.gid;
+                    myGroups.forEach(group => {
+                        const displayName = group.gid.replace(/^「(.+?)」/, "");
+                        groupOptions[group.gid] = displayName;
                     });
 
                     const form = [
-                        {type: "title", label: "邀请用户",},
-                        {type: "combobox", label: "群组名：", options: groupOptions,},
-                        {type: "linetext", label: "用户名：", value: "", placeholder: "请输入要邀请的用户名",},
+                        {type: "title", label: "邀请管理"},
+                        {type: "combobox", label: "操作：", options: {"invite": "邀请加入", "remove": "移出成员"}},
+                        {type: "checkboxlist", label: "群名：", options: groupOptions, value: []},
+                        {type: "linetext", label: "用户：", value: "", placeholder: "请输入要邀请/移出的好友名称，多个请用英文逗号分隔"},
+                        {type: "noticing", label: "", text: "批量操作说明：可勾选多个群组，多个用户名用英文逗号分隔"},
                     ];
+
                     const confirm_callback = async (formmark,) => {
                         const rows = formmark.form;
-                        const gid = rows[1].input_element.value.trim();
-                        const target_uid = rows[2].input_element.value.trim();
+                        const action = rows[1].input_element.value; // 操作（combobox）
+                        const selectedGids = rows[2].value; // 群名（checkboxlist，返回选中的值数组）
+                        const target_uids_input = rows[3].input_element.value.trim(); // 用户（linetext）
 
-                        if (!gid) {
-                            MessageMark.report("请选择群组", null, null, null, MessageMark.colors.yellow);
+                        if (selectedGids.length === 0) {
+                            MessageMark.report("请至少选择一个群组", null, null, null, MessageMark.colors.yellow);
                             return;
                         }
-                        if (!target_uid) {
+
+                        if (!target_uids_input) {
                             MessageMark.report("请输入用户名", null, null, null, MessageMark.colors.yellow);
                             return;
                         }
 
-                        try {
-                            const response = await fetch(`${top_level_path}/chat/api/invite_to_group`, {
-                                method: "POST",
-                                headers: {"Content-Type": "application/json"},
-                                body: JSON.stringify({gid: gid, target_uid: target_uid})
-                            });
-                            const result = await response.json();
-                            if (result.success) {
-                                MessageMark.report(result.message || "邀请成功！", null, null, null, MessageMark.colors.green);
-                                formmark.remove();
-                            } else {
-                                MessageMark.report(result.message || "邀请失败", null, null, null, MessageMark.colors.red);
+                        const target_uids = target_uids_input.split(",").map(uid => uid.trim()).filter(uid => uid);
+                        if (target_uids.length === 0) {
+                            MessageMark.report("请输入有效的用户名", null, null, null, MessageMark.colors.yellow);
+                            return;
+                        }
+
+                        // 根据操作类型执行不同逻辑
+                        if (action === "invite") {
+                            // 批量邀请用户逻辑
+                            let inviteSuccessCount = 0;
+                            let inviteFailCount = 0;
+                            for (const gid of selectedGids) {
+                                for (const target_uid of target_uids) {
+                                    try {
+                                        const response = await fetch(`${top_level_path}/chat/api/invite_to_group`, {
+                                            method: "POST",
+                                            headers: {"Content-Type": "application/json"},
+                                            body: JSON.stringify({gid: gid, target_uid: target_uid})
+                                        });
+                                        if (response.ok) {
+                                            const result = await response.json();
+                                            if (result.success) {
+                                                inviteSuccessCount++;
+                                            } else {
+                                                inviteFailCount++;
+                                                MessageMark.report(`邀请 ${target_uid} 到 ${gid} 失败：${result.message}`, null, null, null, MessageMark.colors.red);
+                                            }
+                                        } else {
+                                            inviteFailCount++;
+                                            const errorText = await response.text();
+                                            MessageMark.report(`邀请 ${target_uid} 到 ${gid} 失败：${errorText || "服务器错误"}`, null, null, null, MessageMark.colors.red);
+                                        }
+                                    } catch (error) {
+                                        inviteFailCount++;
+                                        MessageMark.report(`邀请 ${target_uid} 到 ${gid} 网络错误：${error.message}`, null, null, null, MessageMark.colors.red);
+                                    }
+                                }
                             }
-                        } catch (error) {
-                            MessageMark.report("网络错误：" + error.message, null, null, null, MessageMark.colors.red);
+                            if (inviteSuccessCount > 0) {
+                                MessageMark.report(`成功邀请 ${inviteSuccessCount} 次${inviteFailCount > 0 ? `，${inviteFailCount} 次失败` : ""}`, null, null, null, inviteFailCount > 0 ? MessageMark.colors.yellow : MessageMark.colors.green);
+                            } else if (inviteFailCount > 0) {
+                                MessageMark.report(`邀请失败，共 ${inviteFailCount} 次失败`, null, null, null, MessageMark.colors.red);
+                            }
+                            formmark.remove();
+                        } else if (action === "remove") {
+                            // 确认移出
+                            const displayNames = selectedGids.map(gid => gid.replace(/^「(.+?)」/, ""));
+                            const confirmMsg = target_uids.length > 1
+                                ? `确定要将 ${target_uids.join(",")} 从群组【${displayNames.join("、")}】中移出吗？`
+                                : `确定要将【${target_uids[0]}】从群组【${displayNames.join("、")}】中移出吗？`;
+                            
+                            const mm = new MessageMark(document.body, confirmMsg, MessageMark.btnFlags.close | MessageMark.btnFlags.confirm, MessageMark.colors.red,
+                                () => formmark.remove(), // 取消回调
+                                async () => { // 确认回调
+                                    let successCount = 0;
+                                    let failMessages = [];
+                                    for (const gid of selectedGids) {
+                                        try {
+                                            const response = await fetch(`${top_level_path}/chat/api/remove_from_group`, {
+                                                method: "POST",
+                                                headers: {"Content-Type": "application/json"},
+                                                body: JSON.stringify({gid: gid, target_uids: target_uids.join(",")})
+                                            });
+                                            if (response.ok) {
+                                                const result = await response.json();
+                                                if (result.success) {
+                                                    successCount++;
+                                                } else {
+                                                    failMessages.push(`从 ${gid} 移出成员失败：${result.message}`);
+                                                }
+                                            } else {
+                                                const errorText = await response.text();
+                                                failMessages.push(`从 ${gid} 移出成员失败：${errorText || "服务器错误"}`);
+                                            }
+                                        } catch (error) {
+                                            failMessages.push(`从 ${gid} 移出成员网络错误：${error.message}`);
+                                        }
+                                    }
+                                    if (failMessages.length > 0) {
+                                        MessageMark.report(`部分移出失败：\n${failMessages.join("\n")}`, null, null, null, MessageMark.colors.yellow);
+                                    } else {
+                                        MessageMark.report(`成功从 ${selectedGids.length} 个群组中移出用户！`, null, null, null, MessageMark.colors.green);
+                                        formmark.remove();
+                                    }
+                                }
+                            );
+                            mm.show();
                         }
                     };
                     FormMark.get_global_input(form, confirm_callback);
