@@ -10399,7 +10399,7 @@
 
     // 页面加载完成后初始化插件管理器
     document.addEventListener('DOMContentLoaded', function() {
-        // 旧版 PluginManager 已废弃，避免与新的 PluginMark 重复绑定事件
+        PluginManager.init();
     });
 
     function update_attachment_list_item(msgattr) {
@@ -14386,18 +14386,18 @@
 
             this.currentTab = tabName;
             this.updateTheme();
-            this.updateSelectAllCheckbox();
         }
 
         async loadPlugins() {
-            this.selectedPlugins.clear();
+            console.log('loadPlugins 开始执行');
             this.loadingElement.classList.remove("hidden");
-            this.installedLoadingElement.classList.remove("hidden");
             this.emptyElement.classList.add("hidden");
-            this.installedEmptyElement.classList.add("hidden");
 
             try {
+                // 模拟从后端获取插件列表
+                // 实际应用中应该调用 API: GET /api/plugins
                 this.plugins = await this.fetchPlugins();
+                console.log('loadPlugins 获取到的插件:', this.plugins);
                 this.renderPluginList();
             } catch (error) {
                 console.error('加载插件失败:', error);
@@ -14405,19 +14405,19 @@
                 this.emptyElement.classList.remove("hidden");
             } finally {
                 this.loadingElement.classList.add("hidden");
-                this.installedLoadingElement.classList.add("hidden");
-                this.updateBatchButtons(this.currentTab === 'installed');
             }
         }
 
         async fetchPlugins() {
             try {
                 const response = await fetch(`${top_level_path}/api/plugins`, { credentials: 'same-origin' });
+                console.log('fetchPlugins 响应状态:', response.status);
                 if (!response.ok) {
                     console.error('获取插件列表失败:', response.status);
                     return [];
                 }
                 const data = await response.json();
+                console.log('fetchPlugins 返回数据:', data);
                 if (data.success && data.plugins) {
                     return data.plugins;
                 }
@@ -14429,6 +14429,7 @@
         }
 
         renderPluginList() {
+            console.log('renderPluginList 开始渲染, 插件数量:', this.plugins?.length);
             this.pluginList.innerHTML = '';
             this.installedPluginList.innerHTML = '';
 
@@ -14499,15 +14500,6 @@
                                     <span class="plugin-item-version">v${plugin.version || '1.0.0'}</span>
                                 </div>
                                 <p class="plugin-item-description">${plugin.description || '暂无描述'}</p>
-                                ${isPluginAdmin ? `
-                                <div class="plugin-usage-meta">
-                                    <span class="plugin-usage-badge ${Number(plugin.usage_count || 0) === 0 ? 'zero' : 'nonzero'}">
-                                        使用人数：${Number(plugin.usage_count || 0)}
-                                    </span>
-                                    <span class="plugin-usage-badge">
-                                        缓存：${plugin.cache_exists ? '已缓存' : '未缓存'}
-                                    </span>
-                                </div>` : ''}
 
                                 <div class="plugin-item-progress hidden" data-plugin-id="${plugin.plugin_id}">
                                     <div class="plugin-progress-track">
@@ -14552,8 +14544,11 @@
             this.installedPluginList.innerHTML = filteredInstalledPlugins.map(plugin => renderOne(plugin, true)).join('');
 
             const bindEvents = (container) => {
+                console.log('bindEvents 被调用, container:', container);
+                
                 container.querySelectorAll('[data-action="detail"]').forEach(btn => {
                     btn.addEventListener('click', () => {
+                        console.log('详情按钮被点击, pluginId:', btn.dataset.pluginId);
                         const plugin = this.plugins.find(p => p.plugin_id === btn.dataset.pluginId);
                         if (plugin) this.openPluginDetail(plugin);
                     });
@@ -14561,6 +14556,7 @@
 
                 container.querySelectorAll('[data-action="install"]').forEach(btn => {
                     btn.addEventListener('click', () => {
+                        console.log('安装按钮被点击, pluginId:', btn.dataset.pluginId);
                         const plugin = this.plugins.find(p => p.plugin_id === btn.dataset.pluginId);
                         if (plugin) this.installPlugin(plugin);
                     });
@@ -14568,6 +14564,7 @@
 
                 container.querySelectorAll('[data-action="toggle"]').forEach(btn => {
                     btn.addEventListener('click', () => {
+                        console.log('切换按钮被点击, pluginId:', btn.dataset.pluginId);
                         const plugin = this.plugins.find(p => p.plugin_id === btn.dataset.pluginId);
                         if (plugin) this.togglePlugin(plugin);
                     });
@@ -14575,53 +14572,41 @@
 
                 container.querySelectorAll('[data-action="uninstall"]').forEach(btn => {
                     btn.addEventListener('click', () => {
+                        console.log('卸载按钮被点击, pluginId:', btn.dataset.pluginId);
                         const plugin = this.plugins.find(p => p.plugin_id === btn.dataset.pluginId);
                         if (plugin) this.uninstallPlugin(plugin);
                     });
                 });
 
                 container.querySelectorAll('.plugin-item-checkbox').forEach(cb => {
-                    cb.checked = this.selectedPlugins.has(cb.dataset.pluginId);
-                    cb.addEventListener('change', () => {
-                        const pluginId = cb.dataset.pluginId;
-                        if (cb.checked) {
-                            this.selectedPlugins.add(pluginId);
-                        } else {
-                            this.selectedPlugins.delete(pluginId);
-                        }
-                        this.updateSelectAllCheckbox();
-                    });
+                    cb.addEventListener('change', () => this.updateBatchButtons(cb.dataset.installed === '1'));
                 });
             };
 
             bindEvents(this.pluginList);
             bindEvents(this.installedPluginList);
-            this.updateSelectAllCheckbox();
         }
 
         updateSelectAllCheckbox() {
-            const isInstalledTab = this.currentTab === 'installed';
-            const list = isInstalledTab ? this.installedPluginList : this.pluginList;
+            const list = this.currentTab === 'installed' ? this.installedPluginList : this.pluginList;
             const checkboxes = list.querySelectorAll('.plugin-item-checkbox');
-            const selectAllCheckbox = isInstalledTab ? this.installedSelectAllCheckbox : this.selectAllCheckbox;
-
-            if (!selectAllCheckbox) return;
-
+            const selectAllCheckbox = this.currentTab === 'installed' ? this.installedSelectAllCheckbox : this.selectAllCheckbox;
+            
             if (checkboxes.length === 0) {
                 selectAllCheckbox.checked = false;
-                selectAllCheckbox.indeterminate = false;
                 selectAllCheckbox.disabled = true;
-                this.updateBatchButtons(isInstalledTab);
                 return;
             }
 
             selectAllCheckbox.disabled = false;
             const allChecked = Array.from(checkboxes).every(cb => cb.checked);
             const someChecked = Array.from(checkboxes).some(cb => cb.checked);
-
+            
             selectAllCheckbox.checked = allChecked;
             selectAllCheckbox.indeterminate = someChecked && !allChecked;
-            this.updateBatchButtons(isInstalledTab);
+
+            // 更新批量操作按钮状态
+            this.updateBatchButtons(this.currentTab === 'installed');
         }
 
         createPluginItem(plugin) {
@@ -14994,28 +14979,25 @@
             }
         }
 
-        openPluginDetail(plugin) {
-            return this.showPluginDetail(plugin);
-        }
-
         showPluginDetail(plugin) {
-            PluginDetailMark.show(
+            // 使用新的 PluginDetailMark 类显示插件详情
+            const detailMark = PluginDetailMark.show(
                 document.body,
                 {
-                    plugin_id: plugin.plugin_id,
                     name: plugin.name,
                     description: plugin.description,
                     author: plugin.author,
                     version: plugin.version,
                     permissions: plugin.permissions || '无特殊权限',
                     admin_only: plugin.admin_only || false,
-                    compatibility: plugin.compatibility || '未知',
-                    homepage: plugin.homepage || '',
-                    repository: plugin.repository || '',
                     updateTime: plugin.updateTime || '未知'
                 },
-                () => {},
-                () => {}
+                (pluginData) => {
+                    // 插件详情关闭
+                },
+                (pluginData) => {
+                    console.log('插件详情确定', pluginData);
+                }
             );
         }
 
