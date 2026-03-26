@@ -19030,11 +19030,12 @@
                         {type: "section", text: "",},
                     );
 
-                    // 检查是否为群组会话且当前用户是否为群主
+                    // 检查是否为群组会话且当前用户是否有禁言权限
                     const {xxid, contact_type} = this.current_contact_xxid();
                     if (contact_type === subviews.Chat.receiver_type.group) {
                         const isGroupOwner = this.is_group_owner(xxid);
-                        if (isGroupOwner) {
+                        const isAdmin = this.is_admin();
+                        if (isGroupOwner || isAdmin) {
                             items.push(
                                 {
                                     type: "button",
@@ -25438,6 +25439,13 @@
             }
 
             /*
+            * 判断是否为管理员（contact_any=1）
+            * */
+            is_admin() {
+                return logged_user && logged_user.contact_any === 1;
+            }
+
+            /*
             * 切换群组禁言状态
             * */
             async toggle_group_mute() {
@@ -25484,9 +25492,10 @@
                 const {xxid, contact_type} = this.current_contact_xxid();
                 if (contact_type === subviews.Chat.receiver_type.group && this.group_mute_status) {
                     const isOwner = this.is_group_owner(xxid);
-                    if (!isOwner) {
+                    const isAdmin = this.is_admin();
+                    if (!isOwner && !isAdmin) {
                         this.e_inputarea_textarea.disabled = true;
-                        this.e_inputarea_textarea.placeholder = "群组已禁言,仅群主可发送消息";
+                        this.e_inputarea_textarea.placeholder = "群组已禁言,仅群主和管理员可发送消息";
                     } else {
                         this.e_inputarea_textarea.disabled = false;
                         this.e_inputarea_textarea.placeholder = "";
