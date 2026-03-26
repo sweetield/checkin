@@ -6179,7 +6179,41 @@
     .batch-auth-buttons {
         display: flex;
         gap: 12px;
-        justify-content: center;
+        justify-content: flex-start;
+    }
+
+    .auth-tabbar {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        border-bottom: 1px solid #e0e0e0;
+        padding: 0 10px;
+    }
+
+    .auth-tabbar-left {
+        display: flex;
+        gap: 0;
+    }
+
+    .auth-tabbar-right {
+        display: none;
+        gap: 8px;
+    }
+
+    .batch-auth-container {
+        display: flex;
+        flex-direction: column;
+        height: 100%;
+    }
+
+    .batch-auth-input-area {
+        flex: 1;
+        display: flex;
+    }
+
+    .batch-usernames-input {
+        flex: 1;
+        resize: none;
     }
 
     .batch-auth-btn {
@@ -11953,12 +11987,15 @@
 
             switch(tabId) {
                 case 'intro':
+                    const usageCount = Number(this.pluginData.usage_count || 0);
+                    const usageBadgeClass = usageCount === 0 ? 'zero' : 'nonzero';
                     contentHtml = `
                         <div class="plugin-detail-panel">
                             <h3>插件介绍</h3>
                             <p>${this.pluginData.description || '暂无描述'}</p>
                             <p><strong>作者：</strong>${this.pluginData.author || '未知'}</p>
                             <p><strong>版本：</strong>v${this.pluginData.version || '1.0.0'}</p>
+                            <p><strong>安装数量：</strong><span class="plugin-usage-badge ${usageBadgeClass}">${usageCount}</span></p>
                             ${this.pluginData.homepage ? `<p><strong>主页：</strong><a href="${this.pluginData.homepage}" target="_blank">${this.pluginData.homepage}</a></p>` : ''}
                         </div>
                     `;
@@ -12439,8 +12476,14 @@
     <span id="auth-top-margin"></span>
     <div id="auth-rect">
         <div class="auth-tabbar">
-            <button id="auth-tab-invite" class="active">邀请</button>
-            <button id="auth-tab-batch">一键授权</button>
+            <div class="auth-tabbar-left">
+                <button id="auth-tab-invite" class="active">邀请</button>
+                <button id="auth-tab-batch">一键授权</button>
+            </div>
+            <div class="auth-tabbar-right">
+                <button id="btn-grant-permissions" class="batch-auth-btn grant">赋予权限</button>
+                <button id="btn-revoke-permissions" class="batch-auth-btn revoke">移除权限</button>
+            </div>
         </div>
         <div class="auth-tabcontent">
             <!-- 邀请标签页 -->
@@ -12453,11 +12496,7 @@
             <div id="auth-content-batch" class="auth-tab-pane">
                 <div class="batch-auth-container">
                     <div class="batch-auth-input-area">
-                        <textarea id="batch-usernames" class="batch-usernames-input" placeholder="请输入用户名，多个用户名用英文逗号分隔&#10;例如: user1, user2, user3"></textarea>
-                    </div>
-                    <div class="batch-auth-buttons">
-                        <button id="btn-grant-permissions" class="batch-auth-btn grant">一键授权</button>
-                        <button id="btn-revoke-permissions" class="batch-auth-btn revoke">取消授权</button>
+                        <textarea id="batch-usernames" class="batch-usernames-input" placeholder="批量给用户添加邀请、添加好友、创建群组的权限。请输入用户名，多个用户名用英文逗号分隔&#10;例如: user1, user2, user3"></textarea>
                     </div>
                 </div>
             </div>
@@ -12487,6 +12526,7 @@
             this.batchUsernames = this.mark.querySelector("#batch-usernames");
             this.btnGrant = this.mark.querySelector("#btn-grant-permissions");
             this.btnRevoke = this.mark.querySelector("#btn-revoke-permissions");
+            this.authTabbarRight = this.mark.querySelector(".auth-tabbar-right");
 
             // 按钮组
             this.btnGroup = this.mark.querySelector("#form-mark-btn-group");
@@ -12525,6 +12565,11 @@
                 this.tabInvite.classList.add("active");
                 this.contentInvite.classList.add("active");
 
+                // 隐藏授权按钮
+                if (this.authTabbarRight) {
+                    this.authTabbarRight.style.display = "none";
+                }
+
                 // 自动加载邀请码列表
                 this.loadInviteCodes();
 
@@ -12539,6 +12584,11 @@
             } else if (tabName === "batch") {
                 this.tabBatch.classList.add("active");
                 this.contentBatch.classList.add("active");
+
+                // 显示授权按钮
+                if (this.authTabbarRight) {
+                    this.authTabbarRight.style.display = "flex";
+                }
 
                 // 显示"关闭"按钮
                 this.btnGroup.insertAdjacentHTML("beforeend", `<button class="form-mark-btn">关闭</button>`);
@@ -14389,15 +14439,11 @@
         }
 
         async loadPlugins() {
-            console.log('loadPlugins 开始执行');
             this.loadingElement.classList.remove("hidden");
             this.emptyElement.classList.add("hidden");
 
             try {
-                // 模拟从后端获取插件列表
-                // 实际应用中应该调用 API: GET /api/plugins
                 this.plugins = await this.fetchPlugins();
-                console.log('loadPlugins 获取到的插件:', this.plugins);
                 this.renderPluginList();
             } catch (error) {
                 console.error('加载插件失败:', error);
@@ -14411,25 +14457,21 @@
         async fetchPlugins() {
             try {
                 const response = await fetch(`${top_level_path}/api/plugins`, { credentials: 'same-origin' });
-                console.log('fetchPlugins 响应状态:', response.status);
                 if (!response.ok) {
                     console.error('获取插件列表失败:', response.status);
                     return [];
                 }
                 const data = await response.json();
-                console.log('fetchPlugins 返回数据:', data);
                 if (data.success && data.plugins) {
                     return data.plugins;
                 }
             } catch (error) {
                 console.error('获取插件列表失败:', error);
             }
-            // 返回空数组而不是模拟数据
             return [];
         }
 
         renderPluginList() {
-            console.log('renderPluginList 开始渲染, 插件数量:', this.plugins?.length);
             this.pluginList.innerHTML = '';
             this.installedPluginList.innerHTML = '';
 
@@ -14544,11 +14586,8 @@
             this.installedPluginList.innerHTML = filteredInstalledPlugins.map(plugin => renderOne(plugin, true)).join('');
 
             const bindEvents = (container) => {
-                console.log('bindEvents 被调用, container:', container);
-                
                 container.querySelectorAll('[data-action="detail"]').forEach(btn => {
                     btn.addEventListener('click', () => {
-                        console.log('详情按钮被点击, pluginId:', btn.dataset.pluginId);
                         const plugin = this.plugins.find(p => p.plugin_id === btn.dataset.pluginId);
                         if (plugin) this.showPluginDetail(plugin);
                     });
@@ -14556,7 +14595,6 @@
 
                 container.querySelectorAll('[data-action="install"]').forEach(btn => {
                     btn.addEventListener('click', () => {
-                        console.log('安装按钮被点击, pluginId:', btn.dataset.pluginId);
                         const plugin = this.plugins.find(p => p.plugin_id === btn.dataset.pluginId);
                         if (plugin) this.installPlugin(plugin);
                     });
@@ -14564,7 +14602,6 @@
 
                 container.querySelectorAll('[data-action="toggle"]').forEach(btn => {
                     btn.addEventListener('click', () => {
-                        console.log('切换按钮被点击, pluginId:', btn.dataset.pluginId);
                         const plugin = this.plugins.find(p => p.plugin_id === btn.dataset.pluginId);
                         if (plugin) this.togglePlugin(plugin);
                     });
@@ -14572,7 +14609,6 @@
 
                 container.querySelectorAll('[data-action="uninstall"]').forEach(btn => {
                     btn.addEventListener('click', () => {
-                        console.log('卸载按钮被点击, pluginId:', btn.dataset.pluginId);
                         const plugin = this.plugins.find(p => p.plugin_id === btn.dataset.pluginId);
                         if (plugin) this.uninstallPlugin(plugin);
                     });
@@ -15050,7 +15086,10 @@
                     version: plugin.version,
                     permissions: plugin.permissions || '无特殊权限',
                     admin_only: plugin.admin_only || false,
-                    updateTime: plugin.updateTime || '未知'
+                    updateTime: plugin.updateTime || '未知',
+                    usage_count: plugin.usage_count || 0,
+                    plugin_id: plugin.plugin_id,
+                    installed: plugin.installed
                 },
                 (pluginData) => {
                     // 插件详情关闭
