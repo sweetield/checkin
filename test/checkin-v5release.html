@@ -140,6 +140,55 @@
         .theme-dark .plugin-progress-text {
             color: #b0b0b0;
         }
+
+        .plugin-usage-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            margin-top: 6px;
+            font-size: 12px;
+            color: #666;
+        }
+
+        .plugin-usage-badge {
+            display: inline-flex;
+            align-items: center;
+            padding: 2px 8px;
+            border-radius: 999px;
+            background: #f1f3f5;
+            color: #495057;
+        }
+
+        .plugin-usage-badge.zero {
+            background: #e8f7ec;
+            color: #1f7a3d;
+        }
+
+        .plugin-usage-badge.nonzero {
+            background: #fff3cd;
+            color: #856404;
+        }
+
+        .theme-dark .plugin-usage-meta {
+            color: #b0b0b0;
+        }
+
+        .theme-dark .plugin-usage-badge {
+            background: #3a3f46;
+            color: #e0e0e0;
+        }
+
+        .theme-dark .plugin-usage-badge.zero {
+            background: #1f4f2d;
+            color: #8ee5a8;
+        }
+
+        .theme-dark .plugin-usage-badge.nonzero {
+            background: #5b4a1a;
+            color: #ffd66e;
+        }
+
+
          /* =====人员列表筛选框 ===== */
         .chat-contact-type-private {
             display: flex;
@@ -9788,6 +9837,38 @@
             }
         },
 
+        async clearPluginCache(plugin) {
+            if (!plugin || !plugin.plugin_id || !plugin.version) return;
+
+            MessageMark.confirm(
+                `确定要删除插件 "<strong>${plugin.name}</strong>" v${plugin.version} 的缓存吗？<br><br>只有在使用人数为 0 时才允许删除。`,
+                null,
+                null,
+                async () => {
+                    try {
+                        const response = await fetch(
+                            `${top_level_path}/api/plugins/${plugin.plugin_id}/${plugin.version}/clear-cache`,
+                            {
+                                method: 'POST',
+                                credentials: 'same-origin'
+                            }
+                        );
+
+                        const data = await response.json();
+
+                        if (data.success) {
+                            showToast(`插件 "${plugin.name}" 缓存已删除`, 'success');
+                            await this.loadPlugins();
+                        } else {
+                            showToast(data.message || '删除缓存失败', 'error');
+                        }
+                    } catch (error) {
+                        showToast(`删除缓存失败: ${error.message}`, 'error');
+                    }
+                },
+                MessageMark.colors.red
+            );
+        },
         // 加载插件列表
         async loadPluginList() {
             console.log('loadPluginList 开始执行');
@@ -9821,14 +9902,17 @@
 
         currentUserIsPluginAdmin() {
             return !!(
-                window.logged_user &&
+                window.logged_admin ||
                 (
-                    window.logged_user.contact_any === 1 ||
-                    window.logged_user.contact_any === true ||
-                    window.logged_user.is_plugin_admin === 1 ||
-                    window.logged_user.is_plugin_admin === true ||
-                    window.logged_user.is_admin === 1 ||
-                    window.logged_user.is_admin === true
+                    window.logged_user &&
+                    (
+                        window.logged_user.contact_any === 1 ||
+                        window.logged_user.contact_any === true ||
+                        window.logged_user.is_plugin_admin === 1 ||
+                        window.logged_user.is_plugin_admin === true ||
+                        window.logged_user.is_admin === 1 ||
+                        window.logged_user.is_admin === true
+                    )
                 )
             );
         },
@@ -9916,46 +10000,97 @@
 
             if (!listEl) return;
 
-            if (!plugins || plugins.length === 0) {
+            const isPluginAdmin = this.currentUserIsPluginAdmin();
+
+            const visiblePlugins = (plugins || []).filter(plugin => {
+                const adminOnly = this.isAdminOnlyPlugin(plugin);
+                if (adminOnly && !isPluginAdmin) return false;
+                return true;
+            });
+
+            if (!visiblePlugins || visiblePlugins.length === 0) {
                 this.showEmpty();
                 return;
             }
 
             if (emptyEl) emptyEl.classList.add('hidden');
 
-            listEl.innerHTML = plugins.map(plugin => `
-                <div class="plugin-item" data-plugin-id="${plugin.plugin_id}">
-                    <div class="plugin-item-header">
-                        <input type="checkbox" class="plugin-item-checkbox" data-plugin-id="${plugin.plugin_id}">
-                        <div class="plugin-item-content">
-                            <div class="plugin-item-title">
-                                ${plugin.name}
-                                <span class="plugin-item-version">v${plugin.version}</span>
+            listEl.innerHTML = visiblePlugins.map(plugin => {
+                const adminOnly = this.isAdminOnlyPlugin(plugin);
+                const badgeHtml = adminOnly
+                    ? `<span class="plugin-admin-badge">管理员专用</span>`
+                    : '';
+
+                const usageMetaHtml = isPluginAdmin ? `
+                    <div class="plugin-usage-meta">
+                        <span class="plugin-usage-badge ${Number(plugin.usage_count || 0) === 0 ? 'zero' : 'nonzero'}">
+                            使用人数：${Number(plugin.usage_count || 0)}
+                        </span>
+                        <span class="plugin-usage-badge">
+                            缓存：${plugin.cache_exists ? '已缓存' : '未缓存'}
+                        </span>
+                    </div>
+                ` : '';
+
+                const clearCacheBtnHtml = isPluginAdmin && plugin.can_clear_cache ? `
+                    <button class="plugin-item-btn danger"
+                            data-action="clear-cache"
+                            data-plugin-id="${plugin.plugin_id}">
+                        删除缓存
+                    </button>
+                ` : '';
+
+                return `
+                    <div class="plugin-item" data-plugin-id="${plugin.plugin_id}">
+                        <div class="plugin-item-header">
+                            <input type="checkbox" class="plugin-item-checkbox" data-plugin-id="${plugin.plugin_id}">
+                            <div class="plugin-item-content">
+                                <div class="plugin-item-title">
+                                    <span class="plugin-item-name">${plugin.name}</span>
+                                    ${badgeHtml}
+                                    <span class="plugin-item-version">v${plugin.version}</span>
+                                </div>
+                                <p class="plugin-item-description">${plugin.description || '暂无描述'}</p>
+                                ${usageMetaHtml}
+
+                                <div class="plugin-item-progress hidden" data-plugin-id="${plugin.plugin_id}">
+                                    <div class="plugin-progress-track">
+                                        <div class="plugin-progress-bar"></div>
+                                    </div>
+                                    <div class="plugin-progress-text">准备中...</div>
+                                </div>
                             </div>
-                            <p class="plugin-item-description">${plugin.description || '暂无描述'}</p>
-                        </div>
-                        <div class="plugin-item-actions">
-                            ${plugin.installed ? `
-                                <button class="plugin-item-action-btn ${plugin.enabled ? '' : 'primary'}" onclick="PluginManager.togglePlugin('${plugin.plugin_id}', ${!plugin.enabled})">
-                                    ${plugin.enabled ? '停用' : '启用'}
-                                </button>
-                                <button class="plugin-item-action-btn" onclick="PluginManager.openPluginDetail('${plugin.plugin_id}')">
-                                    详情
-                                </button>
-                                <button class="plugin-item-action-btn danger" onclick="PluginManager.uninstallPlugin('${plugin.plugin_id}')">
-                                    卸载
-                                </button>
-                            ` : `
-                                <button class="plugin-item-action-btn primary" onclick="PluginManager.installPlugin('${plugin.plugin_id}')">
-                                    安装
-                                </button>
-                            `}
+                            <div class="plugin-item-actions">
+                                ${plugin.installed ? `
+                                    <button class="plugin-item-btn ${plugin.enabled ? 'secondary' : 'primary'}"
+                                            data-action="toggle"
+                                            data-plugin-id="${plugin.plugin_id}">
+                                        ${plugin.enabled ? '停用' : '启用'}
+                                    </button>
+                                    <button class="plugin-item-btn secondary"
+                                            data-action="detail"
+                                            data-plugin-id="${plugin.plugin_id}">
+                                        详情
+                                    </button>
+                                    <button class="plugin-item-btn danger"
+                                            data-action="uninstall"
+                                            data-plugin-id="${plugin.plugin_id}">
+                                        卸载
+                                    </button>
+                                ` : `
+                                    <button class="plugin-item-btn primary"
+                                            data-action="install"
+                                            data-plugin-id="${plugin.plugin_id}">
+                                        安装
+                                    </button>
+                                `}
+                                ${clearCacheBtnHtml}
+                            </div>
                         </div>
                     </div>
-                </div>
-            `).join('');
+                `;
+            }).join('');
 
-            // 绑定复选框事件
             const checkboxes = listEl.querySelectorAll('.plugin-item-checkbox');
             checkboxes.forEach(cb => {
                 cb.addEventListener('change', (e) => {
@@ -9967,50 +10102,23 @@
                     }
                 });
             });
-        },
 
-        // 显示空状态
-        showEmpty() {
-            const emptyEl = document.getElementById('plugin-empty');
-            const listEl = document.getElementById('plugin-list');
-            if (emptyEl) emptyEl.classList.remove('hidden');
-            if (listEl) listEl.innerHTML = '';
-        },
+            listEl.querySelectorAll('.plugin-item').forEach(item => {
+                const pluginId = item.dataset.pluginId;
+                const plugin = visiblePlugins.find(p => p.plugin_id === pluginId);
+                if (!plugin) return;
 
-        // 搜索插件
-        async searchPlugins() {
-            const searchInput = document.getElementById('plugin-search-input');
-            const keyword = searchInput ? searchInput.value.trim() : '';
-
-            if (!keyword) {
-                this.loadPluginList();
-                return;
-            }
-
-            const loadingEl = document.getElementById('plugin-loading');
-            const listEl = document.getElementById('plugin-list');
-
-            if (loadingEl) loadingEl.classList.remove('hidden');
-            if (listEl) listEl.innerHTML = '';
-
-            try {
-                const response = await fetch(`${top_level_path}/api/plugins/market/search?q=${encodeURIComponent(keyword)}`, {
-                    credentials: 'same-origin'
+                item.querySelectorAll('[data-action]').forEach(btn => {
+                    btn.addEventListener('click', () => {
+                        const action = btn.dataset.action;
+                        if (action === 'clear-cache') {
+                            this.clearPluginCache(plugin);
+                        } else {
+                            this.handlePluginAction(action, plugin);
+                        }
+                    });
                 });
-                const data = await response.json();
-
-                if (data.success && data.plugins) {
-                    this.currentPlugins = data.plugins;
-                    this.renderPluginList(data.plugins);
-                } else {
-                    this.showEmpty();
-                }
-            } catch (error) {
-                console.error('搜索插件失败:', error);
-                this.showEmpty();
-            } finally {
-                if (loadingEl) loadingEl.classList.add('hidden');
-            }
+            });
         },
 
         // 安装插件
@@ -14520,14 +14628,21 @@
 
         renderInstalledPluginList() {
             this.installedPluginList.innerHTML = '';
-            let installedPlugins = this.plugins.filter(p => p.installed);
+            const isPluginAdmin = this.currentUserIsPluginAdmin();
 
-            // 搜索过滤
+            let installedPlugins = this.plugins
+                .filter(p => p.installed)
+                .filter(plugin => {
+                    const adminOnly = this.isAdminOnlyPlugin(plugin);
+                    if (adminOnly && !isPluginAdmin) return false;
+                    return true;
+                });
+
             if (this.installedSearchKeyword) {
                 const keyword = this.installedSearchKeyword.toLowerCase();
                 installedPlugins = installedPlugins.filter(p =>
-                    p.name.toLowerCase().includes(keyword) ||
-                    p.description.toLowerCase().includes(keyword)
+                    (p.name || '').toLowerCase().includes(keyword) ||
+                    (p.description || '').toLowerCase().includes(keyword)
                 );
             }
 
@@ -14539,8 +14654,58 @@
             this.installedEmptyElement.classList.add("hidden");
 
             installedPlugins.forEach(plugin => {
-                const pluginItem = this.createPluginItem(plugin);
-                this.installedPluginList.appendChild(pluginItem);
+                const adminOnly = this.isAdminOnlyPlugin(plugin);
+                const badgeHtml = adminOnly
+                    ? `<span class="plugin-admin-badge">管理员专用</span>`
+                    : '';
+
+                const div = document.createElement('div');
+                div.className = 'plugin-item';
+                div.dataset.pluginId = plugin.plugin_id;
+                div.innerHTML = `
+                    <div class="plugin-item-header">
+                        <input type="checkbox" class="plugin-item-checkbox" data-plugin-id="${plugin.plugin_id}">
+                        <div class="plugin-item-content">
+                            <div class="plugin-item-title">
+                                <span class="plugin-item-name">${plugin.name}</span>
+                                ${badgeHtml}
+                                <span class="plugin-item-version">v${plugin.version}</span>
+                            </div>
+                            <p class="plugin-item-description">${plugin.description || '暂无描述'}</p>
+
+                            <div class="plugin-item-progress hidden" data-plugin-id="${plugin.plugin_id}">
+                                <div class="plugin-progress-track">
+                                    <div class="plugin-progress-bar"></div>
+                                </div>
+                                <div class="plugin-progress-text">准备中...</div>
+                            </div>
+                        </div>
+                        <div class="plugin-item-actions">
+                            <button class="plugin-item-action-btn ${plugin.enabled ? '' : 'primary'}" data-action="toggle">
+                                ${plugin.enabled ? '停用' : '启用'}
+                            </button>
+                            <button class="plugin-item-action-btn" data-action="detail">详情</button>
+                            <button class="plugin-item-action-btn danger" data-action="uninstall">卸载</button>
+                        </div>
+                    </div>
+                `;
+
+                div.querySelector('.plugin-item-checkbox').addEventListener('change', (e) => {
+                    if (e.target.checked) {
+                        this.selectedPlugins.add(plugin.plugin_id);
+                    } else {
+                        this.selectedPlugins.delete(plugin.plugin_id);
+                    }
+                    this.updateSelectAllCheckbox?.();
+                });
+
+                div.querySelectorAll('[data-action]').forEach(btn => {
+                    btn.addEventListener('click', () => {
+                        this.handlePluginAction(btn.dataset.action, plugin);
+                    });
+                });
+
+                this.installedPluginList.appendChild(div);
             });
         }
 
@@ -16306,8 +16471,6 @@
             console.log(`✓ 已清理 ${clearedCount} 个旧脚本缓存`);
         }
 
-        // 延迟执行，确保其他初始化完成
-        setTimeout(autoLoadEnabledPlugins, 500);
     });
 
     // 创建插件管理实例并暴露到全局
