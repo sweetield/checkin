@@ -31290,21 +31290,27 @@
                                             });
                                             if (response.ok) {
                                                 const result = await response.json();
-                                                if (result.success) {
+                                                if (result.success && result.removed_count > 0) {
                                                     successCount++;
                                                 } else {
-                                                    failMessages.push(`从 ${gid} 移出成员失败：${result.message}`);
+                                                    // 解析失败原因
+                                                    if (result.failed && result.failed.length > 0) {
+                                                        const failDetails = result.failed.map(f => `${f.uid}：${f.reason}`).join("，");
+                                                        failMessages.push(`从 ${gid} 移出失败：${failDetails}`);
+                                                    } else {
+                                                        failMessages.push(`从 ${gid} 移出失败：${result.message || "操作失败"}`);
+                                                    }
                                                 }
                                             } else {
                                                 const errorText = await response.text();
-                                                failMessages.push(`从 ${gid} 移出成员失败：${errorText || "服务器错误"}`);
+                                                failMessages.push(`从 ${gid} 移出失败：${errorText || "服务器错误"}`);
                                             }
                                         } catch (error) {
-                                            failMessages.push(`从 ${gid} 移出成员网络错误：${error.message}`);
+                                            failMessages.push(`从 ${gid} 移出网络错误：${error.message}`);
                                         }
                                     }
                                     if (failMessages.length > 0) {
-                                        MessageMark.report(`部分移出失败：\n${failMessages.join("\n")}`, null, null, null, MessageMark.colors.yellow);
+                                        MessageMark.report(`移出失败：\n${failMessages.join("\n")}`, null, null, null, MessageMark.colors.yellow);
                                     } else {
                                         MessageMark.report(`成功从 ${selectedGids.length} 个群组中移出用户！`, null, null, null, MessageMark.colors.green);
                                         formmark.remove();
