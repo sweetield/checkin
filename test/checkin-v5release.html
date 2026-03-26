@@ -12573,12 +12573,12 @@
                 // 自动加载邀请码列表
                 this.loadInviteCodes();
 
-                // 显示"生成"和"取消"按钮
+                // 显示"生成"和"关闭"按钮
                 this.btnGroup.insertAdjacentHTML("beforeend", `<button class="form-mark-btn" id="auth-generate-btn">生成</button>`);
                 const generateBtn = this.btnGroup.querySelector("#auth-generate-btn");
                 generateBtn.addEventListener("click", () => this.generateInviteCode());
 
-                this.btnGroup.insertAdjacentHTML("beforeend", `<button class="form-mark-btn">取消</button>`);
+                this.btnGroup.insertAdjacentHTML("beforeend", `<button class="form-mark-btn">关闭</button>`);
                 const cancelBtn = this.btnGroup.querySelector("button:last-of-type");
                 cancelBtn.addEventListener("click", () => this.remove());
             } else if (tabName === "batch") {
