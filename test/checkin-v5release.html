@@ -30667,8 +30667,8 @@
                                         password: password
                                     });
 
+                                    const result = await response.json();
                                     if (response.status === 200) {
-                                        const result = await response.json();
                                         MessageMark.report(result.message || "修改成功！", null, null, null, MessageMark.colors.green);
                                         form_mark.remove();
                                         // 延迟刷新页面，让用户看到成功消息
@@ -30676,8 +30676,7 @@
                                             location.reload();
                                         }, 1500);
                                     } else {
-                                        const errorData = await response.json();
-                                        MessageMark.report(errorData.message || "修改失败", null, null, null, MessageMark.colors.red);
+                                        MessageMark.report(result.message || "修改失败", null, null, null, MessageMark.colors.red);
                                     }
                                 } catch (error) {
                                     console.error("修改名称失败:", error);
