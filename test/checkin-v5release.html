@@ -15577,7 +15577,7 @@
 
             // 获取加密密钥
             async getEncryptionKey() {
-                let url = join_path(this.api_url(), top_level_path, "get_encryption_key");
+                let url = join_path(top_level_path, this.api_url(), "get_encryption_key");
                 let r = await net_fetcher.nf_get(url);
                 if (r.status === 200) {
                     let d = await r.json();
