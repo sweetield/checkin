@@ -9740,6 +9740,19 @@
             box-sizing: border-box;
         }
 
+        .md-line-blockquote .md-text-bold .md-text {
+            background: #ffffff;
+            color: #000000;
+            padding: 1px 4px;
+            border-radius: 3px;
+            cursor: pointer;
+        }
+
+        .theme-dark .md-line-blockquote .md-text-bold .md-text {
+            background: #444;
+            color: #ffffff;
+        }
+
         .md-line-title {
             font-weight: bold;
         }
@@ -25948,7 +25961,6 @@
                                 const nameSpan = bq.querySelector(":scope .md-line .md-text-bold .md-text");
                                 if (!nameSpan) continue;
 
-                                let senderName = nameSpan.textContent.trim().replace(/[：:]\s*$/, '');
                                 const contentSpans = bq.querySelectorAll(":scope .md-line > .md-text");
                                 let quoteContent = "";
                                 for (const cs of contentSpans) {
@@ -25956,13 +25968,6 @@
                                         quoteContent += cs.textContent.trim();
                                     }
                                 }
-
-                                nameSpan.style.cursor = "pointer";
-                                nameSpan.style.padding = "1px 4px";
-                                nameSpan.style.borderRadius = "3px";
-                                const isDark = document.body.classList.contains("theme-dark");
-                                nameSpan.style.background = isDark ? "#444" : "#ffffff";
-                                nameSpan.style.color = isDark ? "#ffffff" : "#000000";
 
                                 nameSpan.addEventListener("click", (e) => {
                                     e.stopPropagation();
@@ -25991,25 +25996,22 @@
                                         }
                                     }
 
-                                    if (targetMsg) {
-                                        const msgFlow = this.container.querySelector(":scope .chat-session-msgflow");
-                                        if (msgFlow) {
-                                            const allMsgElements = msgFlow.querySelectorAll(":scope .chat-message, :scope .chat-message-group .chat-message");
-                                            let targetEl = null;
-                                            for (const el of allMsgElements) {
-                                                const elMsgId = el.msgobj?.msgattr?.id || el.dataset?.msgId;
-                                                if (elMsgId && elMsgId == targetMsg.id) {
-                                                    targetEl = el;
-                                                    break;
-                                                }
+                                    if (targetMsg && this.contentpage.e_msgflow) {
+                                        const allMsgElements = this.contentpage.e_msgflow.querySelectorAll(":scope .chat-message");
+                                        let targetEl = null;
+                                        for (const el of allMsgElements) {
+                                            const elMsgId = el.msgobj?.msgattr?.id;
+                                            if (elMsgId && elMsgId == targetMsg.id) {
+                                                targetEl = el;
+                                                break;
                                             }
-                                            if (targetEl && document.body.contains(targetEl)) {
-                                                targetEl.scrollIntoView({ behavior: "smooth", block: "center" });
-                                                targetEl.classList.add("msg-highlight");
-                                                setTimeout(() => {
-                                                    targetEl.classList.remove("msg-highlight");
-                                                }, 2000);
-                                            }
+                                        }
+                                        if (targetEl && document.body.contains(targetEl)) {
+                                            targetEl.scrollIntoView({ behavior: "smooth", block: "center" });
+                                            targetEl.classList.add("msg-highlight");
+                                            setTimeout(() => {
+                                                targetEl.classList.remove("msg-highlight");
+                                            }, 2000);
                                         }
                                     }
                                 });
