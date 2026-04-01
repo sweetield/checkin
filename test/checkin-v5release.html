@@ -7539,14 +7539,13 @@
             display: flex;
             align-items: center;
             gap: 4px;
-            margin-left: auto;
             position: relative;
-            max-width: 220px;
+            max-width: 260px;
         }
 
         .chat-msg-search-input {
             flex: 1;
-            padding: 4px 8px;
+            padding: 5px 10px;
             font-size: 13px;
             border: 1px solid #ddd;
             border-radius: 4px;
@@ -7554,7 +7553,7 @@
             transition: border-color 0.2s;
             background: #fff;
             color: #000;
-            min-width: 0;
+            min-width: 160px;
         }
 
         .chat-msg-search-input:focus {
@@ -7580,7 +7579,7 @@
         }
 
         .chat-msg-search-regex-btn {
-            padding: 4px 6px;
+            padding: 5px 8px;
             font-size: 11px;
             border: 1px solid #ddd;
             border-radius: 4px;
@@ -7589,6 +7588,7 @@
             cursor: pointer;
             white-space: nowrap;
             transition: all 0.15s;
+            font-family: monospace;
         }
 
         .chat-msg-search-regex-btn.active {
@@ -7615,15 +7615,15 @@
 
         .chat-msg-search-results {
             position: absolute;
-            top: 100%;
+            top: calc(100% + 4px);
             left: 0;
             right: 0;
-            max-height: 350px;
+            max-height: 400px;
             overflow-y: auto;
             background: #fff;
             border: 1px solid #ddd;
-            border-radius: 4px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            border-radius: 6px;
+            box-shadow: 0 4px 16px rgba(0,0,0,0.15);
             z-index: 100;
             display: none;
         }
@@ -7631,18 +7631,37 @@
         .theme-dark .chat-msg-search-results {
             background: #2d2d2d;
             border-color: #555;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+            box-shadow: 0 4px 16px rgba(0,0,0,0.4);
+        }
+
+        .chat-msg-search-result-count {
+            padding: 8px 12px;
+            font-size: 12px;
+            color: #888;
+            border-bottom: 1px solid #eee;
+            background: #fafafa;
+            position: sticky;
+            top: 0;
+            z-index: 1;
+        }
+
+        .theme-dark .chat-msg-search-result-count {
+            color: #aaa;
+            border-bottom-color: #444;
+            background: #333;
         }
 
         .chat-msg-search-result-item {
-            padding: 8px 10px;
+            padding: 10px 12px;
             cursor: pointer;
-            border-bottom: 1px solid #eee;
+            border-bottom: 1px solid #f0f0f0;
             transition: background 0.1s;
+            border-left: 3px solid transparent;
         }
 
         .chat-msg-search-result-item:hover {
             background: #f0f7ff;
+            border-left-color: #007bff;
         }
 
         .chat-msg-search-result-item:last-child {
@@ -7655,22 +7674,40 @@
 
         .theme-dark .chat-msg-search-result-item:hover {
             background: #3a3a3a;
+            border-left-color: #2563eb;
         }
 
         .chat-msg-search-result-sender {
             font-size: 12px;
             color: #888;
-            margin-bottom: 2px;
+            margin-bottom: 3px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .chat-msg-search-result-sender .search-sender-name {
+            color: #007bff;
+            font-weight: 500;
+        }
+
+        .chat-msg-search-result-sender .search-msg-time {
+            color: #bbb;
+            font-size: 11px;
         }
 
         .theme-dark .chat-msg-search-result-sender {
             color: #aaa;
         }
 
+        .theme-dark .chat-msg-search-result-sender .search-sender-name {
+            color: #63b3ed;
+        }
+
         .chat-msg-search-result-text {
             font-size: 13px;
             color: #333;
-            line-height: 1.4;
+            line-height: 1.5;
             word-break: break-all;
         }
 
@@ -7678,7 +7715,7 @@
             background: #fff59d;
             color: #000;
             border-radius: 2px;
-            padding: 0 1px;
+            padding: 0 2px;
         }
 
         .theme-dark .chat-msg-search-result-text {
@@ -7690,20 +7727,26 @@
             color: #fff;
         }
 
-        .chat-msg-search-result-count {
-            padding: 6px 10px;
+        .chat-msg-search-result-text .md-text-bold { font-weight: bold; }
+        .chat-msg-search-result-text .md-text-italic { font-style: italic; }
+        .chat-msg-search-result-text .md-text-strikethrough { text-decoration: line-through; color: #999; }
+        .chat-msg-search-result-text .md-inline-code {
+            background: #f0f0f0;
+            padding: 1px 4px;
+            border-radius: 3px;
+            font-family: monospace;
             font-size: 12px;
-            color: #888;
-            border-bottom: 1px solid #eee;
+            color: #d63384;
         }
+        .chat-msg-search-result-text .md-text-at { color: #007bff; font-weight: 500; }
 
-        .theme-dark .chat-msg-search-result-count {
-            color: #aaa;
-            border-bottom-color: #444;
+        .theme-dark .chat-msg-search-result-text .md-inline-code {
+            background: #444;
+            color: #e8a0bf;
         }
 
         .chat-msg-search-result-empty {
-            padding: 16px 10px;
+            padding: 24px 12px;
             text-align: center;
             color: #aaa;
             font-size: 13px;
@@ -7711,6 +7754,14 @@
 
         .theme-dark .chat-msg-search-result-empty {
             color: #777;
+        }
+
+        .chat-msg-search-result-ellipsis {
+            color: #ccc;
+        }
+
+        .theme-dark .chat-msg-search-result-ellipsis {
+            color: #666;
         }
 
         .drive-items-wrap {
@@ -21466,11 +21517,11 @@
             <span class="chat-session-header-info-name">${this.li.bindmap.text}</span>
             <span class="chat-session-header-info-status">正在加载...</span>
         </div>
-        <div class="chat-msg-search">
-            <input type="text" class="chat-msg-search-input" placeholder="搜索消息 (正则需开启 /re)">
-            <button class="chat-msg-search-regex-btn" title="正则搜索">/re</button>
-            <div class="chat-msg-search-results"></div>
-        </div>
+    </div>
+    <div class="chat-msg-search">
+        <input type="text" class="chat-msg-search-input" placeholder="搜索消息">
+        <button class="chat-msg-search-regex-btn" title="正则搜索">/re</button>
+        <div class="chat-msg-search-results"></div>
     </div>
     <div class="chat-session-header-actions">
         <button class="chat-session-header-action-more" title="更多"><i class="bi bi-three-dots"></i></button>
@@ -21719,6 +21770,100 @@
                         return `${d.getMonth()+1}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
                     };
 
+                    const escapeHtml = (s) => s.replace(/[<>"'&]/g, c => ({'<'  : '&lt;', '>'  : '&gt;', '"'  : '&quot;', "'"  : '&#39;', '&'  : '&amp;'}[c]));
+
+                    const renderMd = (html) => {
+                        html = html.replace(/\*\*(.*?)\*\*/g, '<span class="md-text-bold">$1</span>');
+                        html = html.replace(/(?<!\*)\*([^*]+)\*(?!\*)/g, '<span class="md-text-italic">$1</span>');
+                        html = html.replace(/`([^`]+)`/g, '<span class="md-inline-code">$1</span>');
+                        html = html.replace(/~~(.*?)~~/g, '<span class="md-text-strikethrough">$1</span>');
+                        html = html.replace(/@所有人/g, '<span class="md-text-at">@所有人</span>');
+                        html = html.replace(/@([\u4e00-\u9fa5a-zA-Z0-9_]+)/g, '<span class="md-text-at">@$1</span>');
+                        html = html.replace(/\n/g, ' ');
+                        return html;
+                    };
+
+                    const buildPreview = (rawText, keyword, isRegex) => {
+                        let escaped = escapeHtml(rawText);
+                        escaped = renderMd(escaped);
+
+                        if (rawText.length <= 100) {
+                            if (isRegex) {
+                                try {
+                                    const re = new RegExp(keyword, 'gi');
+                                    escaped = escaped.replace(/<[^>]+>/g, '\x00$&\x00');
+                                    const parts = escaped.split('\x00');
+                                    for (let i = 0; i < parts.length; i++) {
+                                        if (!parts[i].startsWith('<')) {
+                                            parts[i] = parts[i].replace(new RegExp(keyword, 'gi'), m => `<mark>${m}</mark>`);
+                                        }
+                                    }
+                                    escaped = parts.join('');
+                                } catch(e) {}
+                            } else {
+                                const kw = keyword.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+                                escaped = escaped.replace(/<[^>]+>/g, '\x00$&\x00');
+                                const parts = escaped.split('\x00');
+                                for (let i = 0; i < parts.length; i++) {
+                                    if (!parts[i].startsWith('<')) {
+                                        parts[i] = parts[i].replace(new RegExp(kw, 'gi'), m => `<mark>${m}</mark>`);
+                                    }
+                                }
+                                escaped = parts.join('');
+                            }
+                            return escaped;
+                        }
+
+                        const idx = rawText.toLowerCase().indexOf(keyword.toLowerCase());
+                        if (idx === -1) return escaped.substring(0, 100) + '<span class="chat-msg-search-result-ellipsis">…</span>';
+
+                        const prefixLen = 30;
+                        const ctxLen = 20;
+                        const suffixLen = 10;
+
+                        const p1 = rawText.substring(0, prefixLen);
+                        const ctxStart = Math.max(0, idx - ctxLen);
+                        const ctxEnd = Math.min(rawText.length, idx + keyword.length + ctxLen);
+                        const pCtx = rawText.substring(ctxStart, ctxEnd);
+                        const p2 = rawText.substring(Math.min(rawText.length, ctxEnd), Math.min(rawText.length, ctxEnd + suffixLen));
+
+                        let preview = escapeHtml(p1) + '<span class="chat-msg-search-result-ellipsis">…</span>';
+                        if (ctxStart > prefixLen) {
+                            preview += '<span class="chat-msg-search-result-ellipsis">…</span>';
+                        }
+                        preview += renderMd(escapeHtml(pCtx));
+                        preview += '<span class="chat-msg-search-result-ellipsis">…</span>';
+                        if (p2) {
+                            preview += renderMd(escapeHtml(p2));
+                        }
+
+                        if (isRegex) {
+                            try {
+                                const re = new RegExp(keyword, 'gi');
+                                preview = preview.replace(/<[^>]+>/g, '\x00$&\x00');
+                                const parts = preview.split('\x00');
+                                for (let i = 0; i < parts.length; i++) {
+                                    if (!parts[i].startsWith('<')) {
+                                        parts[i] = parts[i].replace(new RegExp(keyword, 'gi'), m => `<mark>${m}</mark>`);
+                                    }
+                                }
+                                preview = parts.join('');
+                            } catch(e) {}
+                        } else {
+                            const kw = keyword.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+                            preview = preview.replace(/<[^>]+>/g, '\x00$&\x00');
+                            const parts = preview.split('\x00');
+                            for (let i = 0; i < parts.length; i++) {
+                                if (!parts[i].startsWith('<')) {
+                                    parts[i] = parts[i].replace(new RegExp(kw, 'gi'), m => `<mark>${m}</mark>`);
+                                }
+                            }
+                            preview = parts.join('');
+                        }
+
+                        return preview;
+                    };
+
                     const doSearch = () => {
                         const keyword = searchInput.value.trim();
                         if (!keyword) {
@@ -21730,13 +21875,8 @@
                         let matcher;
                         if (isRegexMode) {
                             try {
-                                const flags = keyword.endsWith("/i") ? "i" : "";
-                                const pattern = flags ? keyword.slice(0, -2) : keyword;
-                                const re = new RegExp(pattern, flags);
-                                matcher = (text) => {
-                                    const m = text.match(re);
-                                    return m ? m[0] : null;
-                                };
+                                const re = new RegExp(keyword, 'i');
+                                matcher = (text) => re.test(text) ? text.match(new RegExp(keyword, 'gi'))[0] : null;
                             } catch (e) {
                                 resultsPanel.style.display = "block";
                                 resultsPanel.innerHTML = `<div class="chat-msg-search-result-empty">正则表达式无效</div>`;
@@ -21744,10 +21884,7 @@
                             }
                         } else {
                             const lower = keyword.toLowerCase();
-                            matcher = (text) => {
-                                const idx = text.toLowerCase().indexOf(lower);
-                                return idx >= 0 ? text.substring(idx, idx + keyword.length) : null;
-                            };
+                            matcher = (text) => text.toLowerCase().includes(lower) ? keyword : null;
                         }
 
                         const msgs = this.li.bindmap.msgs || [];
@@ -21757,7 +21894,7 @@
                             if (!msg.plain_data_text) continue;
                             const matched = matcher(msg.plain_data_text);
                             if (matched) {
-                                results.push({ msg, matched });
+                                results.push(msg);
                                 if (results.length >= 50) break;
                             }
                         }
@@ -21769,25 +21906,13 @@
                         }
 
                         let html = `<div class="chat-msg-search-result-count">找到 ${results.length} 条消息</div>`;
-                        for (const { msg, matched } of results) {
+                        for (const msg of results) {
                             const sender = msg.sender || "未知";
                             const time = formatTime(msg.sent_time);
-                            const text = msg.plain_data_text.replace(/[<>"'&]/g, c => ({'<'  : '&lt;', '>'  : '&gt;', '"'  : '&quot;', "'"  : '&#39;', '&'  : '&amp;'}[c]));
-                            let preview;
-                            if (isRegexMode) {
-                                preview = text;
-                            } else {
-                                const re = new RegExp(keyword.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'gi');
-                                preview = text.replace(re, m => `<mark>${m}</mark>`);
-                            }
-                            if (preview.length > 120) {
-                                const matchedIdx = preview.indexOf('<mark>');
-                                const start = Math.max(0, (matchedIdx > 60 ? matchedIdx - 40 : 0));
-                                const end = Math.min(preview.length, start + 120);
-                                preview = (start > 0 ? '...' : '') + preview.substring(start, end) + (end < preview.length ? '...' : '');
-                            }
+                            const preview = buildPreview(msg.plain_data_text, keyword, isRegexMode);
+
                             html += `<div class="chat-msg-search-result-item" data-msg-id="${msg.id}">
-                                <div class="chat-msg-search-result-sender">${sender} · ${time}</div>
+                                <div class="chat-msg-search-result-sender"><span class="search-sender-name">${escapeHtml(sender)}</span> <span class="search-msg-time">${time}</span></div>
                                 <div class="chat-msg-search-result-text">${preview}</div>
                             </div>`;
                         }
@@ -21820,19 +21945,20 @@
                                 el.scrollIntoView({ behavior: "smooth", block: "center" });
                                 el.classList.add("msg-highlight");
                                 setTimeout(() => el.classList.remove("msg-highlight"), 2000);
-                                searchInput.value = "";
-                                resultsPanel.style.display = "none";
-                                resultsPanel.innerHTML = "";
                                 break;
                             }
                         }
                     });
 
-                    searchInput.addEventListener("click", (e) => e.stopPropagation());
-                    regexBtn.addEventListener("click", (e) => e.stopPropagation());
+                    searchInput.addEventListener("click", (e) => {
+                        e.stopPropagation();
+                        if (searchInput.value.trim()) {
+                            resultsPanel.style.display = "block";
+                        }
+                    });
 
                     document.addEventListener("click", (e) => {
-                        if (!searchInput.contains(e.target) && !resultsPanel.contains(e.target)) {
+                        if (!searchInput.contains(e.target) && !resultsPanel.contains(e.target) && !regexBtn.contains(e.target)) {
                             resultsPanel.style.display = "none";
                         }
                     });
