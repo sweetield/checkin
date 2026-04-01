@@ -21519,8 +21519,8 @@
         </div>
     </div>
     <div class="chat-msg-search">
-        <input type="text" class="chat-msg-search-input" placeholder="搜索消息">
-        <button class="chat-msg-search-regex-btn" title="正则搜索">/re</button>
+        <input type="text" class="chat-msg-search-input" placeholder="搜索消息（支持正则）">
+        <button class="chat-msg-search-regex-btn" title="正则搜索">正则</button>
         <div class="chat-msg-search-results"></div>
     </div>
     <div class="chat-session-header-actions">
@@ -21772,96 +21772,98 @@
 
                     const escapeHtml = (s) => s.replace(/[<>"'&]/g, c => ({'<'  : '&lt;', '>'  : '&gt;', '"'  : '&quot;', "'"  : '&#39;', '&'  : '&amp;'}[c]));
 
-                    const renderMd = (html) => {
-                        html = html.replace(/\*\*(.*?)\*\*/g, '<span class="md-text-bold">$1</span>');
-                        html = html.replace(/(?<!\*)\*([^*]+)\*(?!\*)/g, '<span class="md-text-italic">$1</span>');
-                        html = html.replace(/`([^`]+)`/g, '<span class="md-inline-code">$1</span>');
-                        html = html.replace(/~~(.*?)~~/g, '<span class="md-text-strikethrough">$1</span>');
-                        html = html.replace(/@所有人/g, '<span class="md-text-at">@所有人</span>');
-                        html = html.replace(/@([\u4e00-\u9fa5a-zA-Z0-9_]+)/g, '<span class="md-text-at">@$1</span>');
-                        html = html.replace(/\n/g, ' ');
-                        return html;
+                    const highlightInDOM = (root, keyword, isRegex) => {
+                        const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
+                        const textNodes = [];
+                        while (walker.nextNode()) textNodes.push(walker.currentNode);
+                        for (const node of textNodes) {
+                            const text = node.textContent;
+                            let re;
+                            if (isRegex) {
+                                try { re = new RegExp(keyword, 'gi'); } catch(e) { return; }
+                            } else {
+                                re = new RegExp(keyword.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'gi');
+                            }
+                            if (!re.test(text)) continue;
+                            re.lastIndex = 0;
+                            const frag = document.createDocumentFragment();
+                            let last = 0, m;
+                            while ((m = re.exec(text)) !== null) {
+                                if (m.index > last) frag.appendChild(document.createTextNode(text.slice(last, m.index)));
+                                const mark = document.createElement('mark');
+                                mark.textContent = m[0];
+                                frag.appendChild(mark);
+                                last = re.lastIndex;
+                            }
+                            if (last < text.length) frag.appendChild(document.createTextNode(text.slice(last)));
+                            node.parentNode.replaceChild(frag, node);
+                        }
                     };
 
-                    const buildPreview = (rawText, keyword, isRegex) => {
-                        let escaped = escapeHtml(rawText);
-                        escaped = renderMd(escaped);
+                    const buildPreviewEl = (rawText, keyword, isRegex) => {
+                        const div = document.createElement('div');
+                        div.className = 'chat-msg-search-result-text';
 
-                        if (rawText.length <= 100) {
-                            if (isRegex) {
-                                try {
-                                    const re = new RegExp(keyword, 'gi');
-                                    escaped = escaped.replace(/<[^>]+>/g, '\x00$&\x00');
-                                    const parts = escaped.split('\x00');
-                                    for (let i = 0; i < parts.length; i++) {
-                                        if (!parts[i].startsWith('<')) {
-                                            parts[i] = parts[i].replace(new RegExp(keyword, 'gi'), m => `<mark>${m}</mark>`);
-                                        }
-                                    }
-                                    escaped = parts.join('');
-                                } catch(e) {}
-                            } else {
-                                const kw = keyword.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-                                escaped = escaped.replace(/<[^>]+>/g, '\x00$&\x00');
-                                const parts = escaped.split('\x00');
-                                for (let i = 0; i < parts.length; i++) {
-                                    if (!parts[i].startsWith('<')) {
-                                        parts[i] = parts[i].replace(new RegExp(kw, 'gi'), m => `<mark>${m}</mark>`);
-                                    }
-                                }
-                                escaped = parts.join('');
-                            }
-                            return escaped;
+                        const hasHtml = /<[a-z][\s\S]*?>/i.test(rawText);
+                        const plainText = rawText.replace(/<[^>]+>/g, '').replace(/\n/g, ' ');
+
+                        if (plainText.length <= 100) {
+                            div.innerHTML = rawText.replace(/\n/g, ' ');
+                            highlightInDOM(div, keyword, isRegex);
+                            return div;
                         }
 
-                        const idx = rawText.toLowerCase().indexOf(keyword.toLowerCase());
-                        if (idx === -1) return escaped.substring(0, 100) + '<span class="chat-msg-search-result-ellipsis">…</span>';
+                        const idx = plainText.toLowerCase().indexOf(keyword.toLowerCase());
 
-                        const prefixLen = 30;
-                        const ctxLen = 20;
-                        const suffixLen = 10;
+                        if (hasHtml) {
+                            div.innerHTML = rawText.replace(/\n/g, ' ');
+                            highlightInDOM(div, keyword, isRegex);
+                            return div;
+                        }
 
-                        const p1 = rawText.substring(0, prefixLen);
+                        if (idx === -1) {
+                            div.textContent = plainText.substring(0, 100);
+                            const ell = document.createElement('span');
+                            ell.className = 'chat-msg-search-result-ellipsis';
+                            ell.textContent = '…';
+                            div.appendChild(ell);
+                            return div;
+                        }
+
+                        const prefixLen = 30, ctxLen = 20, suffixLen = 10;
+                        const p1 = plainText.substring(0, prefixLen);
                         const ctxStart = Math.max(0, idx - ctxLen);
-                        const ctxEnd = Math.min(rawText.length, idx + keyword.length + ctxLen);
-                        const pCtx = rawText.substring(ctxStart, ctxEnd);
-                        const p2 = rawText.substring(Math.min(rawText.length, ctxEnd), Math.min(rawText.length, ctxEnd + suffixLen));
+                        const ctxEnd = Math.min(plainText.length, idx + keyword.length + ctxLen);
+                        const pCtx = plainText.substring(ctxStart, ctxEnd);
+                        const p2 = plainText.substring(Math.min(plainText.length, ctxEnd), Math.min(plainText.length, ctxEnd + suffixLen));
 
-                        let preview = escapeHtml(p1) + '<span class="chat-msg-search-result-ellipsis">…</span>';
+                        let preview = p1;
+                        const ell = document.createElement('span');
+                        ell.className = 'chat-msg-search-result-ellipsis';
+                        ell.textContent = '…';
+
+                        div.textContent = preview;
+                        div.appendChild(ell.cloneNode(true));
                         if (ctxStart > prefixLen) {
-                            preview += '<span class="chat-msg-search-result-ellipsis">…</span>';
+                            div.appendChild(ell.cloneNode(true));
                         }
-                        preview += renderMd(escapeHtml(pCtx));
-                        preview += '<span class="chat-msg-search-result-ellipsis">…</span>';
+
+                        const ctxDiv = document.createElement('span');
+                        ctxDiv.textContent = pCtx;
+                        highlightInDOM(ctxDiv, keyword, isRegex);
+                        div.appendChild(ctxDiv);
+
+                        div.appendChild(ell.cloneNode(true));
                         if (p2) {
-                            preview += renderMd(escapeHtml(p2));
+                            div.appendChild(document.createTextNode(p2));
                         }
 
-                        if (isRegex) {
-                            try {
-                                const re = new RegExp(keyword, 'gi');
-                                preview = preview.replace(/<[^>]+>/g, '\x00$&\x00');
-                                const parts = preview.split('\x00');
-                                for (let i = 0; i < parts.length; i++) {
-                                    if (!parts[i].startsWith('<')) {
-                                        parts[i] = parts[i].replace(new RegExp(keyword, 'gi'), m => `<mark>${m}</mark>`);
-                                    }
-                                }
-                                preview = parts.join('');
-                            } catch(e) {}
-                        } else {
-                            const kw = keyword.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-                            preview = preview.replace(/<[^>]+>/g, '\x00$&\x00');
-                            const parts = preview.split('\x00');
-                            for (let i = 0; i < parts.length; i++) {
-                                if (!parts[i].startsWith('<')) {
-                                    parts[i] = parts[i].replace(new RegExp(kw, 'gi'), m => `<mark>${m}</mark>`);
-                                }
-                            }
-                            preview = parts.join('');
-                        }
+                        return div;
+                    };
 
-                        return preview;
+                    const buildPreviewHTML = (rawText, keyword, isRegex) => {
+                        const el = buildPreviewEl(rawText, keyword, isRegex);
+                        return el.innerHTML;
                     };
 
                     const doSearch = () => {
@@ -21909,7 +21911,7 @@
                         for (const msg of results) {
                             const sender = msg.sender || "未知";
                             const time = formatTime(msg.sent_time);
-                            const preview = buildPreview(msg.plain_data_text, keyword, isRegexMode);
+                            const preview = buildPreviewHTML(msg.plain_data_text, keyword, isRegexMode);
 
                             html += `<div class="chat-msg-search-result-item" data-msg-id="${msg.id}">
                                 <div class="chat-msg-search-result-sender"><span class="search-sender-name">${escapeHtml(sender)}</span> <span class="search-msg-time">${time}</span></div>
