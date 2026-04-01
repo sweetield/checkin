@@ -7534,6 +7534,185 @@
             color: #aaa;
         }
 
+        /* 聊天消息搜索 */
+        .chat-msg-search {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            margin-left: auto;
+            position: relative;
+            max-width: 220px;
+        }
+
+        .chat-msg-search-input {
+            flex: 1;
+            padding: 4px 8px;
+            font-size: 13px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            outline: none;
+            transition: border-color 0.2s;
+            background: #fff;
+            color: #000;
+            min-width: 0;
+        }
+
+        .chat-msg-search-input:focus {
+            border-color: #007bff;
+        }
+
+        .chat-msg-search-input::placeholder {
+            color: #aaa;
+        }
+
+        .theme-dark .chat-msg-search-input {
+            background: #3d3d3d;
+            border-color: #555;
+            color: #e0e0e0;
+        }
+
+        .theme-dark .chat-msg-search-input:focus {
+            border-color: #63b3ed;
+        }
+
+        .theme-dark .chat-msg-search-input::placeholder {
+            color: #888;
+        }
+
+        .chat-msg-search-regex-btn {
+            padding: 4px 6px;
+            font-size: 11px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            background: #fff;
+            color: #666;
+            cursor: pointer;
+            white-space: nowrap;
+            transition: all 0.15s;
+        }
+
+        .chat-msg-search-regex-btn.active {
+            background: #007bff;
+            color: #fff;
+            border-color: #007bff;
+        }
+
+        .chat-msg-search-regex-btn:hover {
+            border-color: #007bff;
+        }
+
+        .theme-dark .chat-msg-search-regex-btn {
+            background: #3d3d3d;
+            border-color: #555;
+            color: #ccc;
+        }
+
+        .theme-dark .chat-msg-search-regex-btn.active {
+            background: #2563eb;
+            border-color: #2563eb;
+            color: #fff;
+        }
+
+        .chat-msg-search-results {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            max-height: 350px;
+            overflow-y: auto;
+            background: #fff;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            z-index: 100;
+            display: none;
+        }
+
+        .theme-dark .chat-msg-search-results {
+            background: #2d2d2d;
+            border-color: #555;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+        }
+
+        .chat-msg-search-result-item {
+            padding: 8px 10px;
+            cursor: pointer;
+            border-bottom: 1px solid #eee;
+            transition: background 0.1s;
+        }
+
+        .chat-msg-search-result-item:hover {
+            background: #f0f7ff;
+        }
+
+        .chat-msg-search-result-item:last-child {
+            border-bottom: none;
+        }
+
+        .theme-dark .chat-msg-search-result-item {
+            border-bottom-color: #444;
+        }
+
+        .theme-dark .chat-msg-search-result-item:hover {
+            background: #3a3a3a;
+        }
+
+        .chat-msg-search-result-sender {
+            font-size: 12px;
+            color: #888;
+            margin-bottom: 2px;
+        }
+
+        .theme-dark .chat-msg-search-result-sender {
+            color: #aaa;
+        }
+
+        .chat-msg-search-result-text {
+            font-size: 13px;
+            color: #333;
+            line-height: 1.4;
+            word-break: break-all;
+        }
+
+        .chat-msg-search-result-text mark {
+            background: #fff59d;
+            color: #000;
+            border-radius: 2px;
+            padding: 0 1px;
+        }
+
+        .theme-dark .chat-msg-search-result-text {
+            color: #ddd;
+        }
+
+        .theme-dark .chat-msg-search-result-text mark {
+            background: #665c00;
+            color: #fff;
+        }
+
+        .chat-msg-search-result-count {
+            padding: 6px 10px;
+            font-size: 12px;
+            color: #888;
+            border-bottom: 1px solid #eee;
+        }
+
+        .theme-dark .chat-msg-search-result-count {
+            color: #aaa;
+            border-bottom-color: #444;
+        }
+
+        .chat-msg-search-result-empty {
+            padding: 16px 10px;
+            text-align: center;
+            color: #aaa;
+            font-size: 13px;
+        }
+
+        .theme-dark .chat-msg-search-result-empty {
+            color: #777;
+        }
+
         .drive-items-wrap {
             display: flex;
             flex-direction: column;
@@ -21287,6 +21466,11 @@
             <span class="chat-session-header-info-name">${this.li.bindmap.text}</span>
             <span class="chat-session-header-info-status">正在加载...</span>
         </div>
+        <div class="chat-msg-search">
+            <input type="text" class="chat-msg-search-input" placeholder="搜索消息 (正则需开启 /re)">
+            <button class="chat-msg-search-regex-btn" title="正则搜索">/re</button>
+            <div class="chat-msg-search-results"></div>
+        </div>
     </div>
     <div class="chat-session-header-actions">
         <button class="chat-session-header-action-more" title="更多"><i class="bi bi-three-dots"></i></button>
@@ -21520,6 +21704,139 @@
                 this.e_header_info = this.container.querySelector(":scope div.chat-session-header-info");
                 this.e_header_info_name = this.container.querySelector(":scope span.chat-session-header-info-name");
                 this.e_header_info_status = this.container.querySelector(":scope span.chat-session-header-info-status");
+
+                // 消息搜索功能
+                {
+                    const searchInput = this.container.querySelector(":scope .chat-msg-search-input");
+                    const regexBtn = this.container.querySelector(":scope .chat-msg-search-regex-btn");
+                    const resultsPanel = this.container.querySelector(":scope .chat-msg-search-results");
+                    let isRegexMode = false;
+
+                    const formatTime = (ts) => {
+                        if (!ts) return "";
+                        const d = new Date(ts * 1000);
+                        const pad = n => String(n).padStart(2, "0");
+                        return `${d.getMonth()+1}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
+                    };
+
+                    const doSearch = () => {
+                        const keyword = searchInput.value.trim();
+                        if (!keyword) {
+                            resultsPanel.style.display = "none";
+                            resultsPanel.innerHTML = "";
+                            return;
+                        }
+
+                        let matcher;
+                        if (isRegexMode) {
+                            try {
+                                const flags = keyword.endsWith("/i") ? "i" : "";
+                                const pattern = flags ? keyword.slice(0, -2) : keyword;
+                                const re = new RegExp(pattern, flags);
+                                matcher = (text) => {
+                                    const m = text.match(re);
+                                    return m ? m[0] : null;
+                                };
+                            } catch (e) {
+                                resultsPanel.style.display = "block";
+                                resultsPanel.innerHTML = `<div class="chat-msg-search-result-empty">正则表达式无效</div>`;
+                                return;
+                            }
+                        } else {
+                            const lower = keyword.toLowerCase();
+                            matcher = (text) => {
+                                const idx = text.toLowerCase().indexOf(lower);
+                                return idx >= 0 ? text.substring(idx, idx + keyword.length) : null;
+                            };
+                        }
+
+                        const msgs = this.li.bindmap.msgs || [];
+                        const results = [];
+                        for (let i = msgs.length - 1; i >= 0; i--) {
+                            const msg = msgs[i];
+                            if (!msg.plain_data_text) continue;
+                            const matched = matcher(msg.plain_data_text);
+                            if (matched) {
+                                results.push({ msg, matched });
+                                if (results.length >= 50) break;
+                            }
+                        }
+
+                        if (results.length === 0) {
+                            resultsPanel.style.display = "block";
+                            resultsPanel.innerHTML = `<div class="chat-msg-search-result-empty">未找到匹配消息</div>`;
+                            return;
+                        }
+
+                        let html = `<div class="chat-msg-search-result-count">找到 ${results.length} 条消息</div>`;
+                        for (const { msg, matched } of results) {
+                            const sender = msg.sender || "未知";
+                            const time = formatTime(msg.sent_time);
+                            const text = msg.plain_data_text.replace(/[<>"'&]/g, c => ({'<'  : '&lt;', '>'  : '&gt;', '"'  : '&quot;', "'"  : '&#39;', '&'  : '&amp;'}[c]));
+                            let preview;
+                            if (isRegexMode) {
+                                preview = text;
+                            } else {
+                                const re = new RegExp(keyword.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'gi');
+                                preview = text.replace(re, m => `<mark>${m}</mark>`);
+                            }
+                            if (preview.length > 120) {
+                                const matchedIdx = preview.indexOf('<mark>');
+                                const start = Math.max(0, (matchedIdx > 60 ? matchedIdx - 40 : 0));
+                                const end = Math.min(preview.length, start + 120);
+                                preview = (start > 0 ? '...' : '') + preview.substring(start, end) + (end < preview.length ? '...' : '');
+                            }
+                            html += `<div class="chat-msg-search-result-item" data-msg-id="${msg.id}">
+                                <div class="chat-msg-search-result-sender">${sender} · ${time}</div>
+                                <div class="chat-msg-search-result-text">${preview}</div>
+                            </div>`;
+                        }
+                        resultsPanel.style.display = "block";
+                        resultsPanel.innerHTML = html;
+                    };
+
+                    searchInput.addEventListener("input", doSearch);
+
+                    regexBtn.addEventListener("click", (e) => {
+                        e.stopPropagation();
+                        isRegexMode = !isRegexMode;
+                        regexBtn.classList.toggle("active", isRegexMode);
+                        if (searchInput.value.trim()) doSearch();
+                    });
+
+                    resultsPanel.addEventListener("click", (e) => {
+                        e.stopPropagation();
+                        const item = e.target.closest(".chat-msg-search-result-item");
+                        if (!item) return;
+                        const msgId = parseInt(item.dataset.msgId);
+                        if (!msgId) return;
+
+                        const msgFlow = this.e_msgflow;
+                        if (!msgFlow) return;
+                        const allEls = msgFlow.querySelectorAll(":scope .chat-message");
+                        for (const el of allEls) {
+                            const elId = el.msgobj?.msgattr?.id;
+                            if (elId && elId == msgId) {
+                                el.scrollIntoView({ behavior: "smooth", block: "center" });
+                                el.classList.add("msg-highlight");
+                                setTimeout(() => el.classList.remove("msg-highlight"), 2000);
+                                searchInput.value = "";
+                                resultsPanel.style.display = "none";
+                                resultsPanel.innerHTML = "";
+                                break;
+                            }
+                        }
+                    });
+
+                    searchInput.addEventListener("click", (e) => e.stopPropagation());
+                    regexBtn.addEventListener("click", (e) => e.stopPropagation());
+
+                    document.addEventListener("click", (e) => {
+                        if (!searchInput.contains(e.target) && !resultsPanel.contains(e.target)) {
+                            resultsPanel.style.display = "none";
+                        }
+                    });
+                }
 
                 this.e_header_actions = this.container.querySelector(":scope div.chat-session-header-actions");
 
