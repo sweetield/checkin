@@ -25961,58 +25961,29 @@
                                 const nameSpan = bq.querySelector(":scope .md-line .md-text-bold .md-text");
                                 if (!nameSpan) continue;
 
-                                const contentSpans = bq.querySelectorAll(":scope .md-line > .md-text");
-                                let quoteContent = "";
-                                for (const cs of contentSpans) {
-                                    if (cs !== nameSpan && !nameSpan.contains(cs)) {
-                                        quoteContent += cs.textContent.trim();
-                                    }
-                                }
-
                                 nameSpan.addEventListener("click", (e) => {
                                     e.stopPropagation();
-                                    const allMsgs = this.contentpage.li.bindmap.msgs;
-                                    let targetMsg = null;
+                                    const citeId = this.msgattr.cite_message_id;
+                                    if (!citeId) return;
 
-                                    if (quoteContent.length > 0) {
-                                        for (let i = allMsgs.length - 1; i >= 0; i--) {
-                                            const msg = allMsgs[i];
-                                            if (msg.id === this.msgattr.id) continue;
-                                            if (msg.plain_data_text && msg.plain_data_text.includes(quoteContent)) {
-                                                targetMsg = msg;
-                                                break;
-                                            }
+                                    const targetMsg = this.contentpage.li.bindmap.msgs.find(m => m.id === citeId);
+                                    if (!targetMsg || !this.contentpage.e_msgflow) return;
+
+                                    const allMsgElements = this.contentpage.e_msgflow.querySelectorAll(":scope .chat-message");
+                                    let targetEl = null;
+                                    for (const el of allMsgElements) {
+                                        const elMsgId = el.msgobj?.msgattr?.id;
+                                        if (elMsgId && elMsgId == citeId) {
+                                            targetEl = el;
+                                            break;
                                         }
                                     }
-
-                                    if (!targetMsg) {
-                                        for (let i = allMsgs.length - 1; i >= 0; i--) {
-                                            const msg = allMsgs[i];
-                                            if (msg.id === this.msgattr.id) continue;
-                                            if (msg.plain_data_text && msg.plain_data_text.startsWith(quoteContent.substring(0, 20))) {
-                                                targetMsg = msg;
-                                                break;
-                                            }
-                                        }
-                                    }
-
-                                    if (targetMsg && this.contentpage.e_msgflow) {
-                                        const allMsgElements = this.contentpage.e_msgflow.querySelectorAll(":scope .chat-message");
-                                        let targetEl = null;
-                                        for (const el of allMsgElements) {
-                                            const elMsgId = el.msgobj?.msgattr?.id;
-                                            if (elMsgId && elMsgId == targetMsg.id) {
-                                                targetEl = el;
-                                                break;
-                                            }
-                                        }
-                                        if (targetEl && document.body.contains(targetEl)) {
-                                            targetEl.scrollIntoView({ behavior: "smooth", block: "center" });
-                                            targetEl.classList.add("msg-highlight");
-                                            setTimeout(() => {
-                                                targetEl.classList.remove("msg-highlight");
-                                            }, 2000);
-                                        }
+                                    if (targetEl && document.body.contains(targetEl)) {
+                                        targetEl.scrollIntoView({ behavior: "smooth", block: "center" });
+                                        targetEl.classList.add("msg-highlight");
+                                        setTimeout(() => {
+                                            targetEl.classList.remove("msg-highlight");
+                                        }, 2000);
                                     }
                                 });
                             }
