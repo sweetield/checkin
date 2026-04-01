@@ -25945,11 +25945,11 @@
                         {
                             const blockquotes = this.e_mcr_span.querySelectorAll(":scope .md-line-blockquote");
                             for (const bq of blockquotes) {
-                                const nameSpan = bq.querySelector(":scope .md-line .md-text-bold .md-text, :scope .md-line .md-text");
+                                const nameSpan = bq.querySelector(":scope .md-line .md-text-bold .md-text");
                                 if (!nameSpan) continue;
 
                                 let senderName = nameSpan.textContent.trim().replace(/[：:]\s*$/, '');
-                                const contentSpans = bq.querySelectorAll(":scope .md-line .md-text");
+                                const contentSpans = bq.querySelectorAll(":scope .md-line > .md-text");
                                 let quoteContent = "";
                                 for (const cs of contentSpans) {
                                     if (cs !== nameSpan && !nameSpan.contains(cs)) {
@@ -25958,19 +25958,22 @@
                                 }
 
                                 nameSpan.style.cursor = "pointer";
-                                nameSpan.style.textDecoration = "underline";
+                                nameSpan.style.padding = "1px 4px";
+                                nameSpan.style.borderRadius = "3px";
+                                const isDark = document.body.classList.contains("theme-dark");
+                                nameSpan.style.background = isDark ? "#444" : "#ffffff";
+                                nameSpan.style.color = isDark ? "#ffffff" : "#000000";
+
                                 nameSpan.addEventListener("click", (e) => {
                                     e.stopPropagation();
                                     const allMsgs = this.contentpage.li.bindmap.msgs;
                                     let targetMsg = null;
 
-                                    for (let i = allMsgs.length - 1; i >= 0; i--) {
-                                        const msg = allMsgs[i];
-                                        if (msg.id === this.msgattr.id) continue;
-                                        const msgSenderName = this.contentpage.get_sender_display_name?.(msg.sender) || msg.sender;
-                                        if (msgSenderName !== senderName) continue;
-                                        if (quoteContent && msg.plain_data_text) {
-                                            if (msg.plain_data_text.includes(quoteContent) || quoteContent.includes(msg.plain_data_text)) {
+                                    if (quoteContent.length > 0) {
+                                        for (let i = allMsgs.length - 1; i >= 0; i--) {
+                                            const msg = allMsgs[i];
+                                            if (msg.id === this.msgattr.id) continue;
+                                            if (msg.plain_data_text && msg.plain_data_text.includes(quoteContent)) {
                                                 targetMsg = msg;
                                                 break;
                                             }
@@ -25981,8 +25984,7 @@
                                         for (let i = allMsgs.length - 1; i >= 0; i--) {
                                             const msg = allMsgs[i];
                                             if (msg.id === this.msgattr.id) continue;
-                                            const msgSenderName = this.contentpage.get_sender_display_name?.(msg.sender) || msg.sender;
-                                            if (msgSenderName === senderName) {
+                                            if (msg.plain_data_text && msg.plain_data_text.startsWith(quoteContent.substring(0, 20))) {
                                                 targetMsg = msg;
                                                 break;
                                             }
