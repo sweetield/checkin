@@ -19172,7 +19172,7 @@
                 throw new Error(await format_error_response(r));
             }
 
-            async send_text(ws_send, contact_type, xxid, ceid, sender_rand, plain_text, cite_message_id,) {
+            async send_text(ws_send, contact_type, xxid, ceid, sender_rand, plain_text,) {
                 let url = join_path(this.api_url(), "send");
                 let body = {
                     contact_type, ceid,
@@ -19181,9 +19181,6 @@
                     type: dashboardwrappers.ChatDashboardWrapper.message_type.text,
                     data_text: await encryptors.encrypt2base64(plain_text),
                 };
-                if (cite_message_id) {
-                    body.cite_message_id = cite_message_id;
-                }
                 if (contact_type === subviews.Chat.receiver_type.group) {
                     body.gid = xxid;
                 } else if (contact_type === subviews.Chat.receiver_type.user) {
@@ -23437,7 +23434,7 @@
                 const ws_isopen = false;
                 checkin.subviews.chat.send_text(ws_isopen ? (args) => {
                     this.panel.wrapper.ws_send(args.body, {onfetchload, onfetcherror});
-                } : null, contact_type, xxid, ceid, msg.sender_rand, msg.plain_text, msg.cite_message_id,)
+                } : null, contact_type, xxid, ceid, msg.sender_rand, msg.plain_text,)
                     .then(result => {
                         if (ws_isopen) return;
                         onfetchload(result);
@@ -25964,29 +25961,53 @@
                                 const nameSpan = bq.querySelector(":scope .md-line .md-text-bold .md-text");
                                 if (!nameSpan) continue;
 
+                                const contentSpans = bq.querySelectorAll(":scope .md-line > .md-text");
+                                let quoteContent = "";
+                                for (const cs of contentSpans) {
+                                    if (cs !== nameSpan && !nameSpan.contains(cs)) {
+                                        quoteContent += cs.textContent.trim();
+                                    }
+                                }
+
                                 nameSpan.addEventListener("click", (e) => {
                                     e.stopPropagation();
+                                    if (!this.contentpage.e_msgflow) return;
+
+                                    let targetMsg = null;
                                     const citeId = this.msgattr.cite_message_id;
-                                    if (!citeId) return;
 
-                                    const targetMsg = this.contentpage.li.bindmap.msgs.find(m => m.id === citeId);
-                                    if (!targetMsg || !this.contentpage.e_msgflow) return;
+                                    if (citeId) {
+                                        targetMsg = this.contentpage.li.bindmap.msgs.find(m => m.id === citeId);
+                                    }
 
-                                    const allMsgElements = this.contentpage.e_msgflow.querySelectorAll(":scope .chat-message");
-                                    let targetEl = null;
-                                    for (const el of allMsgElements) {
-                                        const elMsgId = el.msgobj?.msgattr?.id;
-                                        if (elMsgId && elMsgId == citeId) {
-                                            targetEl = el;
-                                            break;
+                                    if (!targetMsg && quoteContent.length > 0) {
+                                        for (let i = this.contentpage.li.bindmap.msgs.length - 1; i >= 0; i--) {
+                                            const msg = this.contentpage.li.bindmap.msgs[i];
+                                            if (msg.id === this.msgattr.id) continue;
+                                            if (msg.plain_data_text && msg.plain_data_text.includes(quoteContent)) {
+                                                targetMsg = msg;
+                                                break;
+                                            }
                                         }
                                     }
-                                    if (targetEl && document.body.contains(targetEl)) {
-                                        targetEl.scrollIntoView({ behavior: "smooth", block: "center" });
-                                        targetEl.classList.add("msg-highlight");
-                                        setTimeout(() => {
-                                            targetEl.classList.remove("msg-highlight");
-                                        }, 2000);
+
+                                    if (targetMsg) {
+                                        const allMsgElements = this.contentpage.e_msgflow.querySelectorAll(":scope .chat-message");
+                                        let targetEl = null;
+                                        for (const el of allMsgElements) {
+                                            const elMsgId = el.msgobj?.msgattr?.id;
+                                            if (elMsgId && elMsgId == targetMsg.id) {
+                                                targetEl = el;
+                                                break;
+                                            }
+                                        }
+                                        if (targetEl && document.body.contains(targetEl)) {
+                                            targetEl.scrollIntoView({ behavior: "smooth", block: "center" });
+                                            targetEl.classList.add("msg-highlight");
+                                            setTimeout(() => {
+                                                targetEl.classList.remove("msg-highlight");
+                                            }, 2000);
+                                        }
                                     }
                                 });
                             }
