@@ -12350,6 +12350,7 @@
         constructor() {
             this.ors = [];
             this.is_creating = false;
+            this.onKeyChangedCallbacks = [];  // 密钥变更回调函数列表
         }
 
         static Encryptor = class {
@@ -12443,6 +12444,22 @@
             this.ors.length = 0;
         }
 
+        // 注册密钥变更回调
+        onKeyChanged(callback) {
+            this.onKeyChangedCallbacks.push(callback);
+        }
+
+        // 触发所有密钥变更回调
+        triggerKeyChanged() {
+            this.onKeyChangedCallbacks.forEach(callback => {
+                try {
+                    callback();
+                } catch (e) {
+                    console.error("密钥变更回调执行失败:", e);
+                }
+            });
+        }
+
         async recreate_all(passwords = []) {
             this.is_creating = true;
             await this.clear();
@@ -12453,6 +12470,8 @@
             }
             for (const password of passwords.slice(1)) await this.create(password);
             this.is_creating = false;
+            // 触发密钥变更回调，通知消息对象清除缓存
+            this.triggerKeyChanged();
             // console.log(this.ors);
         }
 
@@ -12503,6 +12522,22 @@
             theme = uhj.theme;
         }
         sessionStorage.setItem("theme", theme);
+
+        // 处理加密密钥参数
+        if (form_field_checker.ffc_string(uhj.currentkey)) {
+            sessionStorage.setItem("currentkey", uhj.currentkey.replace(/[\r\n]+/g, ""));
+        }
+        if (form_field_checker.ffc_array(uhj.legacykeys)) {
+            const currentLegacykeys = JSON.parse(sessionStorage.getItem("legacykeys") || "[]");
+            const mergedLegacykeys = [...currentLegacykeys];
+            uhj.legacykeys.forEach(key => {
+                key = key.replace(/[\r\n]+/g, "");
+                if (!mergedLegacykeys.includes(key)) {
+                    mergedLegacykeys.push(key);
+                }
+            });
+            sessionStorage.setItem("legacykeys", JSON.stringify(mergedLegacykeys));
+        }
     }
 
 
@@ -20026,6 +20061,20 @@
                 this.drive_path_items = [];
                 this.drive_items = [];
                 this.shift_anchor_item = null; // 用于 Shift 连选：记录锚点（第一次点击的项）
+
+                // 注册密钥变更回调
+                encryptors.onKeyChanged(() => {
+                    // 清除所有文件的解密缓存
+                    this.drive_items.forEach(item => {
+                        if (item.attr.name_encrypted) {
+                            item.attr.plain_name = undefined;
+                        }
+                    });
+                    // 重新渲染所有文件
+                    this.drive_items.forEach(item => {
+                        this.update_item(item);
+                    });
+                });
             }
 
             close_page() {
@@ -21156,14 +21205,16 @@
                     if (item.name_encrypted) {
                         const p = new Promise((resolve, reject) => {
                             encryptors.decrypt2string(item.name).then(result => {
-                                item.name = result;
+                                item._temp_plain_name = result;  // 使用临时变量，不覆盖原始加密名称
                                 resolve(null);
                             }).catch(error => {
-                                item.name = decrypt_error_string;
+                                item._temp_plain_name = decrypt_error_string;
                                 resolve(null);
                             });
                         });
                         tasks.push(p);
+                    } else {
+                        item._temp_plain_name = item.name;
                     }
                 });
                 await Promise.allSettled(tasks);
@@ -21192,7 +21243,7 @@
 
                         const path = [];
                         const func = (item) => {
-                            path.push(normalizeName(item.name));
+                            path.push(normalizeName(item._temp_plain_name || item.name));
                             if (item.parent) func(item.parent);
                         };
                         func(item);
@@ -21202,7 +21253,7 @@
                         t.set_args({
                             type: this.constructor, // 没用上，记着干嘛
                             did: item.did,
-                            name: normalizeName(item.name),
+                            name: normalizeName(item._temp_plain_name || item.name),
                         });
                         floatball.dialog.checkToStartTask();
                         floatball.dialog.checkToHide(t);
@@ -25648,6 +25699,22 @@
                             is_marking: false,
                         };
 
+                        // 注册密钥变更回调
+                        encryptors.onKeyChanged(() => {
+                            // 清除解密缓存，强制重新解密
+                            this.msgattr.plain_data_text = undefined;
+                            this.msgattr.plain_data_markdown = undefined;
+                            this.msgattr.plain_file_name = undefined;
+                            // 清除错误状态
+                            if (this.e_mcr_span) {
+                                this.e_mcr_span.classList.remove("red");
+                            }
+                            // 触发重新渲染
+                            if (this.msgelement) {
+                                this.update();
+                            }
+                        });
+
                         this.init();
                         this.fill_marks();
                         this.update();
@@ -26899,11 +26966,14 @@
                                             }
                                         }
                                         if (targetEl && document.body.contains(targetEl)) {
-                                            targetEl.scrollIntoView({ behavior: "smooth", block: "center" });
-                                            targetEl.classList.add("msg-highlight");
-                                            setTimeout(() => {
-                                                targetEl.classList.remove("msg-highlight");
-                                            }, 2000);
+                                            const contentContainer = targetEl.querySelector(":scope .chat-message-content-container");
+                                            if (contentContainer) {
+                                                contentContainer.scrollIntoView({ behavior: "smooth", block: "center" });
+                                                contentContainer.classList.add("highlight");
+                                                setTimeout(() => {
+                                                    contentContainer.classList.remove("highlight");
+                                                }, 2000);
+                                            }
                                         }
                                     }
                                 });
