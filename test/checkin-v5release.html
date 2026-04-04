@@ -28998,6 +28998,10 @@
 
             /*
             * 切换会话置顶状态
+            * 说明：
+            * 1. 继续沿用原有 pin_chat / unpin_chat 接口做持久化
+            * 2. 前端运行时只把置顶当作 UI 层排序状态
+            * 3. 成功后以服务端返回的 pinned 为准，回写到 ui_state.pinned
             * */
             async toggle_chat_pin() {
                 const wrapper = this.client.dashboard_chat.wrapper;
@@ -29005,18 +29009,25 @@
                 if (!item) return;
 
                 const {xxid, contact_type} = this.current_contact_xxid();
-                const nextPinned = !wrapper.is_contact_pinned(item);
-                const apiUrl = nextPinned ? `${top_level_path}/chat/api/pin_chat` : `${top_level_path}/chat/api/unpin_chat`;
+                const previousPinned = wrapper.is_contact_pinned(item);
+                const requestedPinned = !previousPinned;
+                const apiUrl = requestedPinned
+                    ? `${top_level_path}/chat/api/pin_chat`
+                    : `${top_level_path}/chat/api/unpin_chat`;
 
-                const body = {contact_type: contact_type};
+                const body = {
+                    contact_type: contact_type,
+                };
+
                 if (contact_type === subviews.Chat.receiver_type.group) {
                     body.gid = xxid;
                 } else {
                     body.uid = xxid;
                 }
 
-                wrapper.set_contact_pinned(item, nextPinned);
-                this.chat_pin_status = nextPinned;
+                // 先更新本地 UI，给用户即时反馈
+                wrapper.set_contact_pinned(item, requestedPinned);
+                this.chat_pin_status = requestedPinned;
                 wrapper.resort_contact_items();
 
                 try {
@@ -29024,15 +29035,25 @@
                     if (response.status !== 200) {
                         throw new Error("切换会话置顶失败");
                     }
-                    await response.json();
-                    wrapper.set_contact_pinned(item, nextPinned);
-                    this.chat_pin_status = nextPinned;
+
+                    const result = await response.json();
+
+                    // 继续沿用服务端持久化结果；若服务端返回 pinned，则以服务端为准
+                    const persistedPinned = typeof result?.pinned === "boolean"
+                        ? result.pinned
+                        : requestedPinned;
+
+                    wrapper.set_contact_pinned(item, persistedPinned);
+                    this.chat_pin_status = persistedPinned;
                     wrapper.resort_contact_items();
                 } catch (error) {
-                    wrapper.set_contact_pinned(item, !nextPinned);
-                    this.chat_pin_status = !nextPinned;
+                    // 持久化失败时回滚本地 UI
+                    wrapper.set_contact_pinned(item, previousPinned);
+                    this.chat_pin_status = previousPinned;
                     wrapper.resort_contact_items();
+
                     console.error("切换会话置顶失败:", error);
+                    MessageMark.report("切换会话置顶失败");
                 }
             }
 
