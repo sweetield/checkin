@@ -21896,8 +21896,8 @@
 
             open_page() {
                 super.open_page();
-                // 初始化置顶状态
-                this.chat_pin_status = this.li.bindmap.status_attr.editions && this.li.bindmap.status_attr.editions.includes(-999999);
+                // 初始化置顶状态（纯显示层）
+                this.chat_pin_status = this.client.dashboard_chat.wrapper.is_contact_pinned(this.li.bindmap);
                 // 初始化禁言状态
                 this.group_mute_status = false;
                 // 清空附件列表，确保切换会话时重新渲染
@@ -24241,9 +24241,8 @@
 
                 const {xxid, contact_type, ceid} = this.current_contact_xxid();
 
-                const onfetchload = (result) => {
-                    // if (this.closed) return;
-                    this.client.dashboard_chat.wrapper.update_contact_item_status(result.sync);
+                const onfetchload = async (result) => {
+                    await this.apply_contact_sync_result(result.sync);
                     this.stop_timer__update_read_progress();
                     this.handle_response__update_read_progress(visible_msgattr, result, is_background);
                 };
@@ -25096,14 +25095,15 @@
             mark_as_read(msgattr) {
                 const {xxid, contact_type, ceid} = this.current_contact_xxid();
 
-                const onfetchload = (result) => {
-                    // if (this.closed) return;
-
+                const onfetchload = async (result) => {
                     if (result.sync.editions.length === 1 && result.message_attrs.length === 1 && result.sync.editions[0] === result.message_attrs[0].id) {
                         result.sync.editions.splice(0, 1);
                     }
-                    this.client.dashboard_chat.wrapper.update_contact_item_status(result.sync);
-                    if (result.message_attrs.length > 0) this.msgflow_manage.update_msg(msgattr, result.message_attrs[0],);
+                    const messageUpdateList = [];
+                    if (result.message_attrs.length > 0) {
+                        messageUpdateList.push({source: msgattr, target: result.message_attrs[0]});
+                    }
+                    await this.apply_contact_sync_and_message_updates(result.sync, messageUpdateList);
                 };
                 const onfetcherror = (error) => {
                     // if (this.closed) return;
@@ -28960,34 +28960,78 @@
             }
 
 
+            get_current_contact_item() {
+                return this.li?.bindmap || null;
+            }
+
+            get_current_contact_pin_state() {
+                const wrapper = this.client.dashboard_chat.wrapper;
+                const item = this.get_current_contact_item();
+                if (!item) return false;
+                return wrapper.is_contact_pinned(item);
+            }
+
+            restore_current_contact_pin_state(pinned) {
+                const wrapper = this.client.dashboard_chat.wrapper;
+                const item = this.get_current_contact_item();
+                if (!item) return;
+                wrapper.set_contact_pinned(item, pinned);
+                this.chat_pin_status = pinned;
+            }
+
+            async apply_contact_sync_result(syncStatusAttr) {
+                if (!syncStatusAttr) return;
+                const wrapper = this.client.dashboard_chat.wrapper;
+                const keepPinned = this.get_current_contact_pin_state();
+                await wrapper.update_contact_item_status(syncStatusAttr);
+                this.restore_current_contact_pin_state(keepPinned);
+                wrapper.resort_contact_items();
+            }
+
+            async apply_contact_sync_and_message_updates(syncStatusAttr, messageUpdateList = []) {
+                await this.apply_contact_sync_result(syncStatusAttr);
+                for (const updateItem of messageUpdateList) {
+                    if (!updateItem) continue;
+                    this.msgflow_manage.update_msg(updateItem.source, updateItem.target);
+                }
+            }
+
             /*
             * 切换会话置顶状态
             * */
             async toggle_chat_pin() {
+                const wrapper = this.client.dashboard_chat.wrapper;
+                const item = this.get_current_contact_item();
+                if (!item) return;
+
                 const {xxid, contact_type} = this.current_contact_xxid();
-                const apiUrl = this.chat_pin_status ? `${top_level_path}/chat/api/unpin_chat` : `${top_level_path}/chat/api/pin_chat`;
+                const nextPinned = !wrapper.is_contact_pinned(item);
+                const apiUrl = nextPinned ? `${top_level_path}/chat/api/pin_chat` : `${top_level_path}/chat/api/unpin_chat`;
 
-                const body = {
-                    contact_type: contact_type
-                };
-
+                const body = {contact_type: contact_type};
                 if (contact_type === subviews.Chat.receiver_type.group) {
                     body.gid = xxid;
                 } else {
                     body.uid = xxid;
                 }
 
+                wrapper.set_contact_pinned(item, nextPinned);
+                this.chat_pin_status = nextPinned;
+                wrapper.resort_contact_items();
+
                 try {
                     const response = await net_fetcher.nf_post_json(apiUrl, body);
-                    if (response.status === 200) {
-                        const result = await response.json();
-                        this.chat_pin_status = result.pinned;
-                        // 重新加载会话列表以更新排序和图标
-                        if (this.contentpage && this.contentpage.aside_left) {
-                            this.contentpage.aside_left.refresh_contacts();
-                        }
+                    if (response.status !== 200) {
+                        throw new Error("切换会话置顶失败");
                     }
+                    await response.json();
+                    wrapper.set_contact_pinned(item, nextPinned);
+                    this.chat_pin_status = nextPinned;
+                    wrapper.resort_contact_items();
                 } catch (error) {
+                    wrapper.set_contact_pinned(item, !nextPinned);
+                    this.chat_pin_status = !nextPinned;
+                    wrapper.resort_contact_items();
                     console.error("切换会话置顶失败:", error);
                 }
             }
@@ -32792,101 +32836,146 @@
             /*
             * 左侧 联系人
             * */
-            add_contact_item(attr,) {
-                if (attr.type === subviews.Chat.receiver_type.group) {
-                    // 去掉群组名称中的「用户名」前缀
-                    const group_name = attr.gid.replace(/^「(.+?)」/, "");
-                    const mainaction = {text: group_name, pagetype: contentpages.dashboard_chat.group,};
-                    mainaction.contact_attr = attr;
-
-                    mainaction.status_attr = {};
-                    mainaction.ceid = null;
-                    mainaction.msgs = [];
-                    mainaction.draft_text = "";
-                    mainaction.sending_msgs = [];
-
-                    const lis = this.dashboard_element.mainactions[0].lis;
-                    const ol = this.dashboard_element.mainactions[0].ol;
-                    lis.push(mainaction);
-                    this.add_contact_item_(mainaction, ol,);
-                    this.sort_contact_items(lis, ol);
-                } else if (attr.type === subviews.Chat.receiver_type.user) {
-                    const mainaction = {text: attr.uid, pagetype: contentpages.dashboard_chat.user,};
-                    mainaction.contact_attr = attr;
-
-                    mainaction.status_attr = {};
-                    mainaction.ceid = null;
-                    mainaction.msgs = [];
-                    mainaction.draft_text = "";
-                    mainaction.sending_msgs = [];
-
-                    const lis = this.dashboard_element.mainactions[1].lis;
-                    const ol = this.dashboard_element.mainactions[1].ol;
-                    lis.push(mainaction);
-                    this.add_contact_item_(mainaction, ol,);
-                    this.sort_contact_items(lis, ol);
+            ensure_contact_ui_state(item) {
+                if (!item.ui_state || typeof item.ui_state !== "object") {
+                    item.ui_state = {};
                 }
+                if (typeof item.ui_state.pinned !== "boolean") {
+                    item.ui_state.pinned = false;
+                }
+                if (typeof item.ui_state.__pin_initialized !== "boolean") {
+                    item.ui_state.__pin_initialized = false;
+                }
+                return item.ui_state;
+            }
+
+            import_legacy_pin_state(item) {
+                const uiState = this.ensure_contact_ui_state(item);
+                if (uiState.__pin_initialized) return;
+
+                const editions = item?.status_attr?.editions;
+                if (Array.isArray(editions) && editions.includes(-999999)) {
+                    uiState.pinned = true;
+                }
+                uiState.__pin_initialized = true;
+            }
+
+            is_contact_pinned(item) {
+                this.import_legacy_pin_state(item);
+                return !!this.ensure_contact_ui_state(item).pinned;
+            }
+
+            set_contact_pinned(item, pinned) {
+                const uiState = this.ensure_contact_ui_state(item);
+                uiState.pinned = !!pinned;
+                uiState.__pin_initialized = true;
+                this.render_contact_pin_icon(item);
+            }
+
+            render_contact_pin_icon(item) {
+                if (!item || !item.e_pin_icon) return;
+                if (this.is_contact_pinned(item)) {
+                    item.e_pin_icon.classList.remove("hidden");
+                } else {
+                    item.e_pin_icon.classList.add("hidden");
+                }
+            }
+
+            init_contact_ui_state(item) {
+                this.import_legacy_pin_state(item);
+                this.render_contact_pin_icon(item);
+            }
+
+            get_contact_last_message_time(item) {
+                return item?.status_attr?.last_message_time || 0;
+            }
+
+            is_contact_unread(item) {
+                return (item?.status_attr?.unread_count || 0) > 0;
+            }
+
+            is_contact_online(item) {
+                const status = item?.status_attr;
+                if (!status) return false;
+                if (status.type === subviews.Chat.receiver_type.group) {
+                    return status.online_count > 0;
+                }
+                return status.online_status === ChatDashboardWrapper.online_status.online;
+            }
+
+            sort_contact_group_by_time(items) {
+                return items.sort((a, b) => this.get_contact_last_message_time(b) - this.get_contact_last_message_time(a));
+            }
+
+            add_contact_item(attr,) {
+                let mainaction = null;
+                let lis = null;
+                let ol = null;
+
+                if (attr.type === subviews.Chat.receiver_type.group) {
+                    const group_name = attr.gid.replace(/^「(.+?)」/, "");
+                    mainaction = {text: group_name, pagetype: contentpages.dashboard_chat.group,};
+                    lis = this.dashboard_element.mainactions[0].lis;
+                    ol = this.dashboard_element.mainactions[0].ol;
+                } else if (attr.type === subviews.Chat.receiver_type.user) {
+                    mainaction = {text: attr.uid, pagetype: contentpages.dashboard_chat.user,};
+                    lis = this.dashboard_element.mainactions[1].lis;
+                    ol = this.dashboard_element.mainactions[1].ol;
+                } else {
+                    return;
+                }
+
+                mainaction.contact_attr = attr;
+                mainaction.status_attr = {};
+                mainaction.ceid = null;
+                mainaction.msgs = [];
+                mainaction.draft_text = "";
+                mainaction.sending_msgs = [];
+                mainaction.ui_state = {
+                    pinned: false,
+                    __pin_initialized: false,
+                };
+
+                lis.push(mainaction);
+                this.add_contact_item_(mainaction, ol,);
+                this.sort_contact_items(lis, ol);
             }
 
             // 排序会话列表：置顶 > 未读 > 在线 > 离线
             sort_contact_items(lis, ol) {
-                // 检查置顶状态
-                const isPinned = (item) => {
-                    return item.status_attr.editions && item.status_attr.editions.includes(-999999);
-                };
-
-                // 检查未读状态
-                const isUnread = (item) => {
-                    return item.status_attr.unread_count > 0;
-                };
-
-                // 检查在线状态
-                const isOnline = (item) => {
-                    if (item.status_attr.type === subviews.Chat.receiver_type.group) {
-                        return item.status_attr.online_count > 0;
-                    } else {
-                        return item.status_attr.online_status === ChatDashboardWrapper.online_status.online;
-                    }
-                };
-
-                // 分组：置顶、未读、在线、离线
                 const pinned = [];
                 const unread = [];
                 const online = [];
                 const offline = [];
 
                 lis.forEach(item => {
-                    if (isPinned(item)) {
+                    if (this.is_contact_pinned(item)) {
                         pinned.push(item);
-                    } else if (isUnread(item)) {
-                        unread.push(item);
-                    } else if (isOnline(item)) {
-                        online.push(item);
-                    } else {
-                        offline.push(item);
+                        return;
                     }
+                    if (this.is_contact_unread(item)) {
+                        unread.push(item);
+                        return;
+                    }
+                    if (this.is_contact_online(item)) {
+                        online.push(item);
+                        return;
+                    }
+                    offline.push(item);
                 });
 
-                // 每组内按最后消息时间倒序排序
-                const sortByTime = (a, b) => {
-                    const aTime = a.status_attr.last_message_time || 0;
-                    const bTime = b.status_attr.last_message_time || 0;
-                    return bTime - aTime;
-                };
-                pinned.sort(sortByTime);
-                unread.sort(sortByTime);
-                online.sort(sortByTime);
-                offline.sort(sortByTime);
+                this.sort_contact_group_by_time(pinned);
+                this.sort_contact_group_by_time(unread);
+                this.sort_contact_group_by_time(online);
+                this.sort_contact_group_by_time(offline);
 
-                // 合并所有组
                 const sortedItems = [...pinned, ...unread, ...online, ...offline];
-
-                // 重新排列 DOM 元素
                 sortedItems.forEach(item => {
                     if (item.element) {
                         ol.appendChild(item.element);
                     }
                 });
+                return sortedItems;
             }
 
             add_contact_item_(mainaction, ol,) {
@@ -32929,6 +33018,7 @@
                 mainaction.e_ssb_lastmsgview = li.querySelector(":scope .chat-contact-session-status-bottom-lastmsgview");
                 mainaction.e_ssb_unreadcount = li.querySelector(":scope .chat-contact-session-status-bottom-unreadcount");
 
+                this.init_contact_ui_state(mainaction);
             }
 
             static is_group(contact_attr) {
@@ -32946,29 +33036,24 @@
 
             async _update_contact_item_status(item, status_attr, for_refresh = false) {
                 if (for_refresh && item.status_attr !== status_attr) return;
-                item.status_attr = status_attr;
 
-                if (status_attr.edition_id !== null) { // 有未同步的二编消息
+                const previousStatus = item.status_attr || {};
+                item.status_attr = {
+                    ...previousStatus,
+                    ...status_attr,
+                };
+
+                if (item.status_attr.edition_id !== null) {
                     const former_ceid = item.ceid;
-                    // item.ceid = status_attr.edition_id; // 由于http并发时收到响应的顺序不确定，判断下是否大于再赋值
-                    if (former_ceid === null || former_ceid < status_attr.edition_id) {
-                        item.ceid = status_attr.edition_id;
-                        this.sync_edited_messages(item, former_ceid, status_attr, status_attr.editions);
+                    if (former_ceid === null || former_ceid < item.status_attr.edition_id) {
+                        item.ceid = item.status_attr.edition_id;
+                        this.sync_edited_messages(item, former_ceid, item.status_attr, item.status_attr.editions);
                     }
                 }
 
-                // 检查是否置顶（editions 中包含 -999999）
-                const isPinned = status_attr.editions && status_attr.editions.includes(-999999);
-                if (item.e_pin_icon) {
-                    if (isPinned) {
-                        item.e_pin_icon.classList.remove("hidden");
-                    } else {
-                        item.e_pin_icon.classList.add("hidden");
-                    }
-                }
+                this.render_contact_pin_icon(item);
 
-                // 检查是否禁言
-                const isMuted = status_attr.muted === 1;
+                const isMuted = item.status_attr.muted === 1;
                 if (item.e_mute_icon) {
                     if (isMuted) {
                         item.e_mute_icon.classList.remove("hidden");
@@ -32977,59 +33062,45 @@
                     }
                 }
 
-                if (status_attr.type === subviews.Chat.receiver_type.group) {
-                    // 修改: 至少2人在线才显示绿灯
-                    item.e_online_status.dataset.onlineStatus = status_attr.online_count >= 2 ? "online" : "offline";
-                } else if (status_attr.type === subviews.Chat.receiver_type.user) {
-                    item.e_online_status.dataset.onlineStatus = status_attr.online_status === ChatDashboardWrapper.online_status.online ? "online" : "offline";
+                if (item.status_attr.type === subviews.Chat.receiver_type.group) {
+                    item.e_online_status.dataset.onlineStatus = item.status_attr.online_count >= 2 ? "online" : "offline";
+                } else if (item.status_attr.type === subviews.Chat.receiver_type.user) {
+                    item.e_online_status.dataset.onlineStatus = item.status_attr.online_status === ChatDashboardWrapper.online_status.online ? "online" : "offline";
                 }
-                item.e_sst_lastmsgtime.textContent = format_timestamp_utc8_day(status_attr.last_message_time);
-                item.e_ssb_unreadcount.textContent = status_attr.unread_count;
-                const string_activity = this.format_contact_item_status__activity(item, status_attr);
-                if (status_attr.unread_count > 0) {
+                item.e_sst_lastmsgtime.textContent = format_timestamp_utc8_day(item.status_attr.last_message_time);
+                item.e_ssb_unreadcount.textContent = item.status_attr.unread_count;
+                const string_activity = this.format_contact_item_status__activity(item, item.status_attr);
+                if (item.status_attr.unread_count > 0) {
                     item.e_ssb_unreadcount.classList.remove("hidden");
-                    item.e_ssb_lastmsgview.textContent = "[系统] 点击查看未读。"
+                    item.e_ssb_lastmsgview.textContent = "[系统] 点击查看未读。";
+                    item.e_ssb_lastmsgview.dataset.hasActivity = "false";
+                } else if (string_activity.length > 0) {
+                    item.e_ssb_unreadcount.classList.add("hidden");
+                    item.e_ssb_lastmsgview.textContent = string_activity;
+                    item.e_ssb_lastmsgview.dataset.hasActivity = "true";
+                } else if (item.draft_text.length > 0) {
+                    item.e_ssb_unreadcount.classList.add("hidden");
+                    item.e_ssb_lastmsgview.textContent = "[草稿] " + this.format_text_for_msgview(item.draft_text);
+                    item.e_ssb_lastmsgview.dataset.hasActivity = "false";
+                } else if (item.msgs.length === 0) {
+                    item.e_ssb_unreadcount.classList.add("hidden");
+                    item.e_ssb_lastmsgview.textContent = full_width_space;
                     item.e_ssb_lastmsgview.dataset.hasActivity = "false";
                 } else {
                     item.e_ssb_unreadcount.classList.add("hidden");
-                    if (string_activity.length > 0) {
-                        item.e_ssb_lastmsgview.textContent = string_activity;
-                        item.e_ssb_lastmsgview.dataset.hasActivity = "true";
-                    } else {
-                        if (item.draft_text.length > 0) {
-                            item.e_ssb_lastmsgview.textContent = "[草稿] " + this.format_text_for_msgview(item.draft_text);
-                            item.e_ssb_lastmsgview.dataset.hasActivity = "false";
-                        } else {
-                            if (item.msgs.length === 0) {
-                                item.e_ssb_lastmsgview.textContent = full_width_space;
-                                item.e_ssb_lastmsgview.dataset.hasActivity = "false";
-                            } else {
-                                item.e_ssb_lastmsgview.textContent = await this.format_contact_item_status__lastmsgview(item.msgs.at(-1));
-                                item.e_ssb_lastmsgview.dataset.hasActivity = "false";
-                            }
-                        }
-                    }
+                    item.e_ssb_lastmsgview.textContent = await this.format_contact_item_status__lastmsgview(item.msgs.at(-1));
+                    item.e_ssb_lastmsgview.dataset.hasActivity = "false";
                 }
 
                 if (checkin.current_content_page && checkin.current_content_page.li.bindmap === item) {
                     if (string_activity.length > 0) {
                         set_textContent_if_different(checkin.current_content_page.e_header_info_status, string_activity);
-                    } else {
-                        if (status_attr.type === subviews.Chat.receiver_type.group) {
-                            set_textContent_if_different(checkin.current_content_page.e_header_info_status, `${status_attr.online_count}人在线`);
-                        } else if (status_attr.type === subviews.Chat.receiver_type.user) {
-                            set_textContent_if_different(checkin.current_content_page.e_header_info_status, status_attr.online_status === ChatDashboardWrapper.online_status.online ? "在线" : "离线");
-                        }
+                    } else if (item.status_attr.type === subviews.Chat.receiver_type.group) {
+                        set_textContent_if_different(checkin.current_content_page.e_header_info_status, `${item.status_attr.online_count}人在线`);
+                    } else if (item.status_attr.type === subviews.Chat.receiver_type.user) {
+                        set_textContent_if_different(checkin.current_content_page.e_header_info_status, item.status_attr.online_status === ChatDashboardWrapper.online_status.online ? "在线" : "离线");
                     }
-                    // if (status_attr.unread_count > 0) {
-                    //     checkin.current_content_page.start_timer__fetch_unread_msgs();
-                    // }
-
                 }
-
-                // 新增：每次状态变化后重排联系人
-                this.resort_contact_items();
-
             }
 
             sync_edited_messages(item, former_ceid, status_attr, message_ids) {
@@ -33900,10 +33971,9 @@
                 } else if (status_attr.type === subviews.Chat.receiver_type.user) {
                     item = items.find(i => i.contact_attr.uid === status_attr.uid);
                 }
-                // 只有当 item 存在时才更新状态
-                if (item) {
-                    await this._update_contact_item_status(item, status_attr);
-                }
+                if (!item) return;
+                await this._update_contact_item_status(item, status_attr);
+                this.resort_contact_items();
             }
 
             change_loading_status__syncing() {
