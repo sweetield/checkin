@@ -32875,9 +32875,11 @@
                 if (uiState.__pin_initialized) return;
 
                 const editions = item?.status_attr?.editions;
-                if (Array.isArray(editions) && editions.includes(-999999)) {
-                    uiState.pinned = true;
+                if (!Array.isArray(editions)) {
+                    return;
                 }
+
+                uiState.pinned = editions.includes(-999999);
                 uiState.__pin_initialized = true;
             }
 
@@ -33072,6 +33074,7 @@
                     }
                 }
 
+                this.import_legacy_pin_state(item);
                 this.render_contact_pin_icon(item);
 
                 const isMuted = item.status_attr.muted === 1;
