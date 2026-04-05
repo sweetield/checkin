@@ -32948,7 +32948,7 @@
                 if (for_refresh && item.status_attr !== status_attr) return;
                 item.status_attr = status_attr;
 
-                if (status_attr.edition_id !== null) { // 有未同步的二编消息
+                if (form_field_checker.ffc_int(status_attr.edition_id)) { // 有未同步的二编消息
                     const former_ceid = item.ceid;
                     // item.ceid = status_attr.edition_id; // 由于http并发时收到响应的顺序不确定，判断下是否大于再赋值
                     if (former_ceid === null || former_ceid < status_attr.edition_id) {
