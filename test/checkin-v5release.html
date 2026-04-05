@@ -33910,7 +33910,7 @@
             * 处理已读状态推送（mark_read）
             * */
             handle_mark_read_push(json) {
-                if (!this.is_active()) return;
+                console.log("[WebSocket] handle_mark_read_push 被调用, json:", json);
 
                 const items = this.contact_items();
                 let targetItem;
@@ -33920,28 +33920,60 @@
                     targetItem = items.find(i => i.contact_attr.uid === json.uid);
                 }
 
-                if (!targetItem) return;
+                console.log("[WebSocket] 找到目标会话:", targetItem ? targetItem.contact_attr.uid || targetItem.contact_attr.gid : "未找到");
 
-                // 更新目标会话中消息的 read_count
-                const messageIds = json.message_ids || [];
-                if (messageIds.length === 0) return;
-
-                // 遍历当前会话中的消息，更新匹配的已读计数
-                for (const msgAttr of targetItem.msgs) {
-                    if (messageIds.includes(msgAttr.id)) {
-                        // 增加已读计数
-                        if (!msgAttr.read_count) msgAttr.read_count = 0;
-                        msgAttr.read_count++;
-                        // 标记为已读状态
-                        msgAttr.status |= dashboardwrappers.ChatDashboardWrapper.message_status.i_read;
-                        // 更新UI
-                        if (msgAttr.msgobj) {
-                            msgAttr.msgobj.update();
-                        }
-                    }
+                if (!targetItem) {
+                    console.log("[WebSocket] 未找到目标会话，触发同步刷新");
+                    this.sync();
+                    return;
                 }
 
-                // 同时触发同步以更新联系人列表状态
+                const messageAttrs = json.message_attrs || [];
+                console.log("[WebSocket] 需要更新的消息属性:", messageAttrs);
+
+                // 检查用户是否正在查看该会话
+                const isViewingThisChat = checkin.current_content_page &&
+                    checkin.current_content_page.li &&
+                    checkin.current_content_page.li.bindmap === targetItem;
+
+                if (isViewingThisChat) {
+                    // 用户正在查看该会话，重新加载消息以获取最新的已读状态
+                    console.log("[WebSocket] 用户正在查看该会话，重新加载消息");
+                    checkin.current_content_page.fetch_unread_msgs(false);
+                    return;
+                }
+
+                // 用户没有查看该会话，只更新本地缓存
+                if (messageAttrs.length > 0) {
+                    let updatedCount = 0;
+                    for (const pushedAttr of messageAttrs) {
+                        const msgAttr = targetItem.msgs.find(m => m.id === pushedAttr.id);
+                        if (!msgAttr) {
+                            console.log("[WebSocket] 消息", pushedAttr.id, "不在本地缓存中");
+                            continue;
+                        }
+
+                        msgAttr.read_count = pushedAttr.read_count;
+
+                        const isGroup = json.contact_type === subviews.Chat.receiver_type.group;
+                        if (!isGroup && msgAttr.sender === logged_user.uid) {
+                            updatedCount++;
+                            console.log("[WebSocket] 更新私聊消息已读, id:", msgAttr.id, "read_count:", msgAttr.read_count);
+                            if (msgAttr.msgobj) {
+                                msgAttr.msgobj.update();
+                            }
+                        } else if (isGroup) {
+                            msgAttr.status |= dashboardwrappers.ChatDashboardWrapper.message_status.i_read;
+                            updatedCount++;
+                            if (msgAttr.msgobj) {
+                                msgAttr.msgobj.update();
+                            }
+                        }
+                    }
+                    console.log("[WebSocket] 更新了", updatedCount, "条消息的已读状态");
+                }
+
+                // 更新联系人列表状态
                 this.sync();
             }
 
@@ -33949,7 +33981,7 @@
             * 处理已读进度推送（read）
             * */
             handle_read_progress_push(json) {
-                if (!this.is_active()) return;
+                console.log("[WebSocket] handle_read_progress_push 被调用, json:", json);
 
                 const items = this.contact_items();
                 let targetItem;
@@ -33959,23 +33991,53 @@
                     targetItem = items.find(i => i.contact_attr.uid === json.uid);
                 }
 
-                if (!targetItem) return;
+                console.log("[WebSocket] 找到目标会话:", targetItem ? targetItem.contact_attr.uid || targetItem.contact_attr.gid : "未找到");
 
-                // 更新已读进度
+                if (!targetItem) {
+                    console.log("[WebSocket] 未找到目标会话，触发同步刷新");
+                    this.sync();
+                    return;
+                }
+
+                // 检查用户是否正在查看该会话
+                const isViewingThisChat = checkin.current_content_page &&
+                    checkin.current_content_page.li &&
+                    checkin.current_content_page.li.bindmap === targetItem;
+
+                if (isViewingThisChat && json.visible_message_id) {
+                    // 用户正在查看该会话，重新加载消息以获取最新的已读状态
+                    console.log("[WebSocket] 用户正在查看该会话，重新加载消息");
+                    checkin.current_content_page.fetch_unread_msgs(false);
+                    return;
+                }
+
+                // 用户没有查看该会话，只更新本地缓存
                 if (json.visible_message_id) {
-                    targetItem.status_attr.read_message_id = json.visible_message_id;
+                    const visibleMsgId = json.visible_message_id;
+                    console.log("[WebSocket] 更新已读进度到消息ID:", visibleMsgId);
+                    
+                    // 更新 read_message_id
+                    if (!targetItem.status_attr.read_message_id || targetItem.status_attr.read_message_id < visibleMsgId) {
+                        targetItem.status_attr.read_message_id = visibleMsgId;
+                    }
+
                     // 更新所有低于此ID的消息为已读
+                    let updatedCount = 0;
                     for (const msgAttr of targetItem.msgs) {
-                        if (msgAttr.id <= json.visible_message_id && msgAttr.sender !== logged_user.uid) {
-                            msgAttr.status |= dashboardwrappers.ChatDashboardWrapper.message_status.i_read;
-                            if (msgAttr.msgobj) {
-                                msgAttr.msgobj.update();
+                        if (msgAttr.id <= visibleMsgId && msgAttr.sender !== logged_user.uid) {
+                            if (!(msgAttr.status & dashboardwrappers.ChatDashboardWrapper.message_status.i_read)) {
+                                msgAttr.status |= dashboardwrappers.ChatDashboardWrapper.message_status.i_read;
+                                updatedCount++;
+                                if (msgAttr.msgobj) {
+                                    msgAttr.msgobj.update();
+                                }
                             }
                         }
                     }
+                    console.log("[WebSocket] 更新了", updatedCount, "条消息的已读状态");
                 }
 
-                // 同时触发同步以更新联系人列表状态
+                // 触发同步以更新联系人列表状态
                 this.sync();
             }
 
