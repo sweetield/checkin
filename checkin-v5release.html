@@ -12366,17 +12366,26 @@
 
         // 渲染插件详情
         renderPluginDetail(plugin) {
+            const esc = (v) => String(v ?? '').replace(/[&<>'"]/g, c => ({'&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'}[c]));
+            const safeUrl = (v) => {
+                const s = String(v ?? '').trim();
+                if (!s) return '';
+                if (!/^https?:\/\//i.test(s)) return '';
+                return esc(s);
+            };
             // 插件介绍
             const infoEl = document.getElementById('plugin-detail-info');
             if (infoEl) {
+                const homepage = safeUrl(plugin.homepage);
+                const repository = safeUrl(plugin.repository);
                 infoEl.innerHTML = `
-                    <h3>${plugin.name}</h3>
-                    <p><strong>版本:</strong> ${plugin.version}</p>
-                    <p><strong>作者:</strong> ${plugin.author || '未知'}</p>
+                    <h3>${esc(plugin.name)}</h3>
+                    <p><strong>版本:</strong> ${esc(plugin.version)}</p>
+                    <p><strong>作者:</strong> ${esc(plugin.author || '未知')}</p>
                     <p><strong>描述:</strong></p>
-                    <p>${plugin.description || '暂无描述'}</p>
-                    ${plugin.homepage ? `<p><strong>主页:</strong> <a href="${plugin.homepage}" target="_blank">${plugin.homepage}</a></p>` : ''}
-                    ${plugin.repository ? `<p><strong>仓库:</strong> <a href="${plugin.repository}" target="_blank">${plugin.repository}</a></p>` : ''}
+                    <p>${esc(plugin.description || '暂无描述')}</p>
+                    ${homepage ? `<p><strong>主页:</strong> <a href="${homepage}" target="_blank" rel="noopener noreferrer">${homepage}</a></p>` : ''}
+                    ${repository ? `<p><strong>仓库:</strong> <a href="${repository}" target="_blank" rel="noopener noreferrer">${repository}</a></p>` : ''}
                 `;
             }
 
@@ -12389,7 +12398,12 @@
             // 权限说明
             const permissionsEl = document.getElementById('plugin-detail-permissions');
             if (permissionsEl) {
-                const permissions = JSON.parse(plugin.permissions || '[]');
+                let permissions = [];
+                try {
+                    permissions = JSON.parse(plugin.permissions || '[]');
+                } catch (_) {
+                    permissions = [];
+                }
                 const permissionMap = {
                     'storage': '存储权限 - 允许插件存储用户数据',
                     'ui': 'UI 操作权限 - 允许插件修改主界面',
@@ -12400,7 +12414,7 @@
                 };
 
                 permissionsEl.innerHTML = permissions.length > 0
-                    ? permissions.map(p => `<p><strong>${p}:</strong> ${permissionMap[p] || '未知权限'}</p>`).join('')
+                    ? permissions.map(p => `<p><strong>${esc(p)}:</strong> ${esc(permissionMap[p] || '未知权限')}</p>`).join('')
                     : '<p>无需特殊权限</p>';
             }
 
@@ -12408,9 +12422,9 @@
             const versionEl = document.getElementById('plugin-detail-version');
             if (versionEl) {
                 versionEl.innerHTML = `
-                    <p><strong>当前版本:</strong> ${plugin.version}</p>
-                    <p><strong>兼容性:</strong> ${plugin.compatibility || '未指定'}</p>
-                    <p><strong>更新时间:</strong> ${plugin.updated_time || '未知'}</p>
+                    <p><strong>当前版本:</strong> ${esc(plugin.version)}</p>
+                    <p><strong>兼容性:</strong> ${esc(plugin.compatibility || '未指定')}</p>
+                    <p><strong>更新时间:</strong> ${esc(plugin.updated_time || '未知')}</p>
                 `;
             }
         },
@@ -12565,9 +12579,13 @@
                     HEADER_LINKS.forEach(link => {
                         const item = document.createElement("div");
                         item.className = "header-dropdown-item";
-                        item.innerHTML = `<div class="header-dropdown-item-name">${link.name}</div>`;
+                        const nameEl = document.createElement("div");
+                        nameEl.className = "header-dropdown-item-name";
+                        nameEl.textContent = String(link.name ?? "");
+                        item.appendChild(nameEl);
                         item.addEventListener("click", function() {
-                            window.open(link.url, "_blank");
+                            const url = String(link.url ?? "");
+                            if (/^https?:\/\//i.test(url)) window.open(url, "_blank", "noopener,noreferrer");
                             headerLinksDropdown.classList.add("hidden");
                         });
                         headerLinksList.appendChild(item);
@@ -12751,7 +12769,7 @@
             return;
         }
 
-        text.innerHTML = message;
+        text.textContent = String(message ?? "");
         modal.classList.remove("hidden");
         modal.classList.add("show");
 
@@ -13929,9 +13947,16 @@
             this.rect = this.mark.querySelector(":scope div#message-mark-rect");
             this.rect.style.background = MessageMark.get_background_color.call(this);
 
-            // 使用 innerHTML 而不是 textContent，以支持 HTML 换行
+            // 转义后再替换换行为 <br>，避免 XSS 且保留换行显示
             this.text_element = this.mark.querySelector(":scope p#message-mark-text");
-            this.text_element.innerHTML = this.message;
+            const safeMessage = String(this.message ?? "")
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#39;')
+                .replace(/\n/g, '<br>');
+            this.text_element.innerHTML = safeMessage;
 
             this.btn_group = this.mark.querySelector(":scope div#message-mark-btn-group");
             if (this.btn_flags & MessageMark.btnFlags.confirm) {
@@ -14345,6 +14370,7 @@
         }
 
         #add_input_element_combobox(row, input_group) {
+            const esc = (v) => String(v ?? '').replace(/[&<>'"]/g, c => ({'&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'}[c]));
             let html = `
 <label>${row.label}<select></select></label>
 `;
@@ -14354,7 +14380,7 @@
 
             for (const optionsKey in row.options) {
                 let html = `
-<option value="${optionsKey}">${row.options[optionsKey]}</option>
+<option value="${esc(optionsKey)}">${esc(row.options[optionsKey])}</option>
 `;
                 row.input_element.insertAdjacentHTML("beforeend", html);
                 const option = row.input_element.querySelector(":scope > option:last-of-type");
@@ -14364,6 +14390,7 @@
         }
 
         #add_input_element_checkboxlist(row, input_group) {
+            const esc = (v) => String(v ?? '').replace(/[&<>'"]/g, c => ({'&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'}[c]));
             // 创建多选下拉组件（放在label里，模拟select外观）
             const containerId = `multiselect-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
             const dropdownId = `multiselect-dropdown-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
@@ -14407,9 +14434,9 @@
                 const checkboxId = `cb-${optionKey}-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
                 const isSelected = row.selectedValues.includes(optionKey);
                 let optionHtml = `
-<label class="form-mark-multiselect-option${isSelected ? ' selected' : ''}" data-value="${optionKey}" data-display="${row.options[optionKey]}">
-    <input type="checkbox" id="${checkboxId}" value="${optionKey}" ${isSelected ? 'checked' : ''}>
-    <span>${row.options[optionKey]}</span>
+<label class="form-mark-multiselect-option${isSelected ? ' selected' : ''}" data-value="${esc(optionKey)}" data-display="${esc(row.options[optionKey])}">
+    <input type="checkbox" id="${esc(checkboxId)}" value="${esc(optionKey)}" ${isSelected ? 'checked' : ''}>
+    <span>${esc(row.options[optionKey])}</span>
 </label>
 `;
                 optionsContainer.insertAdjacentHTML("beforeend", optionHtml);
@@ -14802,6 +14829,7 @@
         }
 
         #createOptionGroupHtml(group, row) {
+            const esc = (v) => String(v ?? '').replace(/[&<>'"]/g, c => ({'&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'}[c]));
             const currentValue = group.getValue(row.jsonData);
             let contentHtml = '';
             // select 和 input 类型使用 inline 模式
@@ -14809,24 +14837,24 @@
 
             if (group.type === 'select') {
                 const optionsHtml = group.options.map(opt =>
-                    `<option value="${opt.value}" ${opt.value === currentValue ? 'selected' : ''}>${opt.label}</option>`
+                    `<option value="${esc(opt.value)}" ${opt.value === currentValue ? 'selected' : ''}>${esc(opt.label)}</option>`
                 ).join('');
                 contentHtml = `
-                    <select class="form-mark-option-select" data-field="${group.field}">
+                    <select class="form-mark-option-select" data-field="${esc(group.field)}">
                         ${optionsHtml}
                     </select>
                 `;
             } else if (group.type === 'input') {
                 contentHtml = `
-                    <input type="text" class="form-mark-option-input" data-field="${group.field}"
-                           value="${group.getValue(row.jsonData)}" placeholder="${group.placeholder || ''}">
-                    <span class="form-mark-option-unit">${group.unit || ''}</span>
+                    <input type="text" class="form-mark-option-input" data-field="${esc(group.field)}"
+                           value="${esc(group.getValue(row.jsonData))}" placeholder="${esc(group.placeholder || '')}">
+                    <span class="form-mark-option-unit">${esc(group.unit || '')}</span>
                 `;
             } else if (group.type === 'multiselect') {
                 const opsHtml = group.operations.map((op, idx) =>
-                    `<option value="${op.value}" ${idx === 0 ? 'selected' : ''}>${op.label}</option>`
+                    `<option value="${esc(op.value)}" ${idx === 0 ? 'selected' : ''}>${esc(op.label)}</option>`
                 ).join('');
-                const dropdownId = `inline-dropdown-${group.id}-${Date.now()}`;
+                const dropdownId = `inline-dropdown-${esc(group.id)}-${Date.now()}`;
                 contentHtml = `
                     <div class="form-mark-option-multiselect-row">
                         <select class="form-mark-option-select form-mark-option-select-fixed" data-operation="${group.id}">
@@ -14908,9 +14936,9 @@
 
                 for (const key in group.options) {
                     const optionHtml = `
-                        <label class="form-mark-inline-multiselect-option" data-value="${key}">
-                            <input type="checkbox" value="${key}">
-                            <span>${group.options[key]}</span>
+                        <label class="form-mark-inline-multiselect-option" data-value="${esc(key)}">
+                            <input type="checkbox" value="${esc(key)}">
+                            <span>${esc(group.options[key])}</span>
                         </label>
                     `;
                     optionsContainer.insertAdjacentHTML("beforeend", optionHtml);
@@ -15537,10 +15565,15 @@
             const item = document.createElement("div");
             item.className = "auth-invite-code-item";
             item.dataset.codeId = id; // 保存数据库 ID
-            item.innerHTML = `
-                <span class="auth-invite-code-text">${code}</span>
-                <button class="auth-invite-code-delete" title="删除">✕</button>
-            `;
+            const codeSpan = document.createElement("span");
+            codeSpan.className = "auth-invite-code-text";
+            codeSpan.textContent = String(code ?? "");
+            const deleteBtn = document.createElement("button");
+            deleteBtn.className = "auth-invite-code-delete";
+            deleteBtn.title = "删除";
+            deleteBtn.textContent = "✕";
+            item.appendChild(codeSpan);
+            item.appendChild(deleteBtn);
 
             // 点击邀请码文本复制
             item.querySelector(".auth-invite-code-text").addEventListener("click", () => {
@@ -17542,6 +17575,7 @@
             }
 
             const renderOne = (plugin, installedTab = false) => {
+                const esc = (v) => String(v ?? '').replace(/[&<>'"]/g, c => ({'&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'}[c]));
                 const adminOnly = this.isAdminOnlyPlugin(plugin);
                 const badgeHtml = adminOnly
                     ? `<span class="plugin-admin-badge">管理员专用</span>`
@@ -17553,27 +17587,32 @@
                 // 获取版本号显示信息
                 const versionDisplay = this.getVersionDisplay(plugin);
                 const hasUpdate = versionDisplay.className === 'plugin-version has-update';
+                const safeVersionClass = /^[-_ a-zA-Z0-9]+$/.test(versionDisplay.className || '') ? versionDisplay.className : 'plugin-version';
+                const safePluginId = esc(plugin.plugin_id);
+                const safePluginName = esc(plugin.name || plugin.plugin_id);
+                const safeDescription = esc(plugin.description || '暂无描述');
+                const safeVersionText = esc(versionDisplay.versionText);
 
                 return `
-                    <div class="plugin-item" data-plugin-id="${plugin.plugin_id}">
+                    <div class="plugin-item" data-plugin-id="${safePluginId}">
                         <div class="plugin-item-header">
                             <input type="checkbox"
                                    class="plugin-item-checkbox"
-                                   data-plugin-id="${plugin.plugin_id}"
+                                   data-plugin-id="${safePluginId}"
                                    ${installedTab ? 'data-installed="1"' : ''}>
                             <div class="plugin-item-content">
                                 <div class="plugin-item-title">
-                                    <span class="plugin-item-name">${plugin.name || plugin.plugin_id}</span>
-                                    <span class="${versionDisplay.className}">${versionDisplay.versionText}</span>
+                                    <span class="plugin-item-name">${safePluginName}</span>
+                                    <span class="${safeVersionClass}">${safeVersionText}</span>
                                     ${badgeHtml}
                                 </div>
-                                <p class="plugin-item-description">${plugin.description || '暂无描述'}</p>
+                                <p class="plugin-item-description">${safeDescription}</p>
                             </div>
 
                             <div class="plugin-item-actions">
                                 <button class="plugin-item-btn secondary"
                                         data-action="detail"
-                                        data-plugin-id="${plugin.plugin_id}">
+                                        data-plugin-id="${safePluginId}">
                                     详情
                                 </button>
 
@@ -17581,30 +17620,30 @@
                                     ${hasUpdate ? `
                                         <button class="plugin-item-btn primary"
                                                 data-action="update"
-                                                data-plugin-id="${plugin.plugin_id}">
+                                                data-plugin-id="${safePluginId}">
                                             更新
                                         </button>
                                     ` : ''}
                                     <button class="plugin-item-btn ${isEnabled ? 'secondary' : 'primary'}"
                                             data-action="toggle"
-                                            data-plugin-id="${plugin.plugin_id}">
+                                            data-plugin-id="${safePluginId}">
                                         ${isEnabled ? '停用' : '启用'}
                                     </button>
                                     <button class="plugin-item-btn danger"
                                             data-action="uninstall"
-                                            data-plugin-id="${plugin.plugin_id}">
+                                            data-plugin-id="${safePluginId}">
                                         卸载
                                     </button>
                                 ` : `
                                     <button class="plugin-item-btn primary"
                                             data-action="install"
-                                            data-plugin-id="${plugin.plugin_id}">
+                                            data-plugin-id="${safePluginId}">
                                         安装
                                     </button>
                                 `}
                             </div>
                         </div>
-                        <div class="plugin-item-progress hidden" data-plugin-id="${plugin.plugin_id}">
+                        <div class="plugin-item-progress hidden" data-plugin-id="${safePluginId}">
                             <div class="plugin-progress-track">
                                 <div class="plugin-progress-bar"></div>
                             </div>
@@ -19349,9 +19388,13 @@
                         padding: 16px;
                         border-bottom: 1px solid var(--border-color, #eee);
                     `;
-                    header.innerHTML = `
-                        <h3 style="margin: 0; font-size: 18px;">${title}</h3>
-                        <button class="plugin-modal-close" style="
+                    const headerTitle = document.createElement('h3');
+                    headerTitle.style.margin = '0';
+                    headerTitle.style.fontSize = '18px';
+                    headerTitle.textContent = String(title ?? '');
+                    const closeButton = document.createElement('button');
+                    closeButton.className = 'plugin-modal-close';
+                    closeButton.style.cssText = `
                             background: none;
                             border: none;
                             font-size: 24px;
@@ -19359,8 +19402,10 @@
                             padding: 0;
                             line-height: 1;
                             color: var(--text-color, #666);
-                        ">×</button>
-                    `;
+                        `;
+                    closeButton.textContent = '×';
+                    header.appendChild(headerTitle);
+                    header.appendChild(closeButton);
 
                     // 创建内容区域
                     const body = document.createElement('div');
@@ -19428,7 +19473,10 @@
                     btn.id = id;
                     btn.className = `header-toolbar-btn plugin-${self.pluginId}`;
                     btn.title = title;
-                    btn.innerHTML = `<i class="${icon}"></i>`;
+                    const safeIcon = /^[a-zA-Z0-9 _-]+$/.test(String(icon || "")) ? String(icon) : "bi bi-circle";
+                    const iconEl = document.createElement('i');
+                    iconEl.className = safeIcon;
+                    btn.appendChild(iconEl);
 
                     if (onClick) {
                         btn.addEventListener('click', onClick);
@@ -22828,10 +22876,15 @@
 
                                         checkbox.addEventListener("change", (event) => {
                                             select.disabled = !checkbox.checked;
+                                            // 启用时设置默认值为 readonly
+                                            if (checkbox.checked && !select.value) {
+                                                select.value = subviews.Drive.share_type.readonly.toString();
+                                            }
                                         });
 
                                         for (const optionsKey in column.options) {
-                                            let html = `<option value="${optionsKey}">${column.options[optionsKey]}</option>`;
+                                            const esc = (v) => String(v ?? '').replace(/[&<>'"]/g, c => ({'&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'}[c]));
+                                            let html = `<option value="${esc(optionsKey)}">${esc(column.options[optionsKey])}</option>`;
                                             select.insertAdjacentHTML("beforeend", html);
                                             const option = select.querySelector(":scope > option:last-of-type");
                                         }
@@ -25582,12 +25635,16 @@
                     replies.forEach(reply => {
                         const replyTag = document.createElement("div");
                         replyTag.className = "chat-message-reply-tag";
-                        replyTag.innerHTML = `<span class="md-text-at" data-user-id="${reply.user_id}">${reply.user_name}</span>`;
+                        const atSpan = document.createElement("span");
+                        atSpan.className = "md-text-at";
+                        atSpan.dataset.userId = String(reply.user_id ?? "");
+                        atSpan.textContent = String(reply.user_name ?? "");
+                        replyTag.appendChild(atSpan);
                         
                         // 获取用户的颜色
                         const userPalette = contentpages._chat.get_message_palette(reply.user_id);
-                        replyTag.querySelector(".md-text-at").style.color = "white";
-                        replyTag.querySelector(".md-text-at").style.background = userPalette.name_bg;
+                        atSpan.style.color = "white";
+                        atSpan.style.background = userPalette.name_bg;
                         
                         container.appendChild(replyTag);
                     });
@@ -26739,13 +26796,24 @@
                 const options = voteData.options || [];
                 this.e_vote_options_list.innerHTML = "";
                 options.forEach((opt, index) => {
-                    const optionHtml = `
-                        <div class="vote-option-item">
-                            <input type="text" class="vote-option-input" placeholder="选项 ${index + 1}" maxlength="50" value="${opt.text || ''}">
-                            <button class="vote-option-remove" ${index === 0 ? 'disabled' : ''}>✕</button>
-                        </div>
-                    `;
-                    this.e_vote_options_list.insertAdjacentHTML("beforeend", optionHtml);
+                    const item = document.createElement("div");
+                    item.className = "vote-option-item";
+
+                    const input = document.createElement("input");
+                    input.type = "text";
+                    input.className = "vote-option-input";
+                    input.placeholder = `选项 ${index + 1}`;
+                    input.maxLength = 50;
+                    input.value = String(opt?.text ?? "");
+
+                    const removeBtn = document.createElement("button");
+                    removeBtn.className = "vote-option-remove";
+                    removeBtn.textContent = "✕";
+                    if (index === 0) removeBtn.disabled = true;
+
+                    item.appendChild(input);
+                    item.appendChild(removeBtn);
+                    this.e_vote_options_list.appendChild(item);
                 });
                 
                 // 如果没有选项，添加两个空选项
@@ -30902,18 +30970,26 @@
                 const citeContainer = this.container.querySelector(".chat-session-inputarea-cite");
                 const citeContent = citeContainer.querySelector(".chat-session-inputarea-cite-content");
 
-                // 根据消息类型显示不同的引用内容
-                let citeText = '';
-                if (msg_type === 'image') {
-                    citeText = `<i class="bi bi-image"></i> 图片 ${file_name}`;
-                } else if (msg_type === 'file') {
-                    citeText = `<i class="bi bi-file-earmark"></i> 文件 ${file_name}`;
-                } else {
-                    // 文本消息 - 过滤掉引用内容，只显示纯回复文本
-                    citeText = this.extract_text_without_quotes(text);
-                }
+                // 根据消息类型显示不同的引用内容（避免 innerHTML 拼接用户输入）
+                const safeUserName = user_name == null ? '' : String(user_name);
+                const safeFileName = file_name == null ? '' : String(file_name);
+                const safeText = text == null ? '' : String(text);
+                const citeText = (msg_type === 'image' || msg_type === 'file')
+                    ? `${msg_type === 'image' ? '图片' : '文件'} ${safeFileName}`
+                    : this.extract_text_without_quotes(safeText);
 
-                citeContent.innerHTML = `<strong>${user_name}：</strong>${citeText}`;
+                citeContent.innerHTML = "";
+                const strong = document.createElement('strong');
+                strong.textContent = `${safeUserName}：`;
+                citeContent.appendChild(strong);
+                if (msg_type === 'image' || msg_type === 'file') {
+                    const icon = document.createElement('i');
+                    icon.className = msg_type === 'image' ? 'bi bi-image' : 'bi bi-file-earmark';
+                    citeContent.appendChild(icon);
+                    citeContent.appendChild(document.createTextNode(` ${citeText}`));
+                } else {
+                    citeContent.appendChild(document.createTextNode(citeText));
+                }
                 citeContainer.classList.remove("hidden");
 
                 // 存储引用消息 ID，用于发送消息时附带
@@ -31605,10 +31681,13 @@
                     
                     // 构建紧凑布局HTML - 顺序：📌 发送者名称 | 消息内容预览 | 时间戳 | ✕
                     // 对于文本消息，使用解析后的 HTML；其他类型使用纯文本
-                    const previewContent = msgattr.type === 1 && previewHTML ? previewHTML : previewText;
+                    const escapeHTML = (s) => String(s).replace(/[&<>'"]/g, c => ({'&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'}[c]));
+                    const previewContent = msgattr.type === 1 && previewHTML ? previewHTML : escapeHTML(previewText || "");
+                    const safeSenderName = escapeHTML(senderName || "");
+                    const safeBg = /^#[0-9a-fA-F]{3,8}$|^rgba?\([\d\s.,%]+\)$|^[a-zA-Z]+$/.test(backgroundColor || "") ? backgroundColor : "rgba(0, 0, 0, 0.15)";
                     newMsgElement.innerHTML = `
                         <i class="bi bi-pin-fill pinned-icon"></i>
-                        <span class="pinned-sender-name" style="color: white; background: ${backgroundColor}">${senderName}</span>
+                        <span class="pinned-sender-name" style="color: white; background: ${safeBg}">${safeSenderName}</span>
                         <span class="pinned-separator">|</span>
                         <div class="pinned-content-preview">${previewContent}</div>
                         <span class="pinned-sent-time">${timeStr}</span>
@@ -32357,8 +32436,9 @@
                 }
 
                 add_group_item(attr) {
+                    const esc = (v) => String(v ?? '').replace(/[&<>'"]/g, c => ({'&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'}[c]));
                     let html = `
-<option value="${attr.gid}">组：${attr.gid}</option>
+<option value="${esc(attr.gid)}">组：${esc(attr.gid)}</option>
 `;
                     this.activity_filter_group_selector.insertAdjacentHTML("beforeend", html);
                     const option = this.activity_filter_group_selector.querySelector(":scope > option:last-of-type");
@@ -34705,7 +34785,7 @@
                     if (token.type === "text") {
                         parts.push(`<span class="md-text">`);
                         if (token.children) resolve_tokens(token.children);
-                        parts.push(token.text);
+                        parts.push(MarkdownResolver.escapeHTML(token.text || ""));
                         parts.push(`</span>`);
                     } //
                     else if (token.type === "bold") {
@@ -34731,24 +34811,26 @@
                     else if (token.type === "code") {
                         parts.push(`<span class="md-text-code">`);
                         if (token.children) resolve_tokens(token.children);
-                        parts.push(token.text);  // 不转义 HTML，允许代码中包含标签
+                        parts.push(MarkdownResolver.escapeHTML(token.text || ""));
                         parts.push(`</span>`);
                     } //
 
                     else if (token.type === "html") {
-                        parts.push(token.text);  // 直接输出 HTML 标签，不转义
+                        parts.push(MarkdownResolver.escapeHTML(token.text || ""));
                     } //
 
                     else if (token.type === "at") {
-                        parts.push(`<span class="md-text-at" data-user-id="${token.text.slice(1)}">`);
+                        const atUserId = MarkdownResolver.escapeHTML((token.text || "").slice(1));
+                        parts.push(`<span class="md-text-at" data-user-id="${atUserId}">`);
                         if (token.children) resolve_tokens(token.children);
-                        parts.push(token.text);
+                        parts.push(MarkdownResolver.escapeHTML(token.text || ""));
                         parts.push(`</span>`);
                     } //
                     else if (token.type === "cite") {
-                        parts.push(`<span class="md-line" data-message-id="${token.text.slice(1)}">`);
+                        const citeMessageId = MarkdownResolver.escapeHTML((token.text || "").slice(1));
+                        parts.push(`<span class="md-line" data-message-id="${citeMessageId}">`);
                         if (token.children) resolve_tokens(token.children);
-                        parts.push(token.text);
+                        parts.push(MarkdownResolver.escapeHTML(token.text || ""));
                         parts.push(`</span>`);
                     } //
                     else if (token.type === "link") {
@@ -34766,7 +34848,7 @@
                             [href, text] = [text, href];
                         }
                         
-                        parts.push(`<a href="${MarkdownResolver.escapeHTML(href)}" target="_blank" class="md-link">`);
+                        parts.push(`<a href="${MarkdownResolver.escapeHTML(href)}" target="_blank" rel="noopener noreferrer" class="md-link">`);
                         parts.push(MarkdownResolver.escapeHTML(text));
                         parts.push(`</a>`);
                     } //
