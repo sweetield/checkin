@@ -11886,7 +11886,7 @@
             if (!plugin || !plugin.plugin_id || !plugin.version) return;
 
             MessageMark.confirm(
-                `确定要删除插件 "<strong>${plugin.name}</strong>" v${plugin.version} 的缓存吗？<br><br>只有在使用人数为 0 时才允许删除。`,
+                `确定要删除插件 "${plugin.name}" v${plugin.version} 的缓存吗？\n\n只有在使用人数为 0 时才允许删除。`,
                 null,
                 null,
                 async () => {
@@ -14146,26 +14146,39 @@
         async updatePanelContent(tabId) {
             const panel = this.mark.querySelector("#plugin-detail-panel");
             let contentHtml = '';
+            const esc = (v) => String(v ?? '').replace(/[&<>'"]/g, c => ({'&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'}[c]));
+            const safeUrl = (v) => {
+                const s = String(v ?? '').trim();
+                if (!s) return '';
+                if (!/^https?:\/\//i.test(s)) return '';
+                return esc(s);
+            };
 
             switch(tabId) {
                 case 'intro':
                     const usageCount = Number(this.pluginData.usage_count || 0);
                     const usageBadgeClass = usageCount === 0 ? 'zero' : 'nonzero';
+                    const introHomepage = safeUrl(this.pluginData.homepage);
                     contentHtml = `
                         <div class="plugin-detail-panel">
                             <h3>插件介绍</h3>
-                            <p>${this.pluginData.description || '暂无描述'}</p>
-                            <p><strong>作者：</strong>${this.pluginData.author || '未知'}</p>
-                            <p><strong>版本：</strong>v${this.pluginData.version || '1.0.0'}</p>
+                            <p>${esc(this.pluginData.description || '暂无描述')}</p>
+                            <p><strong>作者：</strong>${esc(this.pluginData.author || '未知')}</p>
+                            <p><strong>版本：</strong>v${esc(this.pluginData.version || '1.0.0')}</p>
                             <p><strong>统计：</strong>已有 ${usageCount} 个用户安装</p>
-                            ${this.pluginData.homepage ? `<p><strong>主页：</strong><a href="${this.pluginData.homepage}" target="_blank">${this.pluginData.homepage}</a></p>` : ''}
+                            ${introHomepage ? `<p><strong>主页：</strong><a href="${introHomepage}" target="_blank" rel="noopener noreferrer">${introHomepage}</a></p>` : ''}
                         </div>
                     `;
                     panel.innerHTML = contentHtml;
                     break;
                 case 'permissions':
                     const perms = this.pluginData.permissions || [];
-                    const permsList = typeof perms === 'string' ? JSON.parse(perms) : perms;
+                    let permsList = [];
+                    try {
+                        permsList = typeof perms === 'string' ? JSON.parse(perms) : perms;
+                    } catch (_) {
+                        permsList = [];
+                    }
                     const permissionMap = {
                         'storage': '存储权限 - 允许插件存储用户数据（配置、业务数据）',
                         'ui': 'UI 操作权限 - 允许插件修改主界面（添加按钮、修改样式等）',
@@ -14175,7 +14188,7 @@
                         'admin_only': '仅管理员可用 - 此插件仅管理员可安装和使用'
                     };
                     const permissionsHtml = permsList.length > 0 
-                        ? permsList.map(p => `<p><strong>${p}：</strong> ${permissionMap[p] || '未知权限'}</p>`).join('')
+                        ? permsList.map(p => `<p><strong>${esc(p)}：</strong> ${esc(permissionMap[p] || '未知权限')}</p>`).join('')
                         : '<p>无需特殊权限</p>';
                     
                     contentHtml = `
@@ -14188,12 +14201,13 @@
                     panel.innerHTML = contentHtml;
                     break;
                 case 'version':
+                    const versionRepository = safeUrl(this.pluginData.repository);
                     contentHtml = `
                         <div class="plugin-detail-panel">
                             <h3>版本信息</h3>
-                            <p><strong>当前版本：</strong>v${this.pluginData.version || '1.0.0'}</p>
-                            <p><strong>兼容性：</strong>${this.pluginData.compatibility || '未知'}</p>
-                            ${this.pluginData.repository ? `<p><strong>仓库：</strong><a href="${this.pluginData.repository}" target="_blank">${this.pluginData.repository}</a></p>` : ''}
+                            <p><strong>当前版本：</strong>v${esc(this.pluginData.version || '1.0.0')}</p>
+                            <p><strong>兼容性：</strong>${esc(this.pluginData.compatibility || '未知')}</p>
+                            ${versionRepository ? `<p><strong>仓库：</strong><a href="${versionRepository}" target="_blank" rel="noopener noreferrer">${versionRepository}</a></p>` : ''}
                         </div>
                     `;
                     panel.innerHTML = contentHtml;
@@ -17977,7 +17991,7 @@
 
         async uninstallPlugin(plugin) {
             MessageMark.confirm(
-                `确定要卸载 "<strong>${plugin.name}</strong>" 吗？<br><br>此操作不可撤销！`,
+                `确定要卸载 "${plugin.name}" 吗？\n\n此操作不可撤销！`,
                 null,
                 null,
                 async () => {
@@ -18287,7 +18301,7 @@
             // 二次确认
             const pluginNames = uninstalledPlugins.map(p => p.name).join('、');
             MessageMark.confirm(
-                `确定要安装以下 ${uninstalledPlugins.length} 个插件吗？<br><br><strong>${pluginNames}</strong>`,
+                `确定要安装以下 ${uninstalledPlugins.length} 个插件吗？\n\n${pluginNames}`,
                 null,
                 null,
                 async () => {
@@ -18381,7 +18395,7 @@
 
             // 二次确认
             MessageMark.confirm(
-                `确定要${action}以下 ${allPlugins.length} 个插件吗？<br><br><strong>${pluginNames}</strong>`,
+                `确定要${action}以下 ${allPlugins.length} 个插件吗？\n\n${pluginNames}`,
                 null,
                 null,
                 async () => {
@@ -18504,7 +18518,7 @@
             // 二次确认
             const pluginNames = installedPlugins.map(p => p.name).join('、');
             MessageMark.confirm(
-                `确定要卸载以下 ${installedPlugins.length} 个插件吗？<br><br><strong>${pluginNames}</strong><br><br>此操作不可撤销！`,
+                `确定要卸载以下 ${installedPlugins.length} 个插件吗？\n\n${pluginNames}\n\n此操作不可撤销！`,
                 null,
                 null,
                 async () => {
@@ -18626,7 +18640,7 @@
         async updatePlugin(plugin) {
             // 二次确认
             MessageMark.confirm(
-                `确定要将插件 "<strong>${plugin.name}</strong>" 从 v${plugin.installed_version} 更新到 v${plugin.version} 吗？`,
+                `确定要将插件 "${plugin.name}" 从 v${plugin.installed_version} 更新到 v${plugin.version} 吗？`,
                 null,
                 null,
                 async () => {
@@ -24234,7 +24248,7 @@
                                     }
 
                                     // 添加确认弹窗，包含隐私提醒
-                                    MessageMark.confirm("确定要跳转到 AI 咨询页面吗？<br><br><span style='font-size: 16px;'>⚠️ 隐私提醒：请不要发送隐私和敏感信息给 AI。</span>", null, null, () => {
+                                    MessageMark.confirm("确定要跳转到 AI 咨询页面吗？\n\n⚠️ 隐私提醒：请不要发送隐私和敏感信息给 AI。", null, null, () => {
                                         const prompt = build_ai_teacher_prompt(userText);
                                         const encodedPrompt = encodeURIComponent(prompt);
 
@@ -28093,7 +28107,7 @@
                                 callback: () => {
                                     if (!this.msgattr.plain_data_text) return;
                                     // 添加确认弹窗，包含隐私提醒
-                                    MessageMark.confirm("确定要跳转到 AI 咨询页面吗？<br><br><span style='font-size: 16px;'>⚠️ 隐私提醒：请不要发送隐私和敏感信息给 AI。</span>", null, null, () => {
+                                    MessageMark.confirm("确定要跳转到 AI 咨询页面吗？\n\n⚠️ 隐私提醒：请不要发送隐私和敏感信息给 AI。", null, null, () => {
                                         const prompt = build_ai_teacher_prompt(this.msgattr.plain_data_text);
                                         window.open(`https://chatgpt.com/?q=${encodeURIComponent(prompt)}`, "_blank");
                                     });
