@@ -34843,6 +34843,54 @@
             return safeDecls.join("; ");
         },
 
+        sanitizeUserHtmlTag: (tagText) => {
+            if (!tagText || typeof tagText !== "string") return "";
+            const raw = tagText.trim();
+            const allowedTags = new Set(["span", "font", "b", "strong", "i", "em", "u", "s", "br"]);
+
+            const closeMatch = raw.match(/^<\s*\/\s*([a-z0-9]+)\s*>$/i);
+            if (closeMatch) {
+                const tag = closeMatch[1].toLowerCase();
+                if (allowedTags.has(tag) && tag !== "br") {
+                    return `</${tag}>`;
+                }
+                return "";
+            }
+
+            const openMatch = raw.match(/^<\s*([a-z0-9]+)\b([^>]*)>$/i);
+            if (!openMatch) {
+                return MarkdownResolver.escapeHTML(raw);
+            }
+
+            const tag = openMatch[1].toLowerCase();
+            const attrText = openMatch[2] || "";
+            if (!allowedTags.has(tag)) {
+                return MarkdownResolver.escapeHTML(raw);
+            }
+
+            if (tag === "br") return "<br>";
+
+            const attrs = [];
+            const styleMatch = attrText.match(/\bstyle\s*=\s*(?:"([^"]*)"|'([^']*)'|([^\s"'>]+))/i);
+            if (styleMatch) {
+                const styleRaw = styleMatch[1] || styleMatch[2] || styleMatch[3] || "";
+                const styleText = MarkdownResolver.sanitizeInlineStyle(styleRaw);
+                if (styleText) attrs.push(` style="${MarkdownResolver.escapeHTML(styleText)}"`);
+            }
+
+            if (tag === "font") {
+                const colorMatch = attrText.match(/\bcolor\s*=\s*(?:"([^"]*)"|'([^']*)'|([^\s"'>]+))/i);
+                if (colorMatch) {
+                    const colorRaw = ((colorMatch[1] || colorMatch[2] || colorMatch[3] || "").trim());
+                    if (colorRaw && /^[#(),.%\-\s\w]+$/i.test(colorRaw) && !/javascript:|url\s*\(/i.test(colorRaw)) {
+                        attrs.push(` color="${MarkdownResolver.escapeHTML(colorRaw)}"`);
+                    }
+                }
+            }
+
+            return `<${tag}${attrs.join("")}>`;
+        },
+
         sanitizeUserHtml: (htmlText) => {
             if (!htmlText || typeof htmlText !== "string") return "";
 
@@ -34935,7 +34983,7 @@
                     } //
 
                     else if (token.type === "html") {
-                        parts.push(MarkdownResolver.sanitizeUserHtml(token.text || ""));
+                        parts.push(MarkdownResolver.sanitizeUserHtmlTag(token.text || ""));
                     } //
 
                     else if (token.type === "at") {
