@@ -32729,7 +32729,7 @@
                     "密码": "",
                     "储存空间": "5120mb",
                     "所属组": [],
-                    "允许主动与所有用户通信": true,
+                    "允许主动与所有用户通信": false,
                     "允许主动与这些组通信": [],
                     "允许主动与这些用户通信": [],
                     "允许管理所有用户的网盘": false,
@@ -34782,6 +34782,118 @@
             return r;
         },
 
+        sanitizeInlineStyle: (styleText) => {
+            if (!styleText || typeof styleText !== "string") return "";
+            const allowedProps = new Set([
+                "color",
+                "background",
+                "background-color",
+                "font-size",
+                "font-weight",
+                "font-style",
+                "text-decoration",
+                "text-align",
+                "display",
+                "width",
+            ]);
+            const isSafeColor = (value) => {
+                return /^#[0-9a-f]{3,8}$/i.test(value)
+                    || /^(rgb|rgba|hsl|hsla)\([0-9.,%\s]+\)$/i.test(value)
+                    || /^[a-z]+$/i.test(value);
+            };
+            const isSafeValue = (prop, value) => {
+                if (/expression|javascript:|url\s*\(/i.test(value)) return false;
+                if (prop === "color" || prop === "background" || prop === "background-color") {
+                    return isSafeColor(value);
+                }
+                if (prop === "font-size") {
+                    return /^\d+(\.\d+)?(px|em|rem|%)$/i.test(value);
+                }
+                if (prop === "font-weight") {
+                    return /^(normal|bold|bolder|lighter|[1-9]00)$/i.test(value);
+                }
+                if (prop === "font-style") {
+                    return /^(normal|italic|oblique)$/i.test(value);
+                }
+                if (prop === "text-decoration") {
+                    return /^(none|underline|line-through|overline)$/i.test(value);
+                }
+                if (prop === "text-align") {
+                    return /^(left|center|right|justify|start|end)$/i.test(value);
+                }
+                if (prop === "display") {
+                    return /^(inline|block|inline-block)$/i.test(value);
+                }
+                if (prop === "width") {
+                    return /^(auto|\d+(\.\d+)?(px|%|em|rem))$/i.test(value);
+                }
+                return false;
+            };
+            const safeDecls = [];
+            const decls = styleText.split(";");
+            for (const decl of decls) {
+                const idx = decl.indexOf(":");
+                if (idx < 1) continue;
+                const prop = decl.slice(0, idx).trim().toLowerCase();
+                const value = decl.slice(idx + 1).trim();
+                if (!allowedProps.has(prop) || !value) continue;
+                if (!isSafeValue(prop, value)) continue;
+                safeDecls.push(`${prop}: ${value}`);
+            }
+            return safeDecls.join("; ");
+        },
+
+        sanitizeUserHtml: (htmlText) => {
+            if (!htmlText || typeof htmlText !== "string") return "";
+
+            const allowedTags = new Set(["span", "font", "b", "strong", "i", "em", "u", "s", "br"]);
+            const template = document.createElement("template");
+            template.innerHTML = htmlText;
+
+            const sanitizeNode = (node) => {
+                if (node.nodeType === Node.TEXT_NODE) {
+                    return MarkdownResolver.escapeHTML(node.textContent || "");
+                }
+
+                if (node.nodeType !== Node.ELEMENT_NODE) {
+                    return "";
+                }
+
+                const tag = node.tagName.toLowerCase();
+                if (!allowedTags.has(tag)) {
+                    return MarkdownResolver.escapeHTML(node.textContent || "");
+                }
+
+                const attrs = [];
+                if (tag !== "br") {
+                    const styleText = MarkdownResolver.sanitizeInlineStyle(node.getAttribute("style") || "");
+                    if (styleText) attrs.push(` style="${MarkdownResolver.escapeHTML(styleText)}"`);
+                }
+                if (tag === "font") {
+                    const colorText = (node.getAttribute("color") || "").trim();
+                    if (colorText && /^[#(),.%\-\s\w]+$/i.test(colorText) && !/javascript:|url\s*\(/i.test(colorText)) {
+                        attrs.push(` color="${MarkdownResolver.escapeHTML(colorText)}"`);
+                    }
+                }
+
+                if (tag === "br") {
+                    return "<br>";
+                }
+
+                let inner = "";
+                for (const child of node.childNodes) {
+                    inner += sanitizeNode(child);
+                }
+                return `<${tag}${attrs.join("")}>${inner}</${tag}>`;
+            };
+
+            let output = "";
+            for (const child of template.content.childNodes) {
+                output += sanitizeNode(child);
+            }
+            return output;
+        },
+
         to_html: (text) => {
             const line_objects = MarkdownResolver.resolve(text);
 
@@ -34823,7 +34935,7 @@
                     } //
 
                     else if (token.type === "html") {
-                        parts.push(MarkdownResolver.escapeHTML(token.text || ""));
+                        parts.push(MarkdownResolver.sanitizeUserHtml(token.text || ""));
                     } //
 
                     else if (token.type === "at") {
