@@ -12965,21 +12965,14 @@
         return arr[Math.floor(Math.random() * arr.length)];
     }
 
+    function esc(v) {
+        return String(v ?? '').replace(/[&<>'"]/g, c => ({'&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'}[c]));
+    }
+
     function delete_cookie(key, path = '/', domain) {
         let cookieStr = `${key}=; Max-Age=0; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=${path}; SameSite=Strict`;
         if (domain) cookieStr += `; domain=${domain}`;
         document.cookie = cookieStr;
-    }
-
-    async function hash_password(text) {
-        // 将字符串转为 Uint8Array
-        const encoder = new TextEncoder();
-        const data = encoder.encode(text);
-        // 计算 SHA-256
-        const hashBuffer = await crypto.subtle.digest('SHA-256', data);
-        // 转为十六进制字符串
-        const hashArray = Array.from(new Uint8Array(hashBuffer));
-        return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
     }
 
     function pickBucket(str, arr) {
@@ -20137,7 +20130,7 @@
 
             async auth(account, password) {
                 let url = join_path(this.api_url(), "auth");
-                let body = {account, password_hash: await hash_password(password),}
+                let body = {account, password}
                 let r = await net_fetcher.nf_post_json(url, body);
                 if (r.status === 200) {
                     let d = await r.json();
@@ -20313,9 +20306,9 @@
 
                 };
 
-                // 只有在密码不为空时才设置 password_hash
+                // 只有在密码不为空时才设置 password
                 if (form["密码"].length > 0) {
-                    d.password_hash = await hash_password(form["密码"]);
+                    d.password = form["密码"];
                 }
 
                 return d;
